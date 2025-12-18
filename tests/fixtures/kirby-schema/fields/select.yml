@@ -1,0 +1,7 @@
+label: Category
+type: select
+options:
+  - value: '100'
+    text: Design
+  - value: '200'
+    text: Architecture

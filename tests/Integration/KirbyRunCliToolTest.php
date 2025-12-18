@@ -1,0 +1,134 @@
+<?php
+
+declare(strict_types=1);
+
+use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
+use Bnomei\KirbyMcp\Mcp\Tools\CliTools;
+use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
+
+it('runs an allowlisted read-only Kirby CLI command', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $result = (new CliTools())->runCli(command: 'version');
+
+    expect($result['ok'])->toBeTrue();
+    $cliResult = $result['cli'];
+    if (!is_array($cliResult)) {
+        throw new RuntimeException('Expected cli result output.');
+    }
+
+    expect($cliResult['exitCode'])->toBe(0);
+    expect($cliResult['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
+});
+
+it('blocks write-capable commands unless allowWrite=true', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $result = (new CliTools())->runCli(command: 'make:template', arguments: ['mcp_test_template']);
+
+    expect($result['ok'])->toBeFalse();
+    expect($result['message'])->toContain('allowWrite=true');
+    expect($result['cli'])->toBeNull();
+});
+
+it('extracts marked JSON when running an mcp:* command', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $runtime = new RuntimeTools();
+    $cli = new CliTools();
+
+    $install = $runtime->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        $result = $cli->runCli(command: 'mcp:render', arguments: ['--type=html', '--max=2000']);
+
+        expect($result['ok'])->toBeTrue();
+        expect($result['mcpJson'])->toBeArray();
+        expect($result['mcpJson'])->toHaveKey('ok');
+        expect($result['mcpJson'])->toHaveKey('html');
+    } finally {
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
+it('respects deny patterns from .kirby-mcp/mcp.json', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    $projectRoot = cmsPath();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $projectRoot);
+
+    $configDir = $projectRoot . '/.kirby-mcp';
+    $configFile = $configDir . '/mcp.json';
+
+    if (is_file($configFile)) {
+        @unlink($configFile);
+    }
+
+    if (!is_dir($configDir)) {
+        mkdir($configDir, 0777, true);
+    }
+
+    file_put_contents($configFile, json_encode(['cli' => ['deny' => ['version']]], JSON_THROW_ON_ERROR));
+
+    try {
+        $result = (new CliTools())->runCli(command: 'version');
+
+        expect($result['ok'])->toBeFalse();
+        expect($result['policy']['matchedDeny'])->toBe('version');
+    } finally {
+        if (is_file($configFile)) {
+            @unlink($configFile);
+        }
+
+        if (is_dir($configDir)) {
+            $entries = scandir($configDir);
+            if (is_array($entries)) {
+                $remaining = array_diff($entries, ['.', '..']);
+                if ($remaining === []) {
+                    rmdir($configDir);
+                }
+            }
+        }
+    }
+});

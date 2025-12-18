@@ -1,0 +1,7 @@
+label: Toggle
+type: toggle
+text:
+  - en: Nope
+    de: Och nö
+  - en: Yay
+    de: Juhu

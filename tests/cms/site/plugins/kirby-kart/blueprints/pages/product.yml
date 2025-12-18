@@ -1,0 +1,178 @@
+name: product
+num: '{{ page.created.toDate("YmdHis") }}'
+image:
+  icon: blank
+  cover: true
+  query: page.gallery.toFiles.first
+options:
+  changeTemplate: false
+tabs:
+  provider:
+    label: bnomei.kart.provider-storage
+    icon: globe
+    sections:
+      stats:
+        label: bnomei.kart.summary
+        type: stats
+        reports:
+          - 
+            label: bnomei.kart.price
+            value: '{{ page.formattedPrice() }}'
+          - 
+            label: bnomei.kart.sales-count
+            value: '{{ page.salesCount }}'
+            link: '{{ site.kart.page("orders")?.panel.url }}'
+          - 
+            label: bnomei.kart.stock
+            value: '{{ page.stockWithVariants }}'
+            link: '{{ page.stockUrl }}'
+      meta:
+        type: fields
+        fields:
+          line:
+            type: line
+          description:
+            label: bnomei.kart.description
+            type: textarea
+            virtual: true
+          details:
+            label: bnomei.kart.details
+            type: structure
+            fields:
+              summary:
+                label: bnomei.kart.details.summary
+                type: text
+              text:
+                label: bnomei.kart.details.text
+                type: textarea
+              open:
+                label: bnomei.kart.details.open
+                type: toggle
+                default: false
+            columns:
+              summary:
+                width: 1/5
+              text:
+                width: 3/5
+              open:
+                width: 1/5
+          price:
+            label: bnomei.kart.price
+            type: number
+            min: 0
+            step: 0.01
+            default: 0
+            after: '{{ kirby.option("bnomei.kart.currency") }}'
+            width: 1/4
+            translate: false
+            virtual: true
+          rrprice:
+            label: bnomei.kart.rrprice
+            type: number
+            min: 0
+            step: 0.01
+            placeholder: '{{ page.price }}'
+            after: '{{ kirby.option("bnomei.kart.currency") }}'
+            width: 1/4
+            translate: false
+            virtual: false
+          maxapo:
+            label: bnomei.kart.max-amount-per-order
+            type: number
+            step: 1
+            translate: false
+            width: 1/4
+            placeholder: '{{ site.kart.option("orders.order.maxapo") }}'
+          created:
+            label: bnomei.kart.created
+            type: date
+            time:
+              step: 1
+            default: now
+            translate: false
+            width: 1/4
+          categories:
+            label: bnomei.kart.categories
+            type: tags
+            options:
+              type: query
+              query: >
+                page.siblings.pluck("categories", ",",
+                true)
+            width: 1/3
+            translate: false
+            virtual: true
+          tags:
+            label: bnomei.kart.tags
+            type: tags
+            options:
+              type: query
+              query: page.siblings.pluck("tags", ",", true)
+            width: 1/3
+            translate: false
+            virtual: true
+          featured:
+            label: '★ {{ t("bnomei.kart.featured") }}'
+            type: toggle
+            default: false
+            width: 1/3
+            translate: false
+            virtual: true
+          gallery:
+            label: bnomei.kart.gallery
+            type: files
+            query: page.parent.images
+            uploads:
+              parent: page.parent
+            width: 1/3
+            translate: false
+            virtual: true
+          downloads:
+            label: '↓ {{ t("bnomei.kart.downloads") }}'
+            type: files
+            query: page.parent.files
+            uploads:
+              parent: page.parent
+            width: 1/3
+            translate: false
+            virtual: true
+          variants:
+            label: '❖ {{ t("bnomei.kart.variants") }}'
+            type: structure
+            translate: false
+            virtual: true
+            width: 1/3
+            fields:
+              price_id:
+                type: hidden
+              variant:
+                label: bnomei.kart.variant
+                type: tags
+                options:
+                  type: query
+                  query: site.kart.allVariants
+              price:
+                label: bnomei.kart.price
+                type: number
+                min: 0
+                step: 0.01
+                after: '{{ kirby.option("bnomei.kart.currency") }}'
+              image:
+                label: field.blocks.image.name
+                type: files
+                query: page.parent.files
+                uploads:
+                  parent: page.parent
+          raw:
+            type: hidden
+            translate: false
+            virtual: true
+          _dump:
+            label: bnomei.kart.raw-values
+            type: info
+            theme: info
+            text: '{< page.dump("raw", 82) >}'
+  local:
+    label: bnomei.kart.local-storage
+    icon: server
+    extends: tabs/product-local

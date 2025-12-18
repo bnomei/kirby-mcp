@@ -1,0 +1,16 @@
+blueprint: page
+title: Filter and Ignore in Pages section
+sections:
+  filterable:
+    type: pages
+    query: page.childrenAndDrafts.filterBy('category', 'video')
+    template: article
+    templates:
+      - article
+      - aside
+      - gallery
+      - video
+    templatesIgnore:
+      - some
+      - other
+      - values

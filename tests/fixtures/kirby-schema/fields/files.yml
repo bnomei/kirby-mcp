@@ -1,0 +1,6 @@
+label: Files
+type: files
+min: 1
+store: uuid
+uploads:
+  parent: pae

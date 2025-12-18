@@ -1,0 +1,4 @@
+type: fields
+fields:
+  mytext:
+    type: text

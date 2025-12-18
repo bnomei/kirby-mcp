@@ -1,0 +1,76 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+if (!defined('KIRBY_HELPER_DUMP')) {
+    define('KIRBY_HELPER_DUMP', false);
+}
+
+if (!defined('KIRBY_HELPER_E')) {
+    define('KIRBY_HELPER_E', false);
+}
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Bnomei\KirbyMcp\Mcp\Handlers\SetLogLevelHandler;
+use Bnomei\KirbyMcp\Project\ProjectRootFinder;
+use Mcp\Server;
+use Mcp\Schema\ServerCapabilities;
+use Mcp\Server\Transport\StdioTransport;
+
+$projectRoot = null;
+$projectFlagProvided = false;
+
+for ($index = 1; $index < count($argv); $index++) {
+    $arg = $argv[$index] ?? null;
+    if (!is_string($arg)) {
+        continue;
+    }
+
+    if (str_starts_with($arg, '--project=')) {
+        $projectFlagProvided = true;
+        $projectRoot = substr($arg, strlen('--project='));
+        continue;
+    }
+
+    if ($arg === '--project') {
+        $projectFlagProvided = true;
+        $next = $argv[$index + 1] ?? null;
+        if (is_string($next) && $next !== '' && !str_starts_with($next, '--')) {
+            $projectRoot = $next;
+            $index++;
+        }
+        continue;
+    }
+}
+
+if (is_string($projectRoot) && $projectRoot !== '') {
+    $resolved = realpath($projectRoot) ?: $projectRoot;
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $resolved);
+} elseif (getenv('KIRBY_MCP_PROJECT_ROOT') === false || getenv('KIRBY_MCP_PROJECT_ROOT') === '') {
+    $detected = (new ProjectRootFinder())->findKirbyProjectRoot();
+    if (is_string($detected) && $detected !== '') {
+        putenv('KIRBY_MCP_PROJECT_ROOT=' . $detected);
+    } elseif ($projectFlagProvided === true) {
+        // The user explicitly asked for project auto-detection with `--project`
+        // but we could not find a composer-based Kirby project root.
+        // Avoid writing to stdout/stderr because this is a stdio protocol server.
+    }
+}
+
+$server = Server::builder()
+    ->setServerInfo('Kirby MCP', '0.0.0')
+    ->setInstructions('Call kirby_init once per session. Use kirby_tool_suggest if unsure which tool/resource to use.')
+    ->setDiscovery(dirname(__DIR__), ['src'])
+    ->addRequestHandler(new SetLogLevelHandler())
+    ->setCapabilities(new ServerCapabilities(
+        tools: true,
+        resources: true,
+        prompts: true,
+        logging: true,
+        completions: true,
+    ))
+    ->build();
+
+exit($server->run(new StdioTransport()));

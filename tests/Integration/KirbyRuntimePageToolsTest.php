@@ -1,0 +1,224 @@
+<?php
+
+declare(strict_types=1);
+
+use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
+use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
+
+it('reads home page content via runtime CLI', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+
+    $install = $tools->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        $result = $tools->readPageContent();
+
+        expect($result)->toHaveKey('ok', true);
+        expect($result['content'])->toBeArray();
+        expect($result['content'])->toHaveKey('title', 'Home');
+    } finally {
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
+it('reads page content by bare uuid (without page:// prefix) via runtime CLI', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+
+    $install = $tools->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        $home = $tools->readPageContent();
+
+        expect($home)->toHaveKey('ok', true);
+        $uuid = $home['page']['uuid'] ?? null;
+        expect($uuid)->toBeString();
+        expect($uuid)->toStartWith('page://');
+
+        $bare = substr((string) $uuid, strlen('page://'));
+        expect($bare)->toBeString();
+        expect(trim($bare))->not()->toBe('');
+
+        $byUuid = $tools->readPageContent(id: $bare);
+        expect($byUuid)->toHaveKey('ok', true);
+        expect($byUuid['page']['id'] ?? null)->toBe($home['page']['id'] ?? null);
+    } finally {
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
+it('updates page content via runtime CLI (confirm=true) and restores fixture', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    $projectRoot = cmsPath();
+    $homeContentFile = $projectRoot . '/content/home/home.txt';
+    $original = file_get_contents($homeContentFile);
+    expect($original)->toBeString();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $projectRoot);
+
+    $tools = new RuntimeTools();
+
+    $install = $tools->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        $update = $tools->updatePageContent(
+            id: 'home',
+            data: ['headline' => 'MCP Test Headline'],
+            confirm: true,
+        );
+
+        expect($update)->toHaveKey('ok', true);
+
+        $read = $tools->readPageContent(id: 'home');
+        expect($read)->toHaveKey('ok', true);
+        expect($read['content']['headline'] ?? null)->toBe('MCP Test Headline');
+    } finally {
+        if (is_string($original)) {
+            file_put_contents($homeContentFile, $original);
+        }
+
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
+it('lists loaded blueprints via runtime CLI', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+
+    $install = $tools->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        $result = $tools->blueprintsLoaded();
+
+        expect($result)->toHaveKey('ok', true);
+        expect($result)->toHaveKey('counts');
+        expect($result['counts']['total'] ?? 0)->toBeGreaterThan(0);
+        expect($result)->toHaveKey('blueprints');
+        expect($result['blueprints'])->toBeArray();
+    } finally {
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});

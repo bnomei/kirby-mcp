@@ -1,0 +1,9 @@
+blueprint: tab
+label: some tab
+icon: home
+
+sections:
+  pages:
+    type: pages
+  into:
+    type: info

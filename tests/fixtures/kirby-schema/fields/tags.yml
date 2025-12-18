@@ -1,0 +1,4 @@
+label: Category
+type: tags
+options: query
+query: site.taxonomy.split

@@ -1,0 +1,13 @@
+blueprint: block
+icon: bars
+name: field.blocks.accordion.name
+fields:
+  summary:
+    label: Summary
+    type: writer
+    marks: false
+    placeholder: Enter summary…
+  details:
+    label: Detail
+    type: writer
+    marks: true

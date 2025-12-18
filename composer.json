@@ -1,0 +1,61 @@
+{
+  "name": "bnomei/kirby-mcp",
+  "description": "A CLI-first MCP server for Kirby CMS",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "getkirby/cli": "^1.0",
+    "mcp/sdk": "^0.1.0",
+    "symfony/process": "^7.0",
+    "symfony/yaml": "^7.0"
+  },
+  "require-dev": {
+    "getkirby/cms": "^5.2",
+    "larastan/larastan": "^3.0",
+    "laravel/pint": "^1.26",
+    "pestphp/pest": "^4.0"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/modelcontextprotocol/php-sdk"
+    }
+  ],
+  "config": {
+    "allow-plugins": {
+      "getkirby/composer-installer": true,
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": false
+    },
+    "sort-packages": true,
+    "optimize-autoloader": true
+  },
+  "autoload": {
+    "psr-4": {
+      "Bnomei\\KirbyMcp\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Bnomei\\KirbyMcp\\Tests\\": "tests/"
+    },
+    "files": [
+      "tests/dev-autoload.php"
+    ]
+  },
+  "bin": [
+    "bin/kirby-mcp"
+  ],
+  "scripts": {
+    "test": "php -d auto_prepend_file=tests/prepend.php vendor/bin/pest",
+    "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
+    "format": "pint",
+    "mcp": "bin/kirby-mcp"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "extra": {
+    "kirby-cms-path": false
+  }
+}

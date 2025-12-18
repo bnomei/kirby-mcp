@@ -1,0 +1,25 @@
+blueprint: field
+type: stats
+# Available size options: small, medium, large, huge. Default is large
+size: large
+reports:
+  - label: Revenue
+    value: €29,682
+    info: +112.5%
+    link: https://getkirby.com/shop
+    theme: love
+  - label: Orders
+    value: 265
+    info: +82.8%
+    theme: warning
+  - label: Avg. Transaction
+    value: €112.01
+    info: +16.3%
+    theme: positive
+  - label: Refunds
+    value: €15.20
+    info: +10.5%
+    theme: positive
+  - label: Discount sales
+    value: €1,422
+    info: n/a

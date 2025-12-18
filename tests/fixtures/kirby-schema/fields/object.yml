@@ -1,0 +1,14 @@
+type: object
+default:
+  name: Nandi Peters
+  email: nandi@example.com
+  phone: 1234 5678
+fields:
+  photo:
+    type: files
+  name:
+    type: text
+  email:
+    type: email
+  phone:
+    type: tel

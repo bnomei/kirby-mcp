@@ -1,0 +1,4 @@
+label: Author
+type: users
+default: johndoe@company.com
+multiple: false

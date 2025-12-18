@@ -1,0 +1,11 @@
+{
+  "name": "kirby-mcp-dev",
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  },
+  "scripts": {
+    "format": "prettier --write \"**/*.{md,yml,yaml,js}\"",
+    "format:check": "prettier --check \"**/*.{md,yml,yaml,js}\""
+  }
+}

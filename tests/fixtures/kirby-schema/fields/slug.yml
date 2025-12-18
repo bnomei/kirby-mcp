@@ -1,0 +1,6 @@
+label: Class Name
+type: slug
+sync: title
+wizard:
+  field: input
+  text: Generate!

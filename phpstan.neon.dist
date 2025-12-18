@@ -1,0 +1,10 @@
+parameters:
+  level: 8
+  bootstrapFiles:
+    - tests/prepend.php
+  paths:
+    - src
+    - tests
+  excludePaths:
+    - tests/cms
+    - vendor

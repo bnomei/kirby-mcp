@@ -1,0 +1,35 @@
+type: blocks
+fieldsets:
+  asd:
+    label: asd
+    type: group
+    fieldsets:
+      - asda
+      - as
+      - default:
+        - type: heading
+          content:
+            level: h2
+            text: A heading
+        - type: text
+          content:
+            ldl: as
+  text:
+    label: Text
+    type: group
+    fieldsets:
+      - heading
+      - text
+      - list
+  media:
+    label: Media
+    type: group
+    fieldsets:
+      - image
+      - video
+  code:
+    label: Code
+    type: group
+    fieldsets:
+      - code
+      - markdown

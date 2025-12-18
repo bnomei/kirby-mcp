@@ -1,0 +1,9 @@
+blueprint: page
+title: Extends
+
+fields:
+
+  something: fields/mega
+  otherside:
+    extends: outerspace
+    type: text

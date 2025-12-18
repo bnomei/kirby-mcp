@@ -1,6 +1,18 @@
 composer.phar
 /vendor/
+.DS_Store
+.phpunit.cache/
+.phpunit.result.cache
+.phpstan.cache/
+node_modules/
+.prettiercache
 
 # Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
 # You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file
 # composer.lock
+
+/tests/cms/media
+/tests/cms/site/accounts
+/tests/cms/site/cache
+/tests/cms/site/commands/mcp
+/tests/cms/site/sessions

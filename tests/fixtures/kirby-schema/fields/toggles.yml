@@ -1,0 +1,17 @@
+type: toggles
+label: Icons
+labels: false
+grow: false
+options:
+  - value: left
+    text: Left
+    icon: text-left
+  - value: center
+    text: Center
+    icon: text-center
+  - value: right
+    text: Right
+    icon: text-right
+  - value: justify
+    text: Justify
+    icon: text-justify

@@ -1,0 +1,11 @@
+label: Categories
+type: checkboxes
+default:
+  - architecture
+  - web
+options:
+  design: Design
+  architecture: Architecture
+  photography: Photography
+  3d: 3D
+  web: Web
