@@ -5,6 +5,61 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
 
+it('skips existing files when force=false during runtime install', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+
+    // First install with force=true to ensure files exist
+    $firstInstall = $tools->runtimeInstall(force: true);
+    $commandsRoot = $firstInstall['commandsRoot'];
+
+    try {
+        expect($firstInstall['installed'])->not()->toBeEmpty();
+        expect($firstInstall['skipped'])->toBeEmpty();
+
+        // Second install with force=false should skip all existing files
+        $secondInstall = $tools->runtimeInstall(force: false);
+
+        expect($secondInstall['installed'])->toBeEmpty();
+        expect($secondInstall['skipped'])->not()->toBeEmpty();
+        expect($secondInstall['skipped'])->toContain('mcp/render.php');
+    } finally {
+        foreach ($firstInstall['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR),
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
 it('reports runtime commands as in sync after installation', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();

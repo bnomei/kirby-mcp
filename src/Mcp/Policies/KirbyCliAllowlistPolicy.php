@@ -107,8 +107,14 @@ final class KirbyCliAllowlistPolicy
             }
 
             $regex = '/^' . str_replace('\\*', '.*', preg_quote($pattern, '/')) . '$/u';
-            if (preg_match($regex, $command) === 1) {
-                return $pattern;
+            try {
+                $result = @preg_match($regex, $command);
+                if ($result === 1) {
+                    return $pattern;
+                }
+            } catch (\Throwable) {
+                // Invalid regex pattern in config - skip silently
+                continue;
             }
         }
 

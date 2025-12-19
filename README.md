@@ -304,18 +304,19 @@ Kirby host selection:
 - To use host-specific Kirby config, set `KIRBY_MCP_HOST` (or `KIRBY_HOST`) when starting the MCP server, or set `kirby.host` in `.kirby-mcp/mcp.json`:
   - `{"kirby":{"host":"localhost"}}`
 
-| Option                  | Type       | Default   | Description                                                                                                                                                                                                  |
-| ----------------------- | ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cache.ttlSeconds`      | `int`      | `60`      | In-memory cache TTL (seconds) for read-only resources like `kirby://commands` and `kirby://cli/command/{command}` plus a few internal caches (roots inspection, completions); set to `0` to disable caching. |
-| `docs.ttlSeconds`       | `int`      | `86400`   | In-memory cache TTL (seconds) for fetched getkirby.com markdown docs (e.g. `kirby://field/{type}` and `kirby://section/{type}`); set to `0` to disable caching.                                              |
-| `cli.allow`             | `string[]` | `[]`      | Additional allowlist patterns for `kirby_run_cli_command` (supports `*` wildcard, e.g. `plugin:*`).                                                                                                          |
-| `cli.allowWrite`        | `string[]` | `[]`      | Additional allowlist patterns for write-capable commands; requires `allowWrite=true` when calling `kirby_run_cli_command` (supports `*`).                                                                    |
-| `cli.deny`              | `string[]` | `[]`      | Deny patterns that always block commands, even if allowlisted (supports `*`).                                                                                                                                |
-| `dumps.enabled`         | `bool`     | `true`    | Enable/disable `mcp_dump()` writes to `.kirby-mcp/dumps.jsonl`.                                                                                                                                              |
-| `dumps.maxBytes`        | `int`      | `2097152` | Max size for `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`. When the next write would exceed it, the log is compacted by keeping the newest half of lines, then the new entry is appended.                |
-| `ide.typeHintScanBytes` | `int`      | `16384`   | Max bytes to read from controller/model files when detecting Kirby IDE baseline type hints (see `kirby_ide_helpers_status`).                                                                                 |
-| `kirby.host`            | `string`   | `null`    | Default Kirby host to pass as `KIRBY_HOST` to the Kirby CLI (affects host-specific config like `config.{host}.php`).                                                                                         |
-| `eval.enabled`          | `bool`     | `false`   | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
+| Option                  | Type       | Default    | Description                                                                                                                                                                                                  |
+| ----------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cache.ttlSeconds`      | `int`      | `60`       | In-memory cache TTL (seconds) for read-only resources like `kirby://commands` and `kirby://cli/command/{command}` plus a few internal caches (roots inspection, completions); set to `0` to disable caching. |
+| `docs.ttlSeconds`       | `int`      | `86400`    | In-memory cache TTL (seconds) for fetched getkirby.com markdown docs (e.g. `kirby://field/{type}` and `kirby://section/{type}`); set to `0` to disable caching.                                              |
+| `cli.allow`             | `string[]` | `[]`       | Additional allowlist patterns for `kirby_run_cli_command` (supports `*` wildcard, e.g. `plugin:*`).                                                                                                          |
+| `cli.allowWrite`        | `string[]` | `[]`       | Additional allowlist patterns for write-capable commands; requires `allowWrite=true` when calling `kirby_run_cli_command` (supports `*`).                                                                    |
+| `cli.deny`              | `string[]` | `[]`       | Deny patterns that always block commands, even if allowlisted (supports `*`).                                                                                                                                |
+| `dumps.enabled`         | `bool`     | `true`     | Enable/disable `mcp_dump()` writes to `.kirby-mcp/dumps.jsonl`.                                                                                                                                              |
+| `dumps.maxBytes`        | `int`      | `2097152`  | Max size for `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`. When the next write would exceed it, the log is compacted by keeping the newest half of lines, then the new entry is appended.                |
+| `dumps.secretPatterns`  | `string[]` | (defaults) | Regex patterns for secret redaction in dump logs. Omit to use defaults (API keys, tokens, IPs, etc.), set to `[]` to disable masking, or provide custom patterns.                                            |
+| `ide.typeHintScanBytes` | `int`      | `16384`    | Max bytes to read from controller/model files when detecting Kirby IDE baseline type hints (see `kirby_ide_helpers_status`).                                                                                 |
+| `kirby.host`            | `string`   | `null`     | Default Kirby host to pass as `KIRBY_HOST` to the Kirby CLI (affects host-specific config like `config.{host}.php`).                                                                                         |
+| `eval.enabled`          | `bool`     | `false`    | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
 
 Environment variables:
 
@@ -330,6 +331,20 @@ Environment variables:
 ## Debug dumps (`mcp_dump`)
 
 This package provides a lightweight `mcp_dump()` helper that appends JSONL to `.kirby-mcp/dumps.jsonl` in the project root.
+
+**Secret redaction:** By default, dump output is scanned for sensitive data (API keys, tokens, passwords, IPs) and redacted before writing. This protects against accidentally leaking secrets. Configure via `dumps.secretPatterns` in `.kirby-mcp/mcp.json`:
+
+```json
+{
+  "dumps": {
+    "secretPatterns": []
+  }
+}
+```
+
+- Omit `secretPatterns` → use built-in patterns (OpenAI/Anthropic/GitHub/Stripe/AWS keys, JWTs, Bearer tokens, IPs, etc.)
+- Set to `[]` → disable redaction entirely
+- Set to `["/pattern1/", "/pattern2/"]` → use only your custom regex patterns
 
 Typical workflow for your coding agent:
 

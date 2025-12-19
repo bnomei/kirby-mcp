@@ -12,6 +12,14 @@ it('supports vendor/bin-style install command', function (): void {
     $projectRoot = cmsPath();
 
     $configDir = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp';
+    $fixtureConfig = $configDir . DIRECTORY_SEPARATOR . 'config.json';
+    $fixtureBackup = null;
+
+    // Preserve fixture config.json if present
+    if (is_file($fixtureConfig)) {
+        $fixtureBackup = file_get_contents($fixtureConfig);
+    }
+
     if (is_dir($configDir)) {
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($configDir, FilesystemIterator::SKIP_DOTS),
@@ -30,23 +38,33 @@ it('supports vendor/bin-style install command', function (): void {
         @rmdir($configDir);
     }
 
-    $process = new Process(
-        command: [PHP_BINARY, $bin, 'install', '--project=' . $projectRoot, '--json'],
-        cwd: dirname(__DIR__, 2),
-        timeout: 60,
-    );
+    try {
+        $process = new Process(
+            command: [PHP_BINARY, $bin, 'install', '--project=' . $projectRoot, '--json'],
+            cwd: dirname(__DIR__, 2),
+            timeout: 60,
+        );
 
-    $process->run();
+        $process->run();
 
-    expect($process->getExitCode())->toBe(0);
+        expect($process->getExitCode())->toBe(0);
 
-    $decoded = McpMarkedJsonExtractor::extract($process->getOutput());
-    expect($decoded)->toBeArray();
-    expect($decoded)->toHaveKey('ok', true);
-    expect($decoded)->toHaveKey('command', 'install');
-    expect($decoded)->toHaveKey('projectRoot', $projectRoot);
-    expect($decoded)->toHaveKey('config');
-    expect($decoded['config'])->toHaveKey('created', true);
+        $decoded = McpMarkedJsonExtractor::extract($process->getOutput());
+        expect($decoded)->toBeArray();
+        expect($decoded)->toHaveKey('ok', true);
+        expect($decoded)->toHaveKey('command', 'install');
+        expect($decoded)->toHaveKey('projectRoot', $projectRoot);
+        expect($decoded)->toHaveKey('config');
+        expect($decoded['config'])->toHaveKey('created', true);
+    } finally {
+        // Restore fixture config.json
+        if (is_string($fixtureBackup)) {
+            if (!is_dir($configDir)) {
+                mkdir($configDir, 0777, true);
+            }
+            file_put_contents($fixtureConfig, $fixtureBackup);
+        }
+    }
 });
 
 it('supports vendor/bin-style update command', function (): void {

@@ -103,7 +103,8 @@ final class PromptIndex
 
                 $description = is_string($mcpPrompt->description) ? trim($mcpPrompt->description) : '';
                 if ($description === '') {
-                    $description = self::docblockSummary($method->getDocComment());
+                    $docComment = $method->getDocComment();
+                    $description = self::docblockSummary($docComment !== false ? $docComment : null);
                 }
 
                 $icons = self::normalizeIcons($mcpPrompt->icons);

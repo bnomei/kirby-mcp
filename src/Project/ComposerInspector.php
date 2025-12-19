@@ -8,7 +8,7 @@ use Bnomei\KirbyMcp\Support\Json;
 
 final class ComposerInspector
 {
-    /** @var array<string, array{composerJsonMtime:int, composerLockMtime:int, audit: ComposerAudit}> */
+    /** @var array<string, array{composerJsonMtime:int|null, composerLockMtime:int|null, audit: ComposerAudit}> */
     private static array $cache = [];
 
     public static function clearCache(): int
@@ -24,11 +24,11 @@ final class ComposerInspector
         $composerJsonPath = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'composer.json';
         $composerLockPath = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'composer.lock';
 
-        $composerJsonMtime = filemtime($composerJsonPath);
-        $composerJsonMtime = is_int($composerJsonMtime) ? $composerJsonMtime : 0;
+        $composerJsonMtime = is_file($composerJsonPath) ? filemtime($composerJsonPath) : false;
+        $composerJsonMtime = is_int($composerJsonMtime) ? $composerJsonMtime : null;
 
         $composerLockMtime = is_file($composerLockPath) ? filemtime($composerLockPath) : false;
-        $composerLockMtime = is_int($composerLockMtime) ? $composerLockMtime : 0;
+        $composerLockMtime = is_int($composerLockMtime) ? $composerLockMtime : null;
 
         $cacheKey = rtrim($projectRoot, DIRECTORY_SEPARATOR);
         $cached = self::$cache[$cacheKey] ?? null;

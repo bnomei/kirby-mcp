@@ -37,7 +37,7 @@ final class DocsTools
      *     htmlUrl: string,
      *     crawlUrl: string,
      *     markdownUrl: string|null
-     *   }>
+     *   }>,
      *   documents: array<int, array{
      *     objectId: string,
      *     title: string,

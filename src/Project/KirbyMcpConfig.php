@@ -258,6 +258,47 @@ final readonly class KirbyMcpConfig
         return self::DEFAULT_DUMPS_ENABLED;
     }
 
+    /**
+     * Get secret masking patterns for dumps.
+     * Returns null to use defaults, or an array of custom patterns (empty array disables masking).
+     *
+     * @return array<int, string>|null
+     */
+    public function dumpsSecretPatterns(): ?array
+    {
+        $dumps = $this->data['dumps'] ?? null;
+        if (!is_array($dumps)) {
+            return null; // Use defaults
+        }
+
+        // Check if secretPatterns key exists
+        if (!array_key_exists('secretPatterns', $dumps)) {
+            return null; // Use defaults
+        }
+
+        $patterns = $dumps['secretPatterns'];
+
+        // Explicitly set to null means use defaults
+        if ($patterns === null) {
+            return null;
+        }
+
+        // Must be an array (can be empty to disable masking)
+        if (!is_array($patterns)) {
+            return null; // Invalid, use defaults
+        }
+
+        // Filter to only valid string patterns
+        $result = [];
+        foreach ($patterns as $pattern) {
+            if (is_string($pattern) && trim($pattern) !== '') {
+                $result[] = trim($pattern);
+            }
+        }
+
+        return $result;
+    }
+
     public function ideTypeHintScanBytes(): int
     {
         $ide = $this->data['ide'] ?? null;

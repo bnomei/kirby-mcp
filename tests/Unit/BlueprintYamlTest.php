@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Blueprint\BlueprintYaml;
 
-it('parses all kirby-schema YAML fixtures', function (): void {
+it('parses all starterkit blueprint YAML files', function (): void {
     $yaml = new BlueprintYaml();
 
-    $root = __DIR__ . '/../fixtures/kirby-schema';
+    $root = __DIR__ . '/../cms/site/blueprints';
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
     );

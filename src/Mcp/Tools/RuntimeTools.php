@@ -636,12 +636,20 @@ final class RuntimeTools
     private function expectedCommandFiles(string $sourceRoot): array
     {
         $sourceRoot = rtrim($sourceRoot, DIRECTORY_SEPARATOR);
-        if ($sourceRoot === '' || !is_dir($sourceRoot)) {
+        if ($sourceRoot === '' || !is_dir($sourceRoot) || !is_readable($sourceRoot)) {
             return [];
         }
 
         $expected = [];
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($sourceRoot));
+
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($sourceRoot, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+        } catch (\Throwable) {
+            return [];
+        }
+
         foreach ($iterator as $file) {
             if (!$file->isFile() || strtolower($file->getExtension()) !== 'php') {
                 continue;

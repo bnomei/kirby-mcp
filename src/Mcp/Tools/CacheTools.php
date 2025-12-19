@@ -117,7 +117,8 @@ final class CacheTools
             ToolIndex::clearCache();
             $toolIndexCleared = true;
         } elseif ($scope === 'prefix') {
-            $staticPrefix = $prefix;
+            // $prefix is guaranteed to be a non-empty string here (validated above)
+            $staticPrefix = $prefix ?? '';
             $staticRemoved = StaticCache::clearPrefix($staticPrefix);
         }
 

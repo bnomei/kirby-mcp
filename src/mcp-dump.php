@@ -10,7 +10,7 @@ if (!function_exists('mcp_dump')) {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
 
         return McpDump::create(
-            values: $values,
+            values: array_values($values),
             backtrace: $backtrace,
         );
     }

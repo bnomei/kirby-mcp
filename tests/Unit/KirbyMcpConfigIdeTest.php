@@ -7,7 +7,7 @@ use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 it('reads ide.typeHintScanBytes from config', function (): void {
     KirbyMcpConfig::clearCache();
 
-    $projectRoot = dirname(__DIR__) . '/fixtures/mcp-config-ide';
+    $projectRoot = dirname(__DIR__) . '/cms';
 
     $config = KirbyMcpConfig::load($projectRoot);
 

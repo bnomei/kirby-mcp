@@ -114,6 +114,82 @@ it('reads page content by bare uuid (without page:// prefix) via runtime CLI', f
     }
 });
 
+it('requires payloadValidatedWithFieldSchemas before updating page content', function (): void {
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+
+    // Without payloadValidatedWithFieldSchemas, update should fail with guidance
+    $result = $tools->updatePageContent(
+        id: 'home',
+        data: ['headline' => 'Test'],
+        confirm: true,
+    );
+
+    expect($result)->toHaveKey('ok', false);
+    expect($result)->toHaveKey('needsSchemaValidation', true);
+    expect($result)->toHaveKey('schemaRefs');
+    expect($result['schemaRefs'])->toContain('kirby://fields/update-schema');
+    expect($result['schemaRefs'])->toContain('kirby://field/{type}/update-schema');
+});
+
+it('returns dry-run preview when confirm=false for page content update', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new RuntimeTools();
+    $install = $tools->runtimeInstall(force: true);
+    $commandsRoot = $install['commandsRoot'];
+
+    try {
+        // With payloadValidatedWithFieldSchemas but without confirm, should get dry-run preview
+        $result = $tools->updatePageContent(
+            id: 'home',
+            data: ['headline' => 'Dry Run Test'],
+            payloadValidatedWithFieldSchemas: true,
+            confirm: false,
+        );
+
+        expect($result)->toHaveKey('ok', false);
+        expect($result)->toHaveKey('needsConfirm', true);
+        expect($result)->toHaveKey('updatedKeys');
+        expect($result['updatedKeys'])->toContain('headline');
+        expect($result)->toHaveKey('page');
+        expect($result['page'])->toHaveKey('id', 'home');
+    } finally {
+        foreach ($install['installed'] as $relativePath) {
+            $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+
+        foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
+        ] as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+
+            $remaining = array_diff($entries, ['.', '..']);
+            if ($remaining === []) {
+                rmdir($dir);
+            }
+        }
+    }
+});
+
 it('updates page content via runtime CLI (confirm=true) and restores fixture', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();
@@ -135,6 +211,7 @@ it('updates page content via runtime CLI (confirm=true) and restores fixture', f
         $update = $tools->updatePageContent(
             id: 'home',
             data: ['headline' => 'MCP Test Headline'],
+            payloadValidatedWithFieldSchemas: true,
             confirm: true,
         );
 
@@ -144,9 +221,11 @@ it('updates page content via runtime CLI (confirm=true) and restores fixture', f
         expect($read)->toHaveKey('ok', true);
         expect($read['content']['headline'] ?? null)->toBe('MCP Test Headline');
 
+        // Test passing JSON string - edge case handling
         $updateJsonString = $tools->updatePageContent(
             id: 'home',
-            data: ['{"headline":"MCP Test Headline (JSON string)"}'],
+            data: ['{"headline":"MCP Test Headline (JSON string)"}'], // @phpstan-ignore-line
+            payloadValidatedWithFieldSchemas: true,
             confirm: true,
         );
 

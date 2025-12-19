@@ -65,7 +65,8 @@
     ],
     "cms:install-fixtures": [
       "bash tests/fixture/install.sh config",
-      "bash tests/fixture/install.sh site/plugins/mcp-test"
+      "bash tests/fixture/install.sh site/plugins/mcp-test",
+      "bash tests/fixture/install.sh .kirby-mcp"
     ],
     "cms:plainkit": [
       "@cms:patch-kirby-helpers",

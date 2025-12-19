@@ -1576,7 +1576,7 @@ PHP;
         }
 
         try {
-            $data = fread($handle, max(0, $maxBytes));
+            $data = fread($handle, max(1, $maxBytes));
             return is_string($data) ? $data : null;
         } finally {
             fclose($handle);

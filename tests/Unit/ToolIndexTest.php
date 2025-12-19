@@ -113,7 +113,7 @@ it('indexes tools and resources via #[McpToolIndex]', function (): void {
             array_keys(PanelReferenceIndex::FIELD_TYPES),
         ),
         array_map(
-            static fn (string $type): string => 'kirby://field/' . $type . '/content',
+            static fn (string $type): string => 'kirby://field/' . $type . '/update-schema',
             array_keys(PanelReferenceIndex::FIELD_TYPES),
         ),
     );

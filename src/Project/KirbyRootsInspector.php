@@ -27,8 +27,13 @@ final class KirbyRootsInspector
             timeoutSeconds: 30,
         );
 
+        // Only attempt to parse valid CLI output; if command failed, return empty roots
+        $roots = $cliResult->exitCode === 0 && $cliResult->stdout !== ''
+            ? KirbyRoots::fromCliOutput($cliResult->stdout)
+            : new KirbyRoots([]);
+
         return new KirbyRootsInspectionResult(
-            roots: KirbyRoots::fromCliOutput($cliResult->stdout),
+            roots: $roots,
             cliResult: $cliResult,
         );
     }

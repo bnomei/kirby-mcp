@@ -75,8 +75,14 @@ final class KirbyCliRunner
         }
 
         $startDir = is_dir($projectRoot) ? $projectRoot : dirname($projectRoot);
-        $current = realpath($startDir) ?: $startDir;
+        $resolved = realpath($startDir);
+        // realpath returns false on failure or a non-empty absolute path on success
+        $current = is_string($resolved) ? $resolved : $startDir;
         $current = rtrim($current, DIRECTORY_SEPARATOR);
+
+        if ($current === '') {
+            return null;
+        }
 
         while ($current !== '') {
             $candidate = $current . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'kirby';

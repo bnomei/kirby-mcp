@@ -13,7 +13,7 @@ resolve_dest() {
   local rel="$1"
 
   case "$rel" in
-    site/*|content/*|media/*|storage/*|public/*|kirby/*|.kirby-mcp/*)
+    site/*|content/*|media/*|storage/*|public/*|kirby/*|.kirby-mcp|.kirby-mcp/*)
       printf '%s\n' "$cms_root/$rel"
       ;;
     *)

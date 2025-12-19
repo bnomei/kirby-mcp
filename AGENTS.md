@@ -45,6 +45,7 @@ Note: `tests/cms/` intentionally has no scoped `AGENTS.md` (it’s a generated f
 
 - Prefer adding/adjusting tests alongside changes; keep unit tests deterministic.
 - Put fast logic tests in `tests/Unit`; use `tests/Integration` when Kirby runtime/fixtures are required.
+- **Fixture setup:** Run `composer cms:starterkit` before running the full test suite (tests expect the starterkit, not plainkit).
 
 ## Commit & Pull Request Guidelines
 

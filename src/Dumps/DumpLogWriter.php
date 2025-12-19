@@ -13,6 +13,12 @@ final class DumpLogWriter
     private const DEFAULT_KEEP_FRACTION = 0.5;
     private const ENV_DUMPS_ENABLED = 'KIRBY_MCP_DUMPS_ENABLED';
 
+    private static function secretMasker(string $projectRoot): SecretMasker
+    {
+        $patterns = KirbyMcpConfig::load($projectRoot)->dumpsSecretPatterns();
+        return new SecretMasker($patterns);
+    }
+
     public static function filePath(?string $projectRoot = null): string
     {
         $projectRoot = DumpProjectRootResolver::resolve($projectRoot);
@@ -66,8 +72,15 @@ final class DumpLogWriter
 
         $path = $dir . DIRECTORY_SEPARATOR . self::FILE_NAME;
 
+        // Apply secret masking before encoding to JSON
+        $masker = self::secretMasker($projectRoot);
+        $maskedEntry = $masker->maskRecursive($entry);
+        if (!is_array($maskedEntry)) {
+            $maskedEntry = $entry;
+        }
+
         $json = json_encode(
-            $entry,
+            $maskedEntry,
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR,
         );
 
