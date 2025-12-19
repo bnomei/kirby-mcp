@@ -53,7 +53,7 @@ kirby://glossary/collection
 ```
 
 ```text
-My home page renders incorrectly. Help me debug it with mcp_dump().
+My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.
 ```
 
 ```text

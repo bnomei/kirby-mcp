@@ -98,6 +98,13 @@ Tool/resource-first guidance:
 Runtime commands:
 - Some tools/resources require project-local Kirby MCP runtime CLI commands. If a response indicates `needsRuntimeInstall`, call `kirby_runtime_install` first.
 
+Debugging with `mcp_dump()` (render → inspect → fix):
+- Add temporary `mcp_dump()` calls in routes/controllers/templates/snippets to capture intermediate values during runtime execution (example: `mcp_dump($page)->label('home')->caller();`).
+- Reproduce via `kirby_render_page(...)` (it returns a `traceId` and ties `mcp_dump()` output to that render run).
+- Inspect dumps via `kirby_dump_log_tail(traceId=...)` (or call `kirby_dump_log_tail()` right after `kirby_render_page` to use the last `traceId`).
+- If reproducing via a real request/route instead of `kirby_render_page`, filter by `path` (example: `kirby_dump_log_tail(path='/about')`).
+- Remove temporary `mcp_dump()` instrumentation after verification.
+
 Prompts:
 - Use MCP prompts (e.g. `kirby_project_tour`, `kirby_performance_audit`) when you want a structured, repeatable workflow.
 - If your client doesn't support MCP prompts yet, use the fallback resources: `kirby://prompts` and `kirby://prompt/{name}` (e.g. `kirby://prompt/kirby_project_tour`).
