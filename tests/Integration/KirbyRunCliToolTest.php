@@ -49,6 +49,22 @@ it('blocks write-capable commands unless allowWrite=true', function (): void {
     expect($result['exitCode'])->toBeNull();
 });
 
+it('does not allow mcp:* write wrappers via kirby_run_cli_command by default', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $result = (new CliTools())->runCliCommand(command: 'mcp:page:update', allowWrite: true);
+
+    expect($result['ok'])->toBeFalse();
+    expect($result['policy']['matchedAllow'])->toBeNull();
+    expect($result['policy']['matchedAllowWrite'])->toBeNull();
+    expect($result['message'])->toContain('Command not allowed by default');
+    expect($result['exitCode'])->toBeNull();
+});
+
 it('extracts marked JSON when running an mcp:* command', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();

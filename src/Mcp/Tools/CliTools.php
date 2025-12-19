@@ -63,7 +63,7 @@ final class CliTools
     )]
     #[McpTool(
         name: 'kirby_run_cli_command',
-        description: 'Run a Kirby CLI command and return raw stdout/stderr + exit code. Commands are guarded by an allowlist (built-in + optional .kirby-mcp/mcp.json); set allowWrite=true for write-capable commands (e.g. make:* or mcp:*). Prefer dedicated MCP resources/tools for common tasks (e.g. `kirby://roots`, `kirby://commands`, `kirby://cli/command/{command}`, `kirby://config/{option}`, `kirby://blueprint/{encodedId}`, `kirby://page/content/{encodedIdOrUuid}`).',
+        description: 'Run a Kirby CLI command and return raw stdout/stderr + exit code. Commands are guarded by an allowlist (built-in + optional .kirby-mcp/mcp.json); set allowWrite=true for write-capable commands (e.g. make:*). Prefer dedicated MCP resources/tools for common tasks (e.g. `kirby://roots`, `kirby://commands`, `kirby://cli/command/{command}`, `kirby://config/{option}`, `kirby://blueprint/{encodedId}`, `kirby://page/content/{encodedIdOrUuid}`). See `kirby://tool-examples` for safe usage patterns.',
         annotations: new ToolAnnotations(
             title: 'Run Kirby CLI Command',
             readOnlyHint: false,

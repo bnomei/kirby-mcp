@@ -88,6 +88,7 @@ Tool/resource-first guidance:
 - Prefer MCP resources for read-only context (project info/roots/composer, tool index, blueprints, page content) when your client supports them.
 - IMPORTANT: Immediately after `kirby_init`, discover available MCP resources and resource templates by calling `list_mcp_resources` and `list_mcp_resource_templates` next.
 - Use `kirby://...` resources and resource templates first; only fall back to `kirby_search`, `kirby_online` or the open web when a relevant MCP resource/template is missing.
+- Use `kirby://tool-examples` for safe, copy-ready inputs when a tool requires strict data shapes or confirm flows.
 - Panel reference resources (fields/sections): `kirby://fields`, `kirby://field/{type}`, `kirby://sections`, `kirby://section/{type}` (example: `kirby://field/text`).
 - If the request involves page “render/rendering” or page “content”, prefer the dedicated tools (`kirby_render_page`, `kirby_read_page_content`, `kirby_update_page_content`) instead of guessing from templates/content files.
 - If the request involves Kirby config values/options, prefer the config resource (`kirby://config/{option}`) instead of calling `kirby_run_cli_command` with `mcp:config:get`.

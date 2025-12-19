@@ -23,5 +23,6 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 ## Guardrails
 - Treat tool names, parameter schemas, and `kirby://...` URIs as public API; changes must be reflected in tests + docs.
 - Any write-capable tool/command must be explicitly gated (allowlist + confirmation) and reviewed for abuse paths.
+- Keep `kirby_run_cli_command` defaults minimal; prefer dedicated tools/resources over broad allowlist patterns (especially for `mcp:*` runtime wrappers).
 - Return structured data; avoid `echo`/side effects from tools/resources.
 - All tool calls (except `kirby_init`) are init-guarded by `RequireInitForToolsHandler` and must prompt the client to call `kirby_init` first.

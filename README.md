@@ -26,11 +26,11 @@ Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples
 
 ## Copy-paste prompt examples
 
-Use these once your MCP client is connected to the server.
+Use these once your MCP client is connected to the server. The parenthetical hints show likely MCP tools/resources (not part of the prompt).
 
-```text
-Use the Kirby MCP to make a plan to... build a contact form page.
-```
+**Planning & content**
+
+- `Use the Kirby MCP to make a plan to... build a contact form page.` (likely: `kirby_roots`, `kirby_blueprint_read`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_render_page`, `kirby_dump_log_tail`, `kirby://config/{option}`)
 
 <details>
 <summary>Agent response example:</summary>
@@ -49,37 +49,54 @@ Here’s a Kirby MCP–driven plan for a new contact form page in this project:
 
 </details>
 
-```text
-Append " with AI" to the title of the home page with Kirby MCP.
-```
+- `Append " with AI" to the title of the home page with Kirby MCP.` (tool: `kirby_update_page_content`; likely: `kirby_read_page_content`)
+- `Show me the fields available on the home page blueprint and what they do using the MCP.` (tool: `kirby_blueprint_read`; likely: `kirby_blueprints_index`)
+- `Show me the current content of the home page.` (tool: `kirby_read_page_content`)
 
-```text
-Show me the fields available on the home page blueprint and what they do using the MCP.
-```
+**Debug & tinker**
 
-```text
-kirby search for collection filtering
-```
+- `My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.` (tool: `kirby_render_page`, `kirby_dump_log_tail`; likely: `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_models_index`)
+- `kirby MCP tinker $site->index()->count()` (tool: `kirby_eval`)
 
-```text
-kirby search online for panel permissions
-```
+**Search & docs**
 
-```text
-kirby://config/debug
-```
+- `kirby search for collection filtering` (tool: `kirby_search`)
+- `kirby search online for panel permissions` (tool: `kirby_online`)
 
-```text
-kirby://glossary/collection
-```
+**Inventory (runtime + filesystem)**
 
-```text
-My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.
-```
+- `list blueprint ids loaded at runtime` (tool: `kirby_blueprints_loaded`)
+- `list blueprints (ids only)` (tool: `kirby_blueprints_index`)
+- `list templates` (tool: `kirby_templates_index`)
+- `list snippets` (tool: `kirby_snippets_index`)
+- `list collections` (tool: `kirby_collections_index`)
+- `list controllers` (tool: `kirby_controllers_index`)
+- `list models` (tool: `kirby_models_index`)
+- `list plugins` (tool: `kirby_plugins_index`)
+- `list routes` (tool: `kirby_routes_index`)
+- `show kirby roots` (tool: `kirby_roots`)
 
-```text
-kirby MCP tinker $site->index()->count()
-```
+**Project & runtime**
+
+- `kirby init` (tool: `kirby_init`)
+- `install kirby mcp runtime commands` (tool: `kirby_runtime_install`)
+- `check kirby mcp runtime status` (tool: `kirby_runtime_status`)
+- `kirby info` (tool: `kirby_info`)
+- `kirby composer audit` (tool: `kirby_composer_audit`)
+- `kirby version` (tool: `kirby_cli_version`)
+- `run kirby cli command uuid:duplicates` (tool: `kirby_run_cli_command`)
+- `clear mcp cache` (tool: `kirby_cache_clear`)
+- `what mcp tool should I use to list plugins?` (tool: `kirby_tool_suggest`)
+
+**IDE helpers**
+
+- `ide helper status` (tool: `kirby_ide_helpers_status`)
+- `generate ide helpers` (tool: `kirby_generate_ide_helpers`)
+
+**Resource shortcuts**
+
+- `kirby://config/debug` (resource: `kirby://config/{option}`)
+- `kirby://glossary/collection` (resource: `kirby://glossary/{term}`)
 
 ## IDE helpers (optional, for humans)
 

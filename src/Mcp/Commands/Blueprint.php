@@ -53,7 +53,20 @@ final class Blueprint extends RuntimeCommand
             return;
         }
 
-        $id = trim($id);
+        try {
+            $id = self::normalizeBlueprintId(trim($id));
+        } catch (\InvalidArgumentException $exception) {
+            self::emit($cli, [
+                'ok' => false,
+                'id' => $id,
+                'error' => [
+                    'class' => $exception::class,
+                    'message' => $exception->getMessage(),
+                    'code' => 0,
+                ],
+            ]);
+            return;
+        }
 
         try {
             $blueprintsRoot = $kirby->root('blueprints');
@@ -80,6 +93,35 @@ final class Blueprint extends RuntimeCommand
                 'error' => self::errorArray($exception, self::traceForCli($cli, $exception)),
             ]);
         }
+    }
+
+    private static function normalizeBlueprintId(string $id): string
+    {
+        if ($id === '') {
+            throw new \InvalidArgumentException('Blueprint id must not be empty.');
+        }
+
+        if (str_contains($id, "\0")) {
+            throw new \InvalidArgumentException('Blueprint id must not contain null bytes.');
+        }
+
+        if (preg_match('/\\s/u', $id) === 1) {
+            throw new \InvalidArgumentException('Blueprint id must not contain whitespace.');
+        }
+
+        if (str_starts_with($id, '/') || str_starts_with($id, '\\')) {
+            throw new \InvalidArgumentException('Blueprint id must be relative (must not start with a slash).');
+        }
+
+        $id = str_replace('\\', '/', $id);
+
+        foreach (explode('/', $id) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                throw new \InvalidArgumentException('Blueprint id contains invalid path segments.');
+            }
+        }
+
+        return $id;
     }
 
     /**

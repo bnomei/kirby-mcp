@@ -31,7 +31,6 @@ final class KirbyCliAllowlistPolicy
      */
     public const DEFAULT_ALLOW_WRITE = [
         'make:*',
-        'mcp:*',
         'clear:*',
     ];
 

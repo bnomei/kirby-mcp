@@ -54,7 +54,9 @@
     "test": "php -d auto_prepend_file=tests/prepend.php vendor/bin/pest",
     "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
     "format": "pint",
-    "mcp": "bin/kirby-mcp"
+    "mcp": "bin/kirby-mcp",
+    "cms:plainkit": "rm -rf tests/cms && vendor/bin/kirby install:kit plainkit tests/cms",
+    "cms:starterkit": "rm -rf tests/cms && vendor/bin/kirby install:kit starterkit tests/cms"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
