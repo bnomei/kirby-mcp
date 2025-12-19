@@ -1,7 +1,0 @@
-label: Category
-type: radio
-options: query
-query:
-  fetch: site.children.published
-  text: "{{ page.year }} - {{ page.title.upper }}"
-  value: "{{ page.slug }}"

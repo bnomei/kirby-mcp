@@ -1,4 +1,0 @@
-label: Category
-type: multiselect
-options: query
-query: site.children.published

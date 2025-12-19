@@ -50,6 +50,7 @@ Note: `tests/cms/` intentionally has no scoped `AGENTS.md` (it’s a fixture san
 
 - Commit history is minimal; use descriptive, imperative messages (optionally `feat:`, `fix:`, `chore:`).
 - PRs include: what/why, how to test (`composer test`), and any user-visible changes (CLI output or docs).
+- Keep `CHANGELOG.md`, `SECURITY.md`, and `CONTRIBUTING.md` updated when policies or releases change.
 - Run `composer format` before pushing; CI may auto-fix styling with Pint.
 
 ## Security & Configuration

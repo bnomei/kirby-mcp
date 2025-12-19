@@ -1,16 +1,18 @@
 * text=auto eol=lf
 
 # Keep the Composer dist lean (Packagist respects export-ignore)
+/.tmp export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.github export-ignore
 /.phpunit.cache export-ignore
 /.phpstan.cache export-ignore
-/knowledge export-ignore
 /tests export-ignore
-/stubs export-ignore
 
-/PLAN.md export-ignore
+/CONTRIBUTING.md export-ignore
+/SECURITY.md export-ignore
+AGENTS.md export-ignore
+PLAN.md export-ignore
 /composer.lock export-ignore
 /phpunit.xml export-ignore
 /phpstan.neon.dist export-ignore
@@ -23,3 +25,4 @@
 /package-lock.json export-ignore
 /pnpm-lock.yaml export-ignore
 /yarn.lock export-ignore
+/.phpactor.json export-ignore

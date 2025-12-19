@@ -1,7 +1,0 @@
-blueprint: page
-
-fields:
-  mytext:
-    type: text
-  other:
-    type: textarea

@@ -18,5 +18,6 @@ Keep GitHub Actions fast, reproducible, and aligned with local `composer` script
 ## Guardrails
 
 - Avoid auto-commit loops (Pint action + auto-commit).
+- Prefer `github.ref` on push workflows and guard with `if: github.actor != 'github-actions[bot]'`.
 - Keep secrets out of logs; pin action versions.
 - Don’t add network-dependent tests or long-running steps.

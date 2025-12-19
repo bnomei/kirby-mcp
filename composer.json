@@ -48,8 +48,7 @@
     ],
     "exclude-from-classmap": [
       "tests/cms/",
-      "tests/fixture/",
-      "tests/fixtures/"
+      "tests/fixture/"
     ]
   },
   "bin": [
@@ -58,7 +57,7 @@
   "scripts": {
     "test": "php -d auto_prepend_file=tests/prepend.php vendor/bin/pest",
     "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
-    "format": "pint",
+    "format": "vendor/bin/pint",
     "mcp": "bin/kirby-mcp",
     "cms:patch-kirby-helpers": [
       "sed -i.bak 's/function dump(/function xdump(/g' vendor/getkirby/cms/config/helpers.php",

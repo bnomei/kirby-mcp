@@ -1,6 +1,0 @@
-label: Price
-type: number
-min: -50
-max: 250
-step: .01
-before: €

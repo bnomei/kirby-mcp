@@ -1,7 +1,0 @@
-label: Text
-type: textarea
-buttons:
-  - bold
-  - '|'
-  - link
-  - email
