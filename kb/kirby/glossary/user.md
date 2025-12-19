@@ -31,7 +31,7 @@ In templates/routes/controllers, you typically obtain the current user via `$kir
 
 ## MCP: Inspect/verify
 
-- Use `kirby_eval` to safely check what “current user” means in *this* runtime context:
+- Use `kirby_eval` to safely check what “current user” means in _this_ runtime context:
   - example: `return kirby()->user() ? kirby()->user()->email() : null;`
 - Inspect role blueprints with `kirby_blueprints_index` and `kirby://blueprint/users%2F<role>`.
 - If a prompt is about “why can’t this user do X”, inspect the role + permissions:
@@ -49,4 +49,3 @@ In templates/routes/controllers, you typically obtain the current user via `$kir
 - https://getkirby.com/docs/reference/objects/cms/user
 - https://getkirby.com/docs/guide/users
 - https://getkirby.com/docs/guide/users/roles
-

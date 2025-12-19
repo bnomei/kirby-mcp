@@ -10,6 +10,7 @@ use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\DumpState;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
@@ -350,7 +351,7 @@ final class RuntimeTools
     )]
     #[McpTool(
         name: 'kirby_update_page_content',
-        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`; it uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. PREREQUISITE: Read `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`; it uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
         annotations: new ToolAnnotations(
             title: 'Update Page Content',
             readOnlyHint: false,
@@ -361,6 +362,7 @@ final class RuntimeTools
     public function updatePageContent(
         string $id,
         array $data,
+        bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,
         bool $validate = false,
         ?string $language = null,
@@ -373,6 +375,18 @@ final class RuntimeTools
             return [
                 'ok' => false,
                 'message' => 'id must not be empty.',
+            ];
+        }
+
+        if ($payloadValidatedWithFieldSchemas !== true) {
+            return [
+                'ok' => false,
+                'needsSchemaValidation' => true,
+                'message' => 'Before updating, read kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
+                'schemaRefs' => [
+                    'kirby://fields/update-schema',
+                    'kirby://field/{type}/update-schema',
+                ],
             ];
         }
 
@@ -497,6 +511,22 @@ final class RuntimeTools
 
         /** @var array<string, mixed> $response */
         $response = $result->payload;
+
+        if (isset($response['blueprints']) && is_array($response['blueprints'])) {
+            foreach ($response['blueprints'] as $index => $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+
+                if (!is_array($entry['fieldSchemas'] ?? null)) {
+                    $entry['fieldSchemas'] = is_array($entry['data'] ?? null)
+                        ? FieldSchemaHelper::fromBlueprintData($entry['data'])
+                        : [];
+                }
+
+                $response['blueprints'][$index] = $entry;
+            }
+        }
         $response['cliMeta'] = $result->cliMeta();
 
         if ($debug === true) {

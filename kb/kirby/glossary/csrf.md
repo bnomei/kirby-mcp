@@ -46,4 +46,3 @@ if (csrf($token) !== true) {
 
 - https://getkirby.com/docs/reference/templates/helpers/csrf
 - https://getkirby.com/docs/guide/sessions
-

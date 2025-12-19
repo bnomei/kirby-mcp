@@ -1,22 +1,27 @@
 # Scenario: Dynamic Open Graph images via `.png` content representation
 
 ## Goal
+
 Generate Open Graph (`og:image`) images dynamically per page using a `.png` content representation like:
+
 - `article.png` for `article` pages
 
 ## Inputs to ask for
+
 - Which template(s) should get dynamic OG images
 - Desired dimensions (Open Graph default: `1200×628`)
 - Text and branding elements to render (title, logo, colors)
 - Available PHP extensions on the server (GD is required for the cookbook approach)
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Ensure the base template exists (content representations need a base template):
   - `kirby_templates_index`
 - Validate the HTML head output: `kirby_render_page`
 
 ## Implementation steps
+
 1. Add a `.png` representation template:
    - `site/templates/<template>.png.php` (e.g. `article.png.php`)
 2. Generate an image using GD (canvas, colors, text, optional logo).
@@ -26,6 +31,7 @@ Generate Open Graph (`og:image`) images dynamically per page using a `.png` cont
 ## Examples (cookbook pattern)
 
 ### `og:image` head markup
+
 ```php
 <?php
 /**
@@ -44,7 +50,9 @@ Generate Open Graph (`og:image`) images dynamically per page using a `.png` cont
 ```
 
 ### Minimal `.png` representation (sketch)
+
 `site/templates/article.png.php`
+
 ```php
 <?php
 /**
@@ -68,6 +76,7 @@ imagedestroy($canvas);
 ```
 
 ## Verification
+
 - Open the `.png` URL directly and confirm it returns an image.
 - View page source and confirm `og:image` resolves to the correct URL.
 - Share URL in a social preview/debugger (platform-dependent) if available.
@@ -79,6 +88,7 @@ imagedestroy($canvas);
 - kirby://glossary/content-representation
 
 ## Links
+
 - Cookbook: Dynamic Open Graph images: https://getkirby.com/docs/cookbook/content-representations/dynamic-og-images
 - Guide: Content representations: https://getkirby.com/docs/guide/templates/content-representations
 - Quicktip: OpenGraph: https://getkirby.com/docs/quicktips/opengraph

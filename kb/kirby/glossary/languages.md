@@ -39,4 +39,3 @@
 
 - https://getkirby.com/docs/reference/objects/cms/languages
 - https://getkirby.com/docs/guide/languages
-

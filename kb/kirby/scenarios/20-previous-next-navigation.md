@@ -1,9 +1,11 @@
 # Scenario: Add previous/next navigation links
 
 ## Goal
+
 Add “previous/next” links between pages in a collection (common: blog articles).
 
 ## Inputs to ask for
+
 - Which scope to navigate:
   - all siblings
   - listed only / unlisted only
@@ -11,16 +13,19 @@ Add “previous/next” links between pages in a collection (common: blog articl
 - Where links should appear (article template, listing, both)
 
 ## Internal tools/resources to use
+
 - Find templates/snippets: `kirby_templates_index`, `kirby_snippets_index`
 - Render and inspect: `kirby_render_page`
 
 ## Implementation steps
+
 1. Decide which navigation helpers to use (`prev/next` vs `prevListed/nextListed`, etc.).
 2. Add guard checks with `hasPrev*()`/`hasNext*()` before rendering links.
 
 ## Examples
 
 ### Navigate through all pages
+
 ```php
 <?php
 /**
@@ -40,6 +45,7 @@ Add “previous/next” links between pages in a collection (common: blog articl
 ```
 
 ### Navigate through listed pages only
+
 ```php
 <?php
 /**
@@ -59,6 +65,7 @@ Add “previous/next” links between pages in a collection (common: blog articl
 ```
 
 ## Verification
+
 - Render a few neighboring pages and confirm the link targets match the intended order.
 
 ## Glossary quick refs
@@ -67,4 +74,5 @@ Add “previous/next” links between pages in a collection (common: blog articl
 - kirby://glossary/snippet
 
 ## Links
+
 - Cookbook: Previous / Next navigation: https://getkirby.com/docs/cookbook/navigation/previous-next

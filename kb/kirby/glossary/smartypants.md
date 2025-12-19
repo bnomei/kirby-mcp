@@ -46,4 +46,3 @@ SmartyPants is a typographic “prettyfier”: it converts plain ASCII punctuati
 - https://getkirby.com/docs/reference/system/options/smartypants
 - https://getkirby.com/docs/guide/content/text-formatting
 - https://getkirby.com/docs/reference/plugins/components/smartypants
-

@@ -48,4 +48,3 @@ Kirby generates image thumbnails (“thumbs”) on the fly when you call image m
 - https://getkirby.com/docs/reference/system/options/thumbs
 - https://getkirby.com/docs/reference/objects/cms/file/thumb
 - https://getkirby.com/docs/reference/plugins/components/thumb
-

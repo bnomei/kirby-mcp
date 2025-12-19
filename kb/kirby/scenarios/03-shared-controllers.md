@@ -1,21 +1,26 @@
 # Scenario: Share controller data (site controller + shared controllers)
 
 ## Goal
+
 Reduce duplication across controllers by:
+
 - putting global variables in the site controller
 - composing controllers for “post type” variants (video/image/quote, etc.)
 
 ## Inputs to ask for
+
 - Which templates/controllers should share data
 - What is truly global (belongs in `site.php`) vs shared only by a subset
 - Any variant naming scheme (e.g. `post-video`, `article.video`)
 
 ## Internal tools/resources to use
+
 - Find current controllers: `kirby_controllers_index`
 - Confirm controller root path: `kirby://roots` (or `kirby_roots`)
 - Verify output doesn’t error: `kirby_render_page`
 
 ## Implementation steps
+
 1. Global/shared across all templates:
    - add `site/controllers/site.php` and return shared variables
 2. Shared across a subset:
@@ -26,6 +31,7 @@ Reduce duplication across controllers by:
 ## Examples
 
 ### Site controller (global defaults)
+
 `site/controllers/site.php`
 
 ```php
@@ -39,6 +45,7 @@ return function ($site) {
 ```
 
 ### Base controller (shared by post variants)
+
 `site/controllers/post.php`
 
 ```php
@@ -52,6 +59,7 @@ return function ($page) {
 ```
 
 ### Variant controller (compose/extend base)
+
 `site/controllers/post-video.php`
 
 ```php
@@ -69,6 +77,7 @@ return function ($page, $pages, $site, $kirby) {
 ```
 
 ## Verification
+
 - Render pages using each variant template and confirm:
   - shared variables exist everywhere you expect
   - variant-only variables don’t leak into unrelated templates
@@ -80,6 +89,7 @@ return function ($page, $pages, $site, $kirby) {
 - kirby://glossary/roots
 
 ## Links
+
 - Cookbook: Shared controllers: https://getkirby.com/docs/cookbook/development-deployment/shared-controllers
 - Quicktip: Keep your code DRY: https://getkirby.com/docs/quicktips/keep_your_code_dry
 - Guide: Controllers (site controller + merging): https://getkirby.com/docs/guide/templates/controllers

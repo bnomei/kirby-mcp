@@ -52,6 +52,8 @@ Template usage:
 - Inspect real stored values with `kirby_read_page_content` (or `kirby://page/content/{encodedIdOrUuid}`) and locate the structure field’s raw YAML.
 - Confirm parsing behavior via `kirby_eval`:
   - example: `return page('home')->links()->toStructure()->toArray();`
+- For storage format + update payload guidance:
+  - `kirby://field/structure/update-schema`
 
 ## Related terms
 
@@ -65,4 +67,3 @@ Template usage:
 - https://getkirby.com/docs/reference/panel/fields/structure
 - https://getkirby.com/docs/reference/templates/field-methods/to-structure
 - https://getkirby.com/docs/cookbook/content-structure/structured-field-content
-

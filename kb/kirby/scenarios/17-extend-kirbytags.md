@@ -1,22 +1,27 @@
 # Scenario: Reuse/extend existing KirbyTags (custom tag wrappers)
 
 ## Goal
+
 Create custom KirbyTags that reuse the implementation of existing tags (e.g. `image`) while:
+
 - wrapping the HTML in extra markup
 - adding attributes (like `srcset`)
 - tweaking output via string replacement
 
 ## Inputs to ask for
+
 - Which original tag to extend (`image`, etc.)
 - New tag name (e.g. `custom-image`, `imageset`)
 - Desired markup/attribute changes
 
 ## Internal tools/resources to use
+
 - Confirm plugin path: `kirby://roots` (or `kirby_roots`)
 - Inspect plugins: `kirby_plugins_index`
 - Render a page containing the tag: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create a plugin (or add to an existing one).
 2. Read the original tag definition from `Kirby\\Text\\KirbyTag::$types[...]`.
 3. Register a new tag under `tags` using the original `attr` and/or `html` callables.
@@ -24,6 +29,7 @@ Create custom KirbyTags that reuse the implementation of existing tags (e.g. `im
 ## Examples
 
 ### Wrap the original `image` output
+
 `site/plugins/custom-tags/index.php`
 
 ```php
@@ -48,6 +54,7 @@ Kirby::plugin('your/plugin', [
 ```
 
 ## Verification
+
 - Use the custom tag in content (KirbyText) and confirm it renders.
 
 ## Glossary quick refs
@@ -57,5 +64,6 @@ Kirby::plugin('your/plugin', [
 - kirby://glossary/roots
 
 ## Links
+
 - Quicktip: Reusing KirbyTags: https://getkirby.com/docs/quicktips/extending-kirbytags
 - Reference: KirbyTags: https://getkirby.com/docs/reference/text/kirbytags

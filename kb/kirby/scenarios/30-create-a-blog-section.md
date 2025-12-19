@@ -1,17 +1,21 @@
 # Scenario: Create a blog section (blog index + article pages)
 
 ## Goal
+
 Create a standard “Blog” section:
+
 - a parent page `blog` that lists articles
 - child pages (articles) with an article template
 
 ## Inputs to ask for
+
 - Blog page id/slug (usually `blog`)
 - Article fields (text, date, cover image, tags, author, …)
 - Listing requirements (sort order, pagination, excerpts, featured items)
 - Whether articles should have multiple template variants (see `22-custom-post-types.md`)
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Inventory templates/snippets/controllers/blueprints:
   - `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`
@@ -19,6 +23,7 @@ Create a standard “Blog” section:
 - Validate rendering: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create page types:
    - `blog` (parent) and `article` (child)
 2. Add templates:
@@ -34,6 +39,7 @@ Create a standard “Blog” section:
 ## Examples (from the cookbook recipe)
 
 ### Blog template: list articles
+
 ```php
 <?php
 /**
@@ -54,6 +60,7 @@ Create a standard “Blog” section:
 ```
 
 ### Article template: simple “back” link
+
 ```php
 <?php
 /**
@@ -67,6 +74,7 @@ Create a standard “Blog” section:
 ```
 
 ## Verification
+
 - Create a blog page and a few listed article children.
 - Render `/blog` and an article page and confirm both templates load correctly.
 
@@ -78,6 +86,7 @@ Create a standard “Blog” section:
 - kirby://glossary/pagination
 
 ## Links
+
 - Cookbook: Create a blog: https://getkirby.com/docs/cookbook/content-structure/create-a-blog
 - Guide: Templates basics: https://getkirby.com/docs/guide/templates/basics
 - Guide: Controllers: https://getkirby.com/docs/guide/templates/controllers

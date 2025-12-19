@@ -90,6 +90,7 @@ Tool/resource-first guidance:
 - Use `kirby://...` resources and resource templates first; only fall back to `kirby_search`, `kirby_online` or the open web when a relevant MCP resource/template is missing.
 - Use `kirby://tool-examples` for safe, copy-ready inputs when a tool requires strict data shapes or confirm flows.
 - Panel reference resources (fields/sections): `kirby://fields`, `kirby://field/{type}`, `kirby://sections`, `kirby://section/{type}` (example: `kirby://field/text`).
+- Content field storage guides: `kirby://fields/update-schema` and `kirby://field/{type}/update-schema` (example: `kirby://field/blocks/update-schema`).
 - If the request involves page “render/rendering” or page “content”, prefer the dedicated tools (`kirby_render_page`, `kirby_read_page_content`, `kirby_update_page_content`) instead of guessing from templates/content files.
 - If the request involves Kirby config values/options, prefer the config resource (`kirby://config/{option}`) instead of calling `kirby_run_cli_command` with `mcp:config:get`.
 - If the request involves IDE/DX or “types”, call `kirby_ide_helpers_status` to check missing template/snippet PHPDoc `@var` hints and whether any helper files look stale.
@@ -98,6 +99,10 @@ Tool/resource-first guidance:
 
 Runtime commands:
 - Some tools/resources require project-local Kirby MCP runtime CLI commands. If a response indicates `needsRuntimeInstall`, call `kirby_runtime_install` first.
+
+## Before Updates
+- Always read current content with `kirby_read_page_content`.
+- Before constructing `kirby_update_page_content` payloads, read `kirby://field/{type}/update-schema` for each field type involved and set `payloadValidatedWithFieldSchemas=true`.
 
 Debugging with `mcp_dump()` (render → inspect → fix):
 - Add temporary `mcp_dump()` calls in routes/controllers/templates/snippets to capture intermediate values during runtime execution (example: `mcp_dump($page)->label('home')->caller();`).

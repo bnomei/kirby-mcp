@@ -1,0 +1,43 @@
+<?php
+
+declare(strict_types=1);
+
+use Bnomei\KirbyMcp\Mcp\Resources\ContentFieldResources;
+use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
+use Bnomei\KirbyMcp\Support\StaticCache;
+use Mcp\Exception\ResourceReadException;
+
+it('lists bundled Kirby content field guides as MCP resources', function (): void {
+    $resource = new ContentFieldResources();
+    $markdown = $resource->contentFieldsList();
+
+    expect($markdown)->toContain('kirby://field/text/update-schema');
+    expect($markdown)->toContain('kirby://field/blocks/update-schema');
+    expect($markdown)->not()->toContain('kirby://field/PLAN/update-schema');
+});
+
+it('reads a bundled content field guide by type', function (): void {
+    $resource = new ContentFieldResources();
+    $markdown = $resource->contentField('text');
+
+    $expected = file_get_contents(dirname(__DIR__, 2) . '/kb/content/fields/text.md');
+    expect($expected)->toBeString()->not()->toBe('');
+
+    expect($markdown)->toBe($expected);
+});
+
+it('validates content field types as slugs', function (): void {
+    $resource = new ContentFieldResources();
+
+    expect(fn () => $resource->contentField('bad slug'))->toThrow(ResourceReadException::class);
+    expect(fn () => $resource->contentField('../text'))->toThrow(ResourceReadException::class);
+});
+
+it('shares the KB document cache with the kb search tool', function (): void {
+    StaticCache::clear();
+
+    $resource = new ContentFieldResources();
+    $resource->contentFieldsList();
+
+    expect(StaticCache::get(KbDocuments::CACHE_KEY))->toBeArray();
+});

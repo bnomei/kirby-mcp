@@ -7,10 +7,10 @@ use Bnomei\KirbyMcp\Mcp\Tools\KbTools;
 it('searches the local Kirby knowledge base with fuzzy matching', function (): void {
     $tools = new KbTools();
 
-    $data = $tools->search('config options', limit: 50);
+    $data = $tools->search('placeholders template', limit: 50);
 
-    expect($data)->toHaveKey('normalizedQuery', 'config options');
-    expect($data)->toHaveKey('needles', ['config', 'options']);
+    expect($data)->toHaveKey('normalizedQuery', 'placeholders template');
+    expect($data)->toHaveKey('needles', ['placeholders', 'template']);
     expect($data)->toHaveKey('results');
     expect($data['results'])->toBeArray();
 
@@ -24,8 +24,8 @@ it('searches the local Kirby knowledge base with fuzzy matching', function (): v
 
     expect($config)->toBeArray();
     expect($config['score'] ?? null)->toBe(2);
-    expect($config['matchedNeedles'] ?? null)->toContain('config');
-    expect($config['matchedNeedles'] ?? null)->toContain('options');
+    expect($config['matchedNeedles'] ?? null)->toContain('placeholders');
+    expect($config['matchedNeedles'] ?? null)->toContain('template');
 
     expect($data)->toHaveKey('documents');
     expect($data['documents'])->toBeArray();
@@ -34,7 +34,7 @@ it('searches the local Kirby knowledge base with fuzzy matching', function (): v
     expect($data['document'])->toHaveKey('markdown');
     expect($data['document']['markdown'])->toBeString()->not()->toBe('');
 
-    $typo = $tools->search('confg, optons', limit: 50);
+    $typo = $tools->search('placeholers templte', limit: 50);
     $files = array_map(static fn (array $row): string => (string) ($row['file'] ?? ''), $typo['results'] ?? []);
     expect($files)->toContain('kb/kirby/scenarios/33-use-placeholders-str-template.md');
 });

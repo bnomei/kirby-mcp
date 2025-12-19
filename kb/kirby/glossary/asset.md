@@ -10,8 +10,8 @@ Important: `asset()` can access arbitrary filesystem paths, so you should never 
 
 - “Reference `/assets/...`” means: use static URLs or `asset('assets/...')->url()` if you need an object.
 - “Difference between asset and file” means:
-  - *asset*: arbitrary filesystem file (not managed in the Panel as content)
-  - *file*: Kirby content file attached to a page/site/user
+  - _asset_: arbitrary filesystem file (not managed in the Panel as content)
+  - _file_: Kirby content file attached to a page/site/user
 
 ## Variants / aliases
 

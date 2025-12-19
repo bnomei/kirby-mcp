@@ -1,12 +1,15 @@
 # Scenario: Filter collections (pages/files/users) safely
 
 ## Goal
+
 Filter Kirby collections (most commonly `Pages`) based on:
+
 - field values (`filterBy()`)
 - more complex logic (`filter()` with a callback)
 - multi-value fields like tags (`in` operator + separator)
 
 ## Inputs to ask for
+
 - What you are filtering (pages, files, users)
 - Where the collection comes from (e.g. `$page->children()->listed()`)
 - Whether it’s a named collection (e.g. `collection('articles')`)
@@ -14,6 +17,7 @@ Filter Kirby collections (most commonly `Pages`) based on:
 - Whether missing values should be excluded (avoid errors on empty fields)
 
 ## Internal tools/resources to use
+
 - Confirm paths/roots: `kirby://roots` (or `kirby_roots`)
 - If the base set is a named collection: `kirby_collections_index`
 - Verify field names/types quickly:
@@ -22,6 +26,7 @@ Filter Kirby collections (most commonly `Pages`) based on:
 - Validate output: `kirby_render_page` (render the listing page)
 
 ## Implementation steps
+
 1. Build the base collection first (keep it readable):
    - e.g. `$items = page('projects')->children()->listed();`
 2. Prefer `filterBy()` for simple cases (faster, more declarative).
@@ -33,18 +38,21 @@ Filter Kirby collections (most commonly `Pages`) based on:
 ## Examples
 
 ### Basic: filter by a single-value field
+
 ```php
 $projects = page('projects')->children()->listed();
 $featured = $projects->filterBy('featured', true);
 ```
 
 ### Date logic: items after “now”
+
 ```php
 $events = page('events')->children()->listed();
 $upcoming = $events->filterBy('date', 'date >', time());
 ```
 
 ### Multi-value field: related siblings by shared tags
+
 ```php
 $related = $page->siblings(false)->filterBy(
     'tags',
@@ -55,6 +63,7 @@ $related = $page->siblings(false)->filterBy(
 ```
 
 ### Filter by template (or exclude templates)
+
 ```php
 $articles = page('blog')->children()->listed()->filterBy('template', 'article');
 
@@ -65,6 +74,7 @@ $events = page('events')
 ```
 
 ## Verification
+
 - Render the page that outputs the filtered collection and confirm:
   - expected count
   - no errors when fields are missing/empty
@@ -77,6 +87,7 @@ $events = page('events')
 - kirby://glossary/roots
 
 ## Links
+
 - Cookbook: Filtering collections: https://getkirby.com/docs/cookbook/collections/filtering
 - Reference: `$pages->filterBy()`: https://getkirby.com/docs/reference/objects/pages/filter-by
 - Reference: `$pages->filter()`: https://getkirby.com/docs/reference/objects/pages/filter

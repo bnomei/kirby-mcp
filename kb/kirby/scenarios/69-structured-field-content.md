@@ -1,21 +1,26 @@
 # Scenario: Structured field content (`yaml()` vs `toStructure()`)
 
 ## Goal
+
 Render and manipulate data from:
+
 - `structure` fields (recommended: `toStructure()`)
 - fields stored as YAML in content files (`yaml()`)
 
 ## Inputs to ask for
+
 - Field type (`structure`, textarea-as-yaml, etc.)
 - Desired output (list, table, grouped)
 - Whether items need validation/sorting/filtering
 
 ## Internal tools/resources to use
+
 - Inspect blueprints: `kirby://blueprint/{encodedId}`
 - Inspect real content values: `kirby://page/content/{encodedIdOrUuid}`
 - Validate output: `kirby_render_page`
 
 ## Implementation steps
+
 1. For `structure` fields:
    - use `$page->field()->toStructure()` and iterate items
 2. For YAML stored in plain fields:
@@ -25,6 +30,7 @@ Render and manipulate data from:
 ## Examples (quicktip snippets)
 
 ### YAML array
+
 ```php
 <?php
 /**
@@ -37,6 +43,7 @@ $addresses = $page->addresses()->yaml();
 ```
 
 ### Structure objects
+
 ```php
 <?php
 /**
@@ -52,6 +59,7 @@ $addresses = $page->addresses()->yaml();
 ```
 
 ## Verification
+
 - Render the template and confirm each structure entry is output as expected.
 - Confirm empty/invalid YAML doesn’t throw errors (add guards if needed).
 
@@ -63,5 +71,6 @@ $addresses = $page->addresses()->yaml();
 - kirby://glossary/blueprint
 
 ## Links
+
 - Quicktip: Structured field content: https://getkirby.com/docs/quicktips/structured-field-content
 - Reference: Structure field: https://getkirby.com/docs/reference/panel/fields/structure

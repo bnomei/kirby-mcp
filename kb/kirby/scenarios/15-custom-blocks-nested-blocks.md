@@ -1,20 +1,24 @@
 # Scenario: Create custom Blocks (incl. nested blocks) via a plugin
 
 ## Goal
+
 Add custom block types for the `blocks` field, including nested blocks (block contains another blocks field).
 
 ## Inputs to ask for
+
 - Block type names (must be unique; avoid core block names like `text`, `heading`, …)
 - Fields for each block type
 - Whether you need Panel preview customization (JS/CSS) or default preview is fine
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Inspect plugins/snippets/blueprints: `kirby_plugins_index`, `kirby_snippets_index`, `kirby_blueprints_index`
 - Panel field reference: `kirby://field/blocks`
 - Render and inspect frontend output: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create a plugin folder, e.g. `site/plugins/faq-block/`.
 2. Add block blueprints:
    - `site/plugins/<plugin>/blueprints/blocks/<block>.yml`
@@ -26,6 +30,7 @@ Add custom block types for the `blocks` field, including nested blocks (block co
 ## Examples (FAQ block with nested Q/A blocks)
 
 ### Block blueprints
+
 `site/plugins/faq-block/blueprints/blocks/faq.yml`
 
 ```yaml
@@ -55,6 +60,7 @@ fields:
 ```
 
 ### Output snippets
+
 `site/plugins/faq-block/snippets/blocks/faq.php`
 
 ```php
@@ -91,6 +97,7 @@ fields:
 ```
 
 ### Plugin registration
+
 `site/plugins/faq-block/index.php`
 
 ```php
@@ -111,6 +118,7 @@ Kirby::plugin('your-project/faq-block', [
 ```
 
 ## Verification
+
 - Add a blocks field to a page blueprint and include your custom block types in `fieldsets`.
 - Create blocks in the Panel and confirm both Panel preview and frontend output are correct.
 
@@ -122,5 +130,6 @@ Kirby::plugin('your-project/faq-block', [
 - kirby://glossary/blueprint
 
 ## Links
+
 - Cookbook: Nested blocks: https://getkirby.com/docs/cookbook/content-structure/nested-blocks
 - Reference: Blocks field: https://getkirby.com/docs/reference/panel/fields/blocks

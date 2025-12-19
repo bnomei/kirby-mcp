@@ -46,4 +46,3 @@ If your project uses thumbnails heavily, the media folder is often where “wher
 - https://getkirby.com/docs/guide/files/resize-images-on-the-fly
 - https://getkirby.com/docs/reference/system/options/thumbs
 - https://getkirby.com/docs/reference/system/options/content#salt-for-drafts-and-media-files
-

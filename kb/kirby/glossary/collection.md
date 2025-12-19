@@ -4,8 +4,8 @@
 
 In Kirby, “collection” can mean two related things:
 
-1) A **collection object** (pages/files/users) that you can filter/sort/paginate.\n
-2) A **named collection** (a reusable query) that you define once and reuse across templates/snippets/controllers/plugins via `collection('name')`.
+1. A **collection object** (pages/files/users) that you can filter/sort/paginate.\n
+2. A **named collection** (a reusable query) that you define once and reuse across templates/snippets/controllers/plugins via `collection('name')`.
 
 Named collections are a clean way to centralize common queries (e.g. “latest articles”) and keep templates simple.
 

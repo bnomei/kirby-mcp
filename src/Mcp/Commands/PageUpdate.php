@@ -6,6 +6,7 @@ namespace Bnomei\KirbyMcp\Mcp\Commands;
 
 use Bnomei\KirbyMcp\Mcp\Support\PageResolver;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommand;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Kirby\CLI\CLI;
 use Throwable;
 
@@ -148,6 +149,14 @@ final class PageUpdate extends RuntimeCommand
             }
 
             $updatedKeys = array_keys($data);
+            $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($page->blueprint()->fields());
+            $schemaCheckReminder = [];
+            foreach ($updatedKeys as $fieldKey) {
+                $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
+                if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {
+                    $schemaCheckReminder[] = $schema;
+                }
+            }
 
             if ($confirm !== true) {
                 self::emit($cli, [
@@ -163,6 +172,7 @@ final class PageUpdate extends RuntimeCommand
                     'language' => $lang,
                     'validate' => $validate,
                     'updatedKeys' => $updatedKeys,
+                    'schemaCheckReminder' => $schemaCheckReminder,
                 ]);
                 return;
             }

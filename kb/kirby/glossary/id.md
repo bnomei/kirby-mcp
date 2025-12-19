@@ -4,7 +4,7 @@
 
 In Kirby, an “id” is the internal identifier used to find and reference models. For pages, the id is the **path in the site tree** (e.g. `blog/post`). For files, the id is also a string identifier (usually scoped to its parent model).
 
-The important distinction in multi-language setups: a page’s `id()` is *not translated*, while the page’s `uri()` can be translated.
+The important distinction in multi-language setups: a page’s `id()` is _not translated_, while the page’s `uri()` can be translated.
 
 ## In prompts (what it usually implies)
 
@@ -51,4 +51,3 @@ echo $page?->id();
 - https://getkirby.com/docs/reference/objects/cms/page/id
 - https://getkirby.com/docs/reference/objects/cms/file/id
 - https://getkirby.com/docs/reference/templates/helpers/page
-

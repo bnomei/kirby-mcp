@@ -50,4 +50,3 @@ permissions:
 
 - https://getkirby.com/docs/guide/users/roles
 - https://getkirby.com/docs/reference/objects/cms/role
-

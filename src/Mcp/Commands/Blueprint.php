@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Commands;
 
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommand;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Kirby\CLI\CLI;
 use Kirby\Cms\Blueprint as KirbyBlueprint;
 use Kirby\Data\Yaml;
@@ -85,6 +86,7 @@ final class Blueprint extends RuntimeCommand
                 'displayNameSource' => $displayNameSource,
                 'file' => $fileInfo,
                 'data' => $data,
+                'fieldSchemas' => FieldSchemaHelper::fromBlueprintData($data, true),
             ]);
         } catch (Throwable $exception) {
             self::emit($cli, [

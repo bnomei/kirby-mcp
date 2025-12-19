@@ -46,4 +46,3 @@ $pagination = $articles->pagination();
 ## Links
 
 - https://getkirby.com/docs/reference/objects/cms/pagination
-

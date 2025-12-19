@@ -25,8 +25,8 @@ fields:
     options: query
     query:
       fetch: site.index
-      text: "{{ page.title }}"
-      value: "{{ page.id }}"
+      text: '{{ page.title }}'
+      value: '{{ page.id }}'
 ```
 
 ## MCP: Inspect/verify

@@ -41,6 +41,8 @@ Rules:
 - Start with a small sample and stop on first unexpected result.
 - Apply in small batches; stop on first error.
 - If Kirby terminology is unclear, consult `kirby://glossary` and `kirby://glossary/{term}`.
+- For field storage/payload details, use `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
+- When writing via `kirby_update_page_content`, set `payloadValidatedWithFieldSchemas=true` after reviewing update schemas.
 TEXT;
 
         $user = sprintf(<<<'TEXT'

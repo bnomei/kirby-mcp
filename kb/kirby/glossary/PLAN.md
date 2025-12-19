@@ -5,6 +5,7 @@ We are creating a **new** set of knowledgebase documents as Markdown files under
 These docs are a **prompt-first glossary**: each file explains a single Kirby term (often something users write verbatim in prompts like `$page`, `$file`, “blueprint”, “snippet”, “Panel”, “KQL”) and shows how an agent can **verify/inspect it in the current project** using the Kirby MCP tools/resources in this repo.
 
 This is complementary to:
+
 - `knowledge/kirby/` (deeper, topic-oriented notes)
 - `kb/kirby/scenarios/` (task playbooks; out of scope here)
 
@@ -17,6 +18,7 @@ This is complementary to:
 ## Scope / non-goals
 
 ### In scope (code-first)
+
 - Core runtime concepts: `kirby()`, `site()`, `page()`, `$kirby`, `$site`, `$page`, `$file`
 - Objects & collections: `Kirby\Cms\Page`, `Pages`, `File`, `Files`, `Field`, `User`, …
 - Templates/snippets/controllers/models and their naming/resolution rules
@@ -26,6 +28,7 @@ This is complementary to:
 - CLI / DX concepts that show up in prompts: Kirby CLI commands, “roots”, IDE helper generation
 
 ### Out of scope (avoid)
+
 - Rewriting full Kirby documentation or listing every method/option
 - Generic PHP/HTML/CSS concepts not specific to Kirby
 - Rare or purely marketing terms unless they commonly appear in user prompts
@@ -44,6 +47,7 @@ Optional (later): add `kb/kirby/glossary/INDEX.md` as an alphabetical list of en
 ## Glossary entry format (what every file should contain)
 
 Each glossary doc should be short, operational, and tool-first:
+
 - **Meaning** (Kirby context, 3–8 sentences)
 - **In prompts** (what users usually mean when they say it)
 - **Variants / aliases** (plural forms, class names, helper functions, Panel vs frontend usage)
@@ -88,7 +92,7 @@ Each glossary doc should be short, operational, and tool-first:
    - `kirby://page/content/{encodedIdOrUuid}` (or `kirby_read_page_content`)
 5. Validate by rendering and inspecting runtime output:
    - `kirby_render_page` (HTML/JSON render with error capture)
-   - If you need to see intermediate values *during* rendering, add temporary `mcp_dump()` calls and inspect via `kirby_dump_log_tail(traceId=...)`
+   - If you need to see intermediate values _during_ rendering, add temporary `mcp_dump()` calls and inspect via `kirby_dump_log_tail(traceId=...)`
    - Use `kirby_eval` for small, read-only “what is this value?” checks (not for render-time tracing)
 6. Only drop down to raw CLI when needed:
    - `kirby://commands` + `kirby://cli/command/{command}`
@@ -120,10 +124,12 @@ We want broad discovery, then strong pruning to “high-signal for prompts”.
 ## Internal MCP tools/resources to link from entries (reference inventory)
 
 ### Session / context
+
 - Tools: `kirby_init`, `kirby_info`
 - Resources: `kirby://info`, `kirby://composer`, `kirby://roots`, `kirby://tools`
 
-### Project discovery (what exists in *this* project)
+### Project discovery (what exists in _this_ project)
+
 - Tools: `kirby_roots`
 - Tools: `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_models_index`
 - Tools: `kirby_blueprints_index`, `kirby_blueprints_loaded`, `kirby_blueprint_read`
@@ -131,20 +137,25 @@ We want broad discovery, then strong pruning to “high-signal for prompts”.
 - Tools: `kirby_plugins_index`
 
 ### Runtime inspection / verification
+
 - Tools: `kirby_render_page`, `kirby_dump_log_tail`, `kirby_routes_index`, `kirby_eval`
 - Helper: `mcp_dump()` (log values from routes/controllers/templates; read via `kirby_dump_log_tail`)
 - Tools: `kirby_read_page_content`, `kirby_update_page_content` (only when explicitly requested)
+- For content storage/payload guidance: `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`
 - Resource template: `kirby://page/content/{encodedIdOrUuid}`
 
 ### CLI discovery
+
 - Resource: `kirby://commands`
 - Resource template: `kirby://cli/command/{command}`
 - Tool: `kirby_run_cli_command`
 
 ### Official docs lookup (avoid manual browsing)
+
 - Tool: `kirby_online` (official Kirby site index + fetch `.md`)
 
 ### Local KB lookup (implementation detail; keep in mind)
+
 - Tool: `kirby_search` searches the bundled local KB under `kb/`
 - Plan: once the glossary is populated, extend/duplicate KB search to include `kb/kirby/glossary/`
 
@@ -160,6 +171,7 @@ We want broad discovery, then strong pruning to “high-signal for prompts”.
 ## Seed entry list (starting point, will be refined by crawling)
 
 Start with these terms because they show up constantly in prompts and code:
+
 - `page`
 - `site`
 - `kirby`

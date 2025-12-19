@@ -36,6 +36,8 @@ In templates, you typically convert a layout field to a `Layouts` collection wit
   - `kirby_blueprint_read` / `kirby://blueprint/{encodedId}`
 - Use the built-in Panel field reference to confirm options:
   - `kirby://field/layout`
+- For storage format + update payload guidance:
+  - `kirby://field/layout/update-schema`
 - Inspect real page content for the field value with `kirby_read_page_content`, then validate rendering with `kirby_render_page`.
 
 ## Related terms

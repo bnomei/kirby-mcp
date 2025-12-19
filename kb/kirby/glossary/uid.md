@@ -41,4 +41,3 @@ In practice: use `uid()` when you need a stable identifier and `slug()` when you
 
 - https://getkirby.com/docs/reference/objects/cms/page/uid
 - https://getkirby.com/docs/reference/objects/cms/page/slug
-

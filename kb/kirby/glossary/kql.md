@@ -4,7 +4,7 @@
 
 KQL is an optional Kirby plugin that provides a query interface for fetching content without writing backend code for each endpoint. It supports only a **non-destructive** subset of Kirby’s API and can be used with the same auth methods as the REST API.
 
-KQL can also be used without authentication, but that is only safe if *all* content is intended to be public.
+KQL can also be used without authentication, but that is only safe if _all_ content is intended to be public.
 
 ## In prompts (what it usually implies)
 

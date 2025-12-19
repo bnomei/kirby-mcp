@@ -45,6 +45,11 @@
     },
     "files": [
       "tests/dev-autoload.php"
+    ],
+    "exclude-from-classmap": [
+      "tests/cms/",
+      "tests/fixture/",
+      "tests/fixtures/"
     ]
   },
   "bin": [
@@ -55,8 +60,26 @@
     "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
     "format": "pint",
     "mcp": "bin/kirby-mcp",
-    "cms:plainkit": "rm -rf tests/cms && vendor/bin/kirby install:kit plainkit tests/cms",
-    "cms:starterkit": "rm -rf tests/cms && vendor/bin/kirby install:kit starterkit tests/cms"
+    "cms:patch-kirby-helpers": [
+      "sed -i.bak 's/function dump(/function xdump(/g' vendor/getkirby/cms/config/helpers.php",
+      "sed -i.bak 's/function e(/function xe(/g' vendor/getkirby/cms/config/helpers.php"
+    ],
+    "cms:install-fixtures": [
+      "bash tests/fixture/install.sh config",
+      "bash tests/fixture/install.sh site/plugins/mcp-test"
+    ],
+    "cms:plainkit": [
+      "@cms:patch-kirby-helpers",
+      "rm -rf tests/cms",
+      "vendor/bin/kirby install:kit plainkit tests/cms",
+      "@cms:install-fixtures"
+    ],
+    "cms:starterkit": [
+      "@cms:patch-kirby-helpers",
+      "rm -rf tests/cms",
+      "vendor/bin/kirby install:kit starterkit tests/cms",
+      "@cms:install-fixtures"
+    ]
   },
   "minimum-stability": "stable",
   "prefer-stable": true,

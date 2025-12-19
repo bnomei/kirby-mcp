@@ -32,6 +32,8 @@ Blocks are rendered via block snippets, usually in `site/snippets/blocks/<type>.
   - `kirby_blueprint_read` / `kirby://blueprint/{encodedId}`
 - Use the built-in Panel field reference to confirm options:
   - `kirby://field/blocks`
+- For storage format + update payload guidance:
+  - `kirby://field/blocks/update-schema`
 - Inspect real page content for the field value with `kirby_read_page_content`, then validate rendering with `kirby_render_page`.
 - If blocks are plugin-provided/customized, inspect plugins with `kirby_plugins_index` and consult `kirby://extension/blocks`.
 

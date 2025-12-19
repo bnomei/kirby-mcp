@@ -23,6 +23,7 @@ Kirby is file-based, so batch changes usually require scripted loops.
 ## Internal tools/resources to use
 
 - For small edits: `kirby_read_page_content` + `kirby_update_page_content` (requires runtime install + confirm)
+- For field payload shapes/merge rules: `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`
 - For large migrations: implement a temporary route as in the cookbook recipe
 - Confirm the temporary route exists (and later that it’s removed): `kirby_routes_index(patternContains='batch')` (requires `kirby_runtime_install`)
 - Validate changes by rendering: `kirby_render_page`

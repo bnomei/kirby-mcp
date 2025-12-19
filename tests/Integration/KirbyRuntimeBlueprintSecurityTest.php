@@ -59,4 +59,3 @@ it('rejects blueprint ids with path traversal segments in runtime mode', functio
         }
     }
 });
-

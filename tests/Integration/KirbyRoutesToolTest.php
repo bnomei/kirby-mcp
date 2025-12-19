@@ -57,7 +57,7 @@ it('indexes routes and reports their defining source (config vs plugin)', functi
         expect($pluginRoute)->toHaveKey('source.pluginId', 'mcp/test-routes');
         expect($pluginRoute)->toHaveKey('source.relativePath');
         expect((string) ($pluginRoute['source']['relativePath'] ?? ''))->toContain(
-            'site' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'mcp-test-routes' . DIRECTORY_SEPARATOR . 'index.php',
+            'site' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'mcp-test' . DIRECTORY_SEPARATOR . 'index.php',
         );
     } finally {
         foreach ($install['installed'] as $relativePath) {

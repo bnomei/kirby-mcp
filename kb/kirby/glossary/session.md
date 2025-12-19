@@ -44,4 +44,3 @@ $notice = $session->pull('notice');
 - https://getkirby.com/docs/reference/objects/session/session-data
 - https://getkirby.com/docs/reference/system/options/session
 - https://getkirby.com/docs/guide/sessions
-

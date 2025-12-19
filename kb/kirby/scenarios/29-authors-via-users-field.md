@@ -1,15 +1,18 @@
 # Scenario: Add authors via users + `users` field
 
 ## Goal
+
 Model “authors” using Kirby users (with a dedicated role/blueprint) and assign authors to content pages (e.g. articles) via the `users` field.
 
 ## Inputs to ask for
+
 - Single or multiple authors per page
 - Which author profile fields are needed (bio, avatar, website, socials)
 - Where author info should appear (article template, authors index page, both)
 - Whether the project uses UUIDs for users (default: yes)
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Inspect existing blueprints/templates:
   - `kirby_blueprints_index` + `kirby://blueprint/{encodedId}`
@@ -17,6 +20,7 @@ Model “authors” using Kirby users (with a dedicated role/blueprint) and assi
 - Validate output: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create a user blueprint for authors:
    - `site/blueprints/users/author.yml`
 2. Add a `users` field to the target page blueprint (e.g. `pages/article.yml`).
@@ -28,7 +32,9 @@ Model “authors” using Kirby users (with a dedicated role/blueprint) and assi
 ## Examples (cookbook pattern)
 
 ### User blueprint (role profile fields)
+
 `site/blueprints/users/author.yml`
+
 ```yaml
 title: Author
 fields:
@@ -41,7 +47,9 @@ fields:
 ```
 
 ### Page blueprint: select a single author
+
 `site/blueprints/pages/article.yml` (excerpt)
+
 ```yaml
 author:
   type: users
@@ -49,6 +57,7 @@ author:
 ```
 
 ### Template: render author block
+
 ```php
 <?php
 /**
@@ -70,6 +79,7 @@ author:
 ```
 
 ## Verification
+
 - Select an author in the Panel and confirm the content file stores a user UUID.
 - Render an article page and confirm author info appears without errors.
 
@@ -81,6 +91,7 @@ author:
 - kirby://glossary/template
 
 ## Links
+
 - Cookbook: Authors: https://getkirby.com/docs/cookbook/content-structure/authors
 - Reference: Users field: https://getkirby.com/docs/reference/panel/fields/users
 - Guide: Users: https://getkirby.com/docs/guide/users

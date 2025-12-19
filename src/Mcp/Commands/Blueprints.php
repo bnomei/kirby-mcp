@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Commands;
 
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommand;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Kirby\CLI\CLI;
 use Kirby\Cms\Blueprint;
 use Kirby\Data\Yaml;
@@ -221,11 +222,13 @@ final class Blueprints extends RuntimeCommand
                 $displayName = null;
                 $displayNameSource = null;
                 $dataError = null;
+                $fieldSchemas = [];
                 if ($withData === true) {
                     try {
                         $data = Blueprint::load($id);
                         [$displayName, $displayNameSource] = self::deriveDisplayName($id, $data, is_string($activeFile) ? $activeFile : null);
                         $dataCount++;
+                        $fieldSchemas = FieldSchemaHelper::fromBlueprintData($data, true);
                     } catch (Throwable $exception) {
                         $dataError = [
                             'class' => $exception::class,
@@ -239,6 +242,15 @@ final class Blueprints extends RuntimeCommand
                     }
                 } elseif ($withDisplayName === true) {
                     [$displayName, $displayNameSource] = self::deriveDisplayNameForListing($id, $extension, is_string($activeFile) ? $activeFile : null);
+
+                    try {
+                        $schemaData = Blueprint::load($id);
+                        if (is_array($schemaData)) {
+                            $fieldSchemas = FieldSchemaHelper::fromBlueprintData($schemaData, true);
+                        }
+                    } catch (Throwable) {
+                        // ignore schema extraction failures when data is not requested
+                    }
                 }
 
                 if ($idsOnly === true) {
@@ -267,6 +279,7 @@ final class Blueprints extends RuntimeCommand
                         'displayNameSource' => $displayNameSource,
                         'data' => $data,
                         'dataError' => $dataError,
+                        'fieldSchemas' => $fieldSchemas,
                     ];
                 }
             }

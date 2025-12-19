@@ -1,22 +1,27 @@
 # Scenario: Build navigation menus (main menu, submenu, breadcrumb)
 
 ## Goal
+
 Create reusable navigation snippets for common menu patterns:
+
 - main menu from listed pages
 - submenu from a page’s listed children
 - breadcrumb navigation
 
 ## Inputs to ask for
+
 - Which pages should appear (listed only, specific pages, nested menus)
 - Active state behavior (`isOpen()`, `isActive()`)
 - Accessibility/markup preferences (e.g. `aria-current`)
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Find existing snippets/templates: `kirby_snippets_index`, `kirby_templates_index`
 - Render and inspect: `kirby_render_page`
 
 ## Implementation steps
+
 1. Implement menus as snippets (`site/snippets/...`) so templates stay clean.
 2. Use `isOpen()` for “active trail” in menus; use `isActive()` for breadcrumb current item.
 3. Only render menus when items exist (`isNotEmpty()`).
@@ -24,6 +29,7 @@ Create reusable navigation snippets for common menu patterns:
 ## Examples
 
 ### Main menu (listed root pages)
+
 ```php
 <?php
 /**
@@ -45,6 +51,7 @@ Create reusable navigation snippets for common menu patterns:
 ```
 
 ### Submenu (children of current menu item)
+
 ```php
 <?php
 /**
@@ -64,6 +71,7 @@ Create reusable navigation snippets for common menu patterns:
 ```
 
 ### Breadcrumb
+
 ```php
 <?php
 /**
@@ -85,6 +93,7 @@ Create reusable navigation snippets for common menu patterns:
 ```
 
 ## Verification
+
 - Render multiple pages and confirm active states and breadcrumb trail are correct.
 
 ## Glossary quick refs
@@ -94,4 +103,5 @@ Create reusable navigation snippets for common menu patterns:
 - kirby://glossary/template
 
 ## Links
+
 - Cookbook: Menus: https://getkirby.com/docs/cookbook/navigation/menus

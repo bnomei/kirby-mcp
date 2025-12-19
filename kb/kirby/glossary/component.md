@@ -35,4 +35,3 @@ When debugging, a common first step is to check whether any plugin is overriding
 ## Links
 
 - https://getkirby.com/docs/reference/plugins/extensions/core-components
-

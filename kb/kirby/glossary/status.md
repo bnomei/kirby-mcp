@@ -3,6 +3,7 @@
 ## Meaning
 
 Kirby pages have three core states:
+
 - **Draft**: stored in a `_drafts` folder; not publicly accessible unless authenticated (or via secret draft link)
 - **Unlisted**: public, but not part of listed navigation/sorting
 - **Listed**: public and ordered (number prefix)

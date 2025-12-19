@@ -10,6 +10,7 @@ use Bnomei\KirbyMcp\Mcp\Completion\BlueprintIdCompletionProvider;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
@@ -151,6 +152,13 @@ final class BlueprintTools
                         }
 
                         /** @var array<string, mixed> $entry */
+                        $fieldSchemas = $entry['fieldSchemas'] ?? null;
+                        if (!is_array($fieldSchemas)) {
+                            $fieldSchemas = is_array($entry['data'] ?? null)
+                                ? FieldSchemaHelper::fromBlueprintData($entry['data'])
+                                : [];
+                        }
+                        $entry['fieldSchemas'] = $fieldSchemas;
                         $byId[$id] = IndexList::selectFields($entry, $fields, $id);
                     }
                 }
@@ -261,6 +269,9 @@ final class BlueprintTools
                     'displayNameSource' => $file->displayNameSource(),
                     'data' => $withData === true ? $file->data : null,
                     'dataError' => $dataError,
+                    'fieldSchemas' => is_array($file->data)
+                        ? FieldSchemaHelper::fromBlueprintData($file->data)
+                        : [],
                 ];
 
                 $blueprints[$id] = IndexList::selectFields($entry, $fields, $id);
@@ -399,6 +410,14 @@ final class BlueprintTools
                     'cliMeta' => $result->cliMeta(),
                 ]);
 
+                if (!is_array($response['fieldSchemas'] ?? null)) {
+                    if (is_array($response['data'] ?? null)) {
+                        $response['fieldSchemas'] = FieldSchemaHelper::fromBlueprintData($response['data']);
+                    } else {
+                        $response['fieldSchemas'] = [];
+                    }
+                }
+
                 if ($withData === false) {
                     unset($response['data']);
                 }
@@ -460,6 +479,9 @@ final class BlueprintTools
                     'extension' => null,
                 ],
                 'dataError' => $dataError,
+                'fieldSchemas' => is_array($file->data)
+                    ? FieldSchemaHelper::fromBlueprintData($file->data)
+                    : [],
             ];
 
             if ($withData === true) {

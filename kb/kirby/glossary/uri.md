@@ -42,4 +42,3 @@ This matters when you generate language-specific URLs or when you compare paths 
 ## Links
 
 - https://getkirby.com/docs/reference/objects/cms/page/uri
-

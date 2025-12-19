@@ -6,6 +6,7 @@ namespace Bnomei\KirbyMcp\Mcp\Commands;
 
 use Bnomei\KirbyMcp\Mcp\Support\PageResolver;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommand;
+use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Kirby\CLI\CLI;
 use Throwable;
 
@@ -68,6 +69,7 @@ final class PageContent extends RuntimeCommand
 
             $lang = is_string($language) && $language !== '' ? $language : null;
             $content = $page->content($lang)->toArray();
+            $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($page->blueprint()->fields(), true);
 
             $truncatedKeys = [];
             if ($maxChars > 0) {
@@ -78,6 +80,70 @@ final class PageContent extends RuntimeCommand
 
                     $content[$key] = substr($value, 0, $maxChars);
                     $truncatedKeys[] = $key;
+                }
+            }
+
+            $complexTypes = ['layout', 'blocks', 'structure'];
+            $presentComplex = [];
+            foreach ($complexTypes as $type) {
+                foreach ($fieldSchemas as $schema) {
+                    if (($schema['type'] ?? null) === $type) {
+                        $presentComplex[] = $type;
+                        break;
+                    }
+                }
+            }
+
+            $warningBlock = null;
+            if ($presentComplex !== []) {
+                $schemaRefs = array_map(
+                    static fn (string $type): string => 'kirby://field/' . $type . '/update-schema',
+                    $presentComplex,
+                );
+                $warningBlock = [
+                    'message' => 'WARNING: This page contains ' . implode('/', $presentComplex)
+                        . ' fields. Before updating, read: ' . implode(', ', $schemaRefs),
+                    'schemaRefs' => $schemaRefs,
+                    'fieldTypes' => $presentComplex,
+                ];
+            }
+
+            $beforeUpdateRead = [];
+            $beforeUpdateSeen = [];
+            $collectSchema = static function (array $schema) use (&$beforeUpdateRead, &$beforeUpdateSeen): void {
+                $schemaRef = $schema['_schemaRef']['updateSchema'] ?? null;
+                if (!is_string($schemaRef) || $schemaRef === '' || isset($beforeUpdateSeen[$schemaRef])) {
+                    return;
+                }
+
+                $beforeUpdateRead[] = $schemaRef;
+                $beforeUpdateSeen[$schemaRef] = true;
+            };
+
+            foreach ($fieldSchemas as $schema) {
+                if (!is_array($schema)) {
+                    continue;
+                }
+
+                $collectSchema($schema);
+
+                $nested = $schema['_nestedBlockFields'] ?? null;
+                if (!is_array($nested)) {
+                    continue;
+                }
+
+                foreach ($nested as $blockFields) {
+                    if (!is_array($blockFields)) {
+                        continue;
+                    }
+
+                    foreach ($blockFields as $nestedSchema) {
+                        if (!is_array($nestedSchema)) {
+                            continue;
+                        }
+
+                        $collectSchema($nestedSchema);
+                    }
                 }
             }
 
@@ -93,7 +159,10 @@ final class PageContent extends RuntimeCommand
                 'keys' => array_keys($content),
                 'truncatedKeys' => $truncatedKeys,
                 'content' => $content,
-                'warning' => 'Do not edit Kirby content files directly unless explicitly asked. Prefer the Panel or a safe tool like kirby_update_page_content.',
+                'fieldSchemas' => $fieldSchemas,
+                'warningBlock' => $warningBlock,
+                'BEFORE_UPDATE_READ' => $beforeUpdateRead,
+                'warning' => 'Do not edit Kirby content files directly unless explicitly asked. Prefer the Panel or a safe tool like kirby_update_page_content. For payload shapes, see kirby://field/{type}/update-schema.',
             ];
         } catch (Throwable $exception) {
             $payload = [

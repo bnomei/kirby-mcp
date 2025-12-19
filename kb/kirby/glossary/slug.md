@@ -49,4 +49,3 @@ If you need a stable, non-translated identifier across languages, use the pageâ€
 - https://getkirby.com/docs/reference/objects/cms/page/slug
 - https://getkirby.com/docs/reference/system/options/slugs
 - https://getkirby.com/docs/guide/languages
-

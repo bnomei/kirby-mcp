@@ -1,18 +1,22 @@
 # Scenario: Scaffold a new page type (template + blueprint + controller)
 
 ## Goal
+
 Add a new Kirby “page type” with:
+
 - a frontend template (PHP)
 - a Panel blueprint (YAML)
 - optional controller/model code for reusable logic
 
 ## Inputs to ask for
+
 - Page type/template name (lowercase; e.g. `event`, `project`, `article.video`)
 - Required fields (e.g. `headline`, `text`, `date`, `cover`, `gallery`)
 - Panel UI expectations (tabs? files section? subpages?)
 - Any existing page type to copy/extend
 
 ## Internal tools/resources to use
+
 - Discover project roots first: `kirby://roots` (or `kirby_roots`)
 - Inventory what already exists:
   - `kirby_templates_index`, `kirby_controllers_index`, `kirby_models_index`
@@ -22,6 +26,7 @@ Add a new Kirby “page type” with:
 - Validate rendering: `kirby_render_page`
 
 ## Implementation steps
+
 1. Resolve paths (don’t assume `site/`):
    - use `kirby://roots` and read `templates`, `controllers`, `models`, `blueprints`
 2. Check for name collisions:
@@ -40,6 +45,7 @@ Add a new Kirby “page type” with:
 ## Examples
 
 ### Minimal page blueprint
+
 `site/blueprints/pages/event.yml`
 
 ```yaml
@@ -70,6 +76,7 @@ tabs:
 ```
 
 ### Minimal template
+
 `site/templates/event.php`
 
 ```php
@@ -92,6 +99,7 @@ tabs:
 ```
 
 ### Optional controller (prepare variables)
+
 `site/controllers/event.php`
 
 ```php
@@ -105,6 +113,7 @@ return function ($page) {
 ```
 
 ## Verification
+
 - Render a page of that type:
   - `kirby_render_page` with `id` set to a page that uses the template, and `contentType: html`
 - Verify blueprint resolves and is valid YAML:
@@ -118,6 +127,7 @@ return function ($page) {
 - kirby://glossary/controller
 
 ## Links
+
 - Templates: https://getkirby.com/docs/guide/templates/basics
 - Controllers: https://getkirby.com/docs/guide/templates/controllers
 - Snippets: https://getkirby.com/docs/guide/templates/snippets

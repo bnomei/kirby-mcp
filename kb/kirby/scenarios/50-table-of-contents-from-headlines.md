@@ -1,21 +1,26 @@
 # Scenario: Generate a table of contents (ToC) from headlines
 
 ## Goal
+
 Generate a table of contents based on headings in:
+
 - KirbyText fields (textarea → `kt()`)
 - Blocks fields (extra pattern)
 
 ## Inputs to ask for
+
 - Which heading levels to include (`h2`, `h3`, …)
 - Whether editors should insert a `(toc)` placeholder or templates always render a ToC
 - Whether content is KirbyText, Blocks, or both
 
 ## Internal tools/resources to use
+
 - Inspect hooks/extensions: `kirby://hooks`, `kirby://extensions`
 - Inventory snippets/plugins: `kirby_snippets_index`, `kirby_plugins_index`
 - Validate rendering: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create a plugin that:
    - anchors headlines in output (hook or field method)
    - generates a headline collection for the ToC
@@ -25,7 +30,9 @@ Generate a table of contents based on headings in:
 ## Examples (cookbook patterns)
 
 ### Add anchored headlines (hook approach)
+
 `site/plugins/toc/index.php` (excerpt)
+
 ```php
 Kirby::plugin('acme/toc', [
   'hooks' => [
@@ -45,7 +52,9 @@ Kirby::plugin('acme/toc', [
 ```
 
 ### Anchor headlines (field method approach)
+
 If you register `anchorHeadlines` as a field method, you can do:
+
 ```php
 <?php
 /**
@@ -59,9 +68,11 @@ If you register `anchorHeadlines` as a field method, you can do:
 ```
 
 ### Placeholder pattern `(toc)` (conceptual)
+
 - use a `kirbytext:after` hook to replace `(toc)` with `snippet('toc', ...)`
 
 ## Verification
+
 - Add headings to a page and confirm:
   - headings become anchored (`id=...`)
   - ToC links jump to the correct sections
@@ -74,5 +85,6 @@ If you register `anchorHeadlines` as a field method, you can do:
 - kirby://glossary/field
 
 ## Links
+
 - Cookbook: Table of contents: https://getkirby.com/docs/cookbook/navigation/table-of-contents
 - Guide: Plugins: https://getkirby.com/docs/guide/plugins

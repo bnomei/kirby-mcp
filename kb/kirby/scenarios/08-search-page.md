@@ -1,9 +1,11 @@
 # Scenario: Create a search page (controller + template)
 
 ## Goal
+
 Add a dedicated search page with a query parameter (`?q=...`), display results, and paginate them.
 
 ## Inputs to ask for
+
 - Where search should run:
   - entire site (`$site->search`)
   - a section only (`page('blog')->search`)
@@ -11,11 +13,13 @@ Add a dedicated search page with a query parameter (`?q=...`), display results, 
 - Results per page and desired UI
 
 ## Internal tools/resources to use
+
 - Confirm roots: `kirby://roots` (or `kirby_roots`)
 - Check existing pages/templates/controllers: `kirby_templates_index`, `kirby_controllers_index`
 - Render and inspect: `kirby_render_page`
 
 ## Implementation steps
+
 1. Create a `search` content page (Panel or content folder).
 2. Add `site/templates/search.php` with the search form and results list.
 3. Add `site/controllers/search.php` to compute `$query`, `$results`, `$pagination`.
@@ -23,6 +27,7 @@ Add a dedicated search page with a query parameter (`?q=...`), display results, 
 ## Examples
 
 ### Controller
+
 `site/controllers/search.php`
 
 ```php
@@ -42,6 +47,7 @@ return function ($site) {
 ```
 
 ### Template (minimal)
+
 `site/templates/search.php`
 
 ```php
@@ -72,6 +78,7 @@ return function ($site) {
 ```
 
 ## Verification
+
 - Render with a query string (e.g. `...?q=test`) and confirm results appear.
 - Confirm pagination works for longer result sets.
 
@@ -83,5 +90,6 @@ return function ($site) {
 - kirby://glossary/pagination
 
 ## Links
+
 - Cookbook: Search: https://getkirby.com/docs/cookbook/collections/search
 - Reference: `$site->search()`: https://getkirby.com/docs/reference/objects/cms/site/search

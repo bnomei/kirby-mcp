@@ -1,20 +1,24 @@
 # Scenario: Reuse & extend blueprints with mixins (`extends`)
 
 ## Goal
+
 Reduce duplication across blueprints by factoring repeated parts into reusable “mixin” blueprints and composing them via `extends`.
 
 Common outcomes:
+
 - consistent SEO/meta fields across many page types
 - reusable page/file sections (e.g. “Articles” list)
 - reusable tab/layout structures
 
 ## Inputs to ask for
+
 - Which blueprint(s) to refactor (ids like `pages/article`, `pages/blog`, `site`, `files/...`)
 - Which parts are repeated (fields, field groups, sections, tabs, entire layout)
 - Where mixins should live (`site/blueprints/fields`, `sections`, `tabs`, `layouts`)
 - Any customization points (labels, query, status, hiding/unsetting fields)
 
 ## Internal tools/resources to use
+
 - Discover where blueprints are loaded from: `kirby_blueprints_index` (and optionally `kirby_blueprints_loaded`)
 - Read individual blueprints (including plugin overrides): `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`
 - Panel reference for building blocks:
@@ -22,6 +26,7 @@ Common outcomes:
 - Render for sanity: `kirby_render_page` (frontend) + open Panel manually for blueprint UI
 
 ## Implementation steps
+
 1. Identify duplication:
    - find repeated tabs/sections/fields across multiple blueprints
 2. Create mixin blueprints in the right folder:
@@ -40,6 +45,7 @@ Common outcomes:
 ## Examples
 
 ### Reuse a field blueprint
+
 `/site/blueprints/fields/dishes.yml`
 
 ```yaml
@@ -62,6 +68,7 @@ fields:
 ```
 
 ### Extend a mixin and override a property
+
 ```yaml
 fields:
   starters:
@@ -70,6 +77,7 @@ fields:
 ```
 
 ### Reuse a group of fields (`type: group`)
+
 `/site/blueprints/fields/meta.yml`
 
 ```yaml
@@ -91,6 +99,7 @@ sections:
 ```
 
 ### Reuse and extend a pages section
+
 `/site/blueprints/sections/articles.yml`
 
 ```yaml
@@ -110,6 +119,7 @@ sections:
 ```
 
 ### Reuse a tab mixin
+
 `/site/blueprints/tabs/seo.yml`
 
 ```yaml
@@ -154,6 +164,7 @@ fields:
 ```
 
 ## Verification
+
 - `kirby_blueprint_read` the target blueprint and confirm it resolves without errors.
 - In the Panel, open a page that uses the blueprint and confirm tabs/sections/fields render as expected.
 
@@ -165,5 +176,6 @@ fields:
 - kirby://glossary/section
 
 ## Links
+
 - Guide: Reusing & extending blueprints: https://getkirby.com/docs/guide/blueprints/extending-blueprints
 - Guide: Blueprint query language (for `query:` options): https://getkirby.com/docs/guide/blueprints/query-language

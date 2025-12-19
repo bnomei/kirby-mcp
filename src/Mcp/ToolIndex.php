@@ -202,5 +202,26 @@ final class ToolIndex
                 ];
             }
         }
+
+        if ($uriTemplate === 'kirby://field/{type}/update-schema') {
+            foreach (PanelReferenceIndex::FIELD_TYPES as $type => $label) {
+                $uri = 'kirby://field/' . $type . '/update-schema';
+
+                if (isset($items[$uri])) {
+                    continue;
+                }
+
+                $keywords = $baseKeywords;
+                $keywords[$type] = max($keywords[$type] ?? 0, 120);
+
+                $items[$uri] = [
+                    'kind' => 'resource_template',
+                    'name' => $uri,
+                    'title' => $label . ' update schema',
+                    'whenToUse' => $whenToUse,
+                    'keywords' => $keywords,
+                ];
+            }
+        }
     }
 }

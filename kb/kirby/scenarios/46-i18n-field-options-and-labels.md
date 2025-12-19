@@ -1,22 +1,27 @@
 # Scenario: Translate select options (and render labels, not raw values)
 
 ## Goal
+
 For option fields (select/radio/multiselect/tags), store stable keys in content files but display translated labels in:
+
 - the Panel
 - frontend templates
 
 ## Inputs to ask for
+
 - Single-language vs multi-language setup
 - Which fields need translated labels (`category`, `type`, etc.)
 - Where translations should live (language `translations`, config map, blueprint)
 
 ## Internal tools/resources to use
+
 - Inspect language setup: `kirby://config/languages`
 - Inspect blueprints and field options:
   - `kirby://blueprint/{encodedId}` / `kirby_blueprint_read`
 - Validate output: `kirby_render_page`
 
 ## Implementation steps
+
 1. In the blueprint, use stable keys (e.g. `design`, `web`) for option values.
 2. Choose one of these strategies to render the label:
    - config option map (`option('category-map')`)
@@ -27,6 +32,7 @@ For option fields (select/radio/multiselect/tags), store stable keys in content 
 ## Examples (cookbook patterns)
 
 ### Config map
+
 ```php
 // site/config/config.php
 return [
@@ -50,6 +56,7 @@ return [
 ```
 
 ### Language `translations` + `t()`
+
 ```php
 <?php
 /**
@@ -63,6 +70,7 @@ return [
 ```
 
 ### Read option labels from blueprint
+
 ```php
 <?php
 /**
@@ -77,6 +85,7 @@ echo $field['options'][$value] ?? $value;
 ```
 
 ## Verification
+
 - Switch language in the Panel and confirm option labels translate.
 - Confirm templates render labels instead of raw stored keys.
 
@@ -88,6 +97,7 @@ echo $field['options'][$value] ?? $value;
 - kirby://glossary/language
 
 ## Links
+
 - Cookbook: Fetching field options: https://getkirby.com/docs/cookbook/i18n/fetching-field-options
 - Guide: Languages: https://getkirby.com/docs/guide/languages
 - Reference: `t()` helper: https://getkirby.com/docs/reference/templates/helpers/t

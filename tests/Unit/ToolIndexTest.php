@@ -112,6 +112,10 @@ it('indexes tools and resources via #[McpToolIndex]', function (): void {
             static fn (string $type): string => 'kirby://field/' . $type,
             array_keys(PanelReferenceIndex::FIELD_TYPES),
         ),
+        array_map(
+            static fn (string $type): string => 'kirby://field/' . $type . '/content',
+            array_keys(PanelReferenceIndex::FIELD_TYPES),
+        ),
     );
 
     $unexpectedExtras = array_values(array_diff($extraInIndex, $allowedExtras));

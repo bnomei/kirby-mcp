@@ -49,7 +49,7 @@ Here’s a Kirby MCP–driven plan for a new contact form page in this project:
 
 </details>
 
-- `Append " with AI" to the title of the home page with Kirby MCP.` (tool: `kirby_update_page_content`; likely: `kirby_read_page_content`)
+- `Append " with AI" to the title of the home page with Kirby MCP.` (tool: `kirby_update_page_content`; likely: `kirby_read_page_content`, `kirby://field/text/update-schema`)
 - `Show me the fields available on the home page blueprint and what they do using the MCP.` (tool: `kirby_blueprint_read`; likely: `kirby_blueprints_index`)
 - `Show me the current content of the home page.` (tool: `kirby_read_page_content`)
 
@@ -173,7 +173,7 @@ Some capabilities require the runtime wrappers (installed via `vendor/bin/kirby-
 - `kirby_snippets_index` — index snippets, includes plugin-registered ones when runtime is installed
 - `kirby_templates_index` — index templates, includes plugin-registered ones when runtime is installed
 - `kirby_tool_suggest` — suggest the best next Kirby MCP tool/resource for a task
-- `kirby_update_page_content` — update page content, plus confirm
+- `kirby_update_page_content` — update page content, plus confirm (see `kirby://field/{type}/update-schema` for payload shapes)
 
 </details>
 
@@ -190,6 +190,7 @@ Resources (read-only):
 - `kirby://composer` — composer audit, scripts and quality tooling
 - `kirby://extensions` — Kirby plugin extensions list (links to `kirby://extension/{name}`)
 - `kirby://fields` — Kirby Panel field types list (links to `kirby://field/{type}`)
+- `kirby://fields/update-schema` — Kirby content field guides list (links to `kirby://field/{type}/update-schema`)
 - `kirby://glossary` — Kirby glossary terms list (links to `kirby://glossary/{term}`)
 - `kirby://hooks` — Kirby hook names list (links to `kirby://hook/{name}`)
 - `kirby://info` — project runtime info, composer audit and local environment detection
@@ -205,6 +206,7 @@ Resource templates (dynamic):
 - `kirby://config/{option}` — read a Kirby config option by dot path
 - `kirby://extension/{name}` — Kirby extension reference markdown from getkirby.com, e.g. `commands` or `darkroom-drivers`
 - `kirby://field/{type}` — Kirby Panel field reference markdown from getkirby.com, e.g. `blocks` or `email`
+- `kirby://field/{type}/update-schema` — bundled content field guide from `kb/content/fields/{type}.md`
 - `kirby://glossary/{term}` — read a bundled Kirby glossary entry by term, e.g. `api` or `kql`
 - `kirby://hook/{name}` — Kirby hook reference markdown from getkirby.com, e.g. `file.changeName:after` or `file-changename-after`
 - `kirby://page/content/{encodedIdOrUuid}` — read page content by URL-encoded id or uuid

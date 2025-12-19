@@ -33,6 +33,8 @@ These calls return a `Kirby\Content\Field` object, which you then transform/outp
   - example: `return $page->content()->get('image')->value();`
 - For Panel field types and their options, use the built-in docs resources:
   - `kirby://fields` and `kirby://field/{type}`
+- For storage format + update payload guidance, use:
+  - `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`
 
 ## Related terms
 

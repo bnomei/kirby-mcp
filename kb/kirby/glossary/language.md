@@ -46,4 +46,3 @@ echo $language->code();
 
 - https://getkirby.com/docs/reference/objects/cms/language
 - https://getkirby.com/docs/guide/languages
-
