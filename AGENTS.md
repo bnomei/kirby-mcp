@@ -15,7 +15,7 @@ When changing behavior in a scoped area, update that area’s `AGENTS.md` and an
 - `kb/AGENTS.md` – shipped knowledge base
 - `.github/workflows/AGENTS.md` – CI workflows
 
-Note: `tests/cms/` intentionally has no scoped `AGENTS.md` (it’s a fixture sandbox).
+Note: `tests/cms/` intentionally has no scoped `AGENTS.md` (it’s a generated fixture sandbox).
 
 ## Project Structure & Module Organization
 
@@ -23,8 +23,8 @@ Note: `tests/cms/` intentionally has no scoped `AGENTS.md` (it’s a fixture san
   `Docs/`, `Dumps/`, `Install/`, `Support/`.
 - `bin/kirby-mcp` – development entrypoint (published as `vendor/bin/kirby-mcp` via Composer).
 - `commands/mcp/` – Kirby CLI command wrappers installed into host projects by `kirby-mcp install`.
-- `kb/` – bundled markdown knowledge base; `knowledge/` – source material and notes.
-- `tests/` – Pest tests (`tests/Unit`, `tests/Integration`) with fixtures in `tests/cms` and `tests/fixtures`.
+- `kb/` – bundled markdown knowledge base.
+- `tests/` – Pest tests (`tests/Unit`, `tests/Integration`) with fixtures in `tests/fixture` and the generated Kirby site in `tests/cms`.
 
 ## Build, Test, and Development Commands
 

@@ -2,7 +2,7 @@
   "preset": "psr12",
   "exclude": [
     "tests/cms",
-    "tests/fixtures",
+    "tests/fixture",
     "vendor"
   ]
 }

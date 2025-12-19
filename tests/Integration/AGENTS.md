@@ -6,7 +6,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 
 ## System
 
-- Fixture Kirby site lives in `tests/cms/` (treated as test data).
+- Fixture Kirby site lives in `tests/cms/` (generated test data).
 - Use `cmsPath()` from `tests/Pest.php` to reference it.
 - Integration tests may invoke `bin/kirby-mcp` / Kirby CLI via the same runner used in production code.
 

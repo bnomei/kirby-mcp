@@ -10,7 +10,7 @@ Maintain the bundled Markdown knowledge base shipped with Kirby MCP (used by too
   - `kb/kirby/glossary/*.md` – short definitions (file name is the term slug).
   - `kb/kirby/scenarios/*.md` – longer how-to guides (`NN-title.md` keeps a stable order).
   - `kb/content/` – content creation guidance (field storage + update payloads).
-- `knowledge/` holds source material; `kb/` is the curated output.
+- `kb/` is the curated output for the shipped knowledge base.
 
 ## Workflows
 
