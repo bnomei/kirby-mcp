@@ -29,6 +29,10 @@ Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples
 Use these once your MCP client is connected to the server.
 
 ```text
+Use the Kirby MCP to make a plan to ...
+```
+
+```text
 Append " with AI" to the title of the home page with Kirby MCP.
 ```
 
