@@ -28,22 +28,36 @@ Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples
 
 Use these once your MCP client is connected to the server.
 
-### 1) Edit content
-
 ```text
 Append " with AI" to the title of the home page with Kirby MCP.
 ```
-
-### 2) Understand a blueprint
 
 ```text
 Show me the fields available on the home page blueprint and what they do using the MCP.
 ```
 
-### 3) Debug a render
+```text
+kirby search for collection filtering
+```
 
 ```text
-My home page renders incorrectly. Help me debug it.
+kirby search online for panel permissions
+```
+
+```text
+kirby://config/debug
+```
+
+```text
+kirby://glossary/collection
+```
+
+```text
+My home page renders incorrectly. Help me debug it with mcp_dump().
+```
+
+```text
+kirby MCP tinker $site->index()->count()
 ```
 
 ## IDE helpers (optional, for humans)
@@ -87,10 +101,11 @@ To remove everything:
 
 Some capabilities require the runtime wrappers (installed via `vendor/bin/kirby-mcp install`) because they query Kirby at runtime.
 
+> [!IMPORTANT]
+> `kirby_init` is required once per session before calling any other tool but the agent should figure this out automatically.
+
 <details>
 <summary>Tools</summary>
-
-Note: `kirby_init` is required once per session before calling any other tool.
 
 - `kirby_blueprint_read` — read a single blueprint by id
 - `kirby_blueprints_index` — index blueprints, includes plugin-registered ones when runtime is installed
@@ -125,6 +140,10 @@ Note: `kirby_init` is required once per session before calling any other tool.
 </details>
 
 <details>
+
+> [!TIP]
+> Call a resource to bring condensed knowledge into the current context of your agent.
+
 <summary>Resources</summary>
 
 Resources (read-only):
