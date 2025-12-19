@@ -10,18 +10,26 @@ final class KirbyRootsInspector
 {
     public function inspect(string $projectRoot, ?string $host = null): KirbyRoots
     {
+        return $this->inspectWithCli($projectRoot, $host)->roots;
+    }
+
+    public function inspectWithCli(string $projectRoot, ?string $host = null): KirbyRootsInspectionResult
+    {
         $env = [];
         if (is_string($host) && $host !== '') {
             $env['KIRBY_HOST'] = $host;
         }
 
-        $result = (new KirbyCliRunner())->run(
+        $cliResult = (new KirbyCliRunner())->run(
             projectRoot: $projectRoot,
             args: ['roots'],
             env: $env,
             timeoutSeconds: 30,
         );
 
-        return KirbyRoots::fromCliOutput($result->stdout);
+        return new KirbyRootsInspectionResult(
+            roots: KirbyRoots::fromCliOutput($cliResult->stdout),
+            cliResult: $cliResult,
+        );
     }
 }

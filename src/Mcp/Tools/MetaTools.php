@@ -22,7 +22,7 @@ final class MetaTools
      *   query: string|null,
      *   keywords: array<int, string>,
      *   initRecommended: bool,
-     *   suggestions: array<int, array{tool: string, score: int, title: string, whenToUse: string, matched: array<int, string>}>
+     *   suggestions: array<int, array{tool: string, name: string, kind: string, score: int, title: string, whenToUse: string, matched: array<int, string>}>
      * }
      */
     #[McpToolIndex(
@@ -38,9 +38,9 @@ final class MetaTools
     )]
     #[McpTool(
         name: 'kirby_tool_suggest',
-        description: 'Suggest the best Kirby MCP tool(s) for a task using a weighted keyword matcher. Use this when you are unsure which tool to call next.',
+        description: 'Suggest the best next Kirby MCP tool/resource for a task using a weighted keyword matcher. Suggestions can include tools, resources (`kirby://...`), and resource templates (`kirby://.../{param}`). Use this when you are unsure what to call/read next. Resource: `kirby://tools`.',
         annotations: new ToolAnnotations(
-            title: 'Suggest Tools',
+            title: 'Suggest Tools & Resources',
             readOnlyHint: true,
             openWorldHint: false,
         ),
@@ -85,6 +85,8 @@ final class MetaTools
 
             $scored[] = [
                 'tool' => $tool['name'],
+                'name' => $tool['name'],
+                'kind' => $tool['kind'],
                 'score' => $score,
                 'title' => $tool['title'],
                 'whenToUse' => $tool['whenToUse'],

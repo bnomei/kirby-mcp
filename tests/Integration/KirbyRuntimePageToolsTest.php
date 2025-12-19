@@ -32,7 +32,9 @@ it('reads home page content via runtime CLI', function (): void {
         }
 
         foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR),
         ] as $dir) {
@@ -89,7 +91,9 @@ it('reads page content by bare uuid (without page:// prefix) via runtime CLI', f
         }
 
         foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR),
         ] as $dir) {
@@ -139,6 +143,18 @@ it('updates page content via runtime CLI (confirm=true) and restores fixture', f
         $read = $tools->readPageContent(id: 'home');
         expect($read)->toHaveKey('ok', true);
         expect($read['content']['headline'] ?? null)->toBe('MCP Test Headline');
+
+        $updateJsonString = $tools->updatePageContent(
+            id: 'home',
+            data: ['{"headline":"MCP Test Headline (JSON string)"}'],
+            confirm: true,
+        );
+
+        expect($updateJsonString)->toHaveKey('ok', true);
+
+        $readJsonString = $tools->readPageContent(id: 'home');
+        expect($readJsonString)->toHaveKey('ok', true);
+        expect($readJsonString['content']['headline'] ?? null)->toBe('MCP Test Headline (JSON string)');
     } finally {
         if (is_string($original)) {
             file_put_contents($homeContentFile, $original);
@@ -152,7 +168,9 @@ it('updates page content via runtime CLI (confirm=true) and restores fixture', f
         }
 
         foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR),
         ] as $dir) {
@@ -202,7 +220,9 @@ it('lists loaded blueprints via runtime CLI', function (): void {
         }
 
         foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR),
         ] as $dir) {

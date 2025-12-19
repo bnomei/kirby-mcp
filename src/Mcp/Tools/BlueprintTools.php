@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
 use Bnomei\KirbyMcp\Blueprint\BlueprintScanner;
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\Completion\BlueprintIdCompletionProvider;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
-use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Support\IndexList;
 use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
@@ -68,81 +70,65 @@ final class BlueprintTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $blueprintsRoot = $runtime->root('blueprints', $projectRoot . '/site/blueprints') ?? ($projectRoot . '/site/blueprints');
 
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
-            $blueprintsRoot = $roots->get('blueprints') ?? ($projectRoot . '/site/blueprints');
+            $args = [RuntimeCommands::BLUEPRINTS];
+            if ($idsOnly === true) {
+                $args[] = '--ids-only';
+            } elseif ($withData === true) {
+                $args[] = '--with-data';
+            } else {
+                $args[] = '--with-display-name';
+            }
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprints.php';
+            if (is_string($type) && trim($type) !== '') {
+                $args[] = '--type=' . trim($type);
+            }
 
-            if (is_file($expectedCommandFile)) {
-                $env = [];
-                if (is_string($host) && trim($host) !== '') {
-                    $env['KIRBY_HOST'] = trim($host);
-                }
+            if (is_string($activeSource) && trim($activeSource) !== '') {
+                $args[] = '--active-source=' . trim($activeSource);
+            }
 
-                $args = ['mcp:blueprints'];
-                if ($idsOnly === true) {
-                    $args[] = '--ids-only';
-                } elseif ($withData === true) {
-                    $args[] = '--with-data';
-                } else {
-                    $args[] = '--with-display-name';
-                }
+            if ($overriddenOnly === true) {
+                $args[] = '--overridden-only';
+            }
 
-                if (is_string($type) && trim($type) !== '') {
-                    $args[] = '--type=' . trim($type);
-                }
+            if ($cursor > 0) {
+                $args[] = '--cursor=' . $cursor;
+            }
 
-                if (is_string($activeSource) && trim($activeSource) !== '') {
-                    $args[] = '--active-source=' . trim($activeSource);
-                }
+            if ($limit > 0) {
+                $args[] = '--limit=' . $limit;
+            }
 
-                if ($overriddenOnly === true) {
-                    $args[] = '--overridden-only';
-                }
+            if ($debug === true) {
+                $args[] = '--debug';
+            }
 
-                if ($cursor > 0) {
-                    $args[] = '--cursor=' . $cursor;
-                }
+            $result = (new RuntimeCommandRunner($runtime))->runMarkedJson(
+                expectedCommandRelativePath: RuntimeCommands::BLUEPRINTS_FILE,
+                args: $args,
+                timeoutSeconds: 60,
+            );
 
-                if ($limit > 0) {
-                    $args[] = '--limit=' . $limit;
-                }
-
-                if ($debug === true) {
-                    $args[] = '--debug';
-                }
-
-                $cliResult = (new KirbyCliRunner())->run(
-                    projectRoot: $projectRoot,
-                    args: $args,
-                    env: $env,
-                    timeoutSeconds: 60,
-                );
-
-                $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-                if (!is_array($payload)) {
-                    return [
-                        'ok' => false,
+            if ($result->installed === true) {
+                if (!is_array($result->payload)) {
+                    return $result->parseErrorResponse([
                         'mode' => 'runtime',
                         'projectRoot' => $projectRoot,
                         'host' => $host,
                         'blueprintsRoot' => $blueprintsRoot,
-                        'parseError' => 'Unable to parse JSON output from Kirby CLI command.',
-                        'cliMeta' => [
-                            'exitCode' => $cliResult->exitCode,
-                            'timedOut' => $cliResult->timedOut,
-                        ],
-                        'message' => $debug === true
-                            ? null
-                            : 'Retry with debug=true to include CLI stdout/stderr.',
-                        'cli' => $debug === true ? $cliResult->toArray() : null,
-                    ];
+                        'cliMeta' => $result->cliMeta(),
+                        'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                        'cli' => $debug === true ? $result->cli() : null,
+                    ]);
                 }
+
+                /** @var array<string, mixed> $payload */
+                $payload = $result->payload;
 
                 $list = $payload['blueprints'] ?? null;
                 $byId = [];
@@ -164,7 +150,8 @@ final class BlueprintTools
                             continue;
                         }
 
-                        $byId[$id] = $this->selectFields($entry, $fields, $id);
+                        /** @var array<string, mixed> $entry */
+                        $byId[$id] = IndexList::selectFields($entry, $fields, $id);
                     }
                 }
 
@@ -185,10 +172,7 @@ final class BlueprintTools
                     'pagination' => $payload['pagination'] ?? null,
                     'filters' => $payload['filters'] ?? null,
                     'errors' => $payload['errors'] ?? [],
-                    'cliMeta' => [
-                        'exitCode' => $cliResult->exitCode,
-                        'timedOut' => $cliResult->timedOut,
-                    ],
+                    'cliMeta' => $result->cliMeta(),
                 ];
 
                 if ($idsOnly === true) {
@@ -198,7 +182,7 @@ final class BlueprintTools
                 }
 
                 if ($debug === true) {
-                    $response['cli'] = $cliResult->toArray();
+                    $response['cli'] = $result->cli();
                 }
 
                 return $response;
@@ -230,33 +214,11 @@ final class BlueprintTools
                 $ids = [];
             }
 
-            $total = count($ids);
-            if ($cursor < 0) {
-                $cursor = 0;
-            }
-
-            if ($limit < 0) {
-                $limit = 0;
-            }
-
-            $pagedIds = $ids;
-            if ($cursor > 0 || $limit > 0) {
-                if ($cursor >= $total) {
-                    $pagedIds = [];
-                } elseif ($limit > 0) {
-                    $pagedIds = array_slice($ids, $cursor, $limit);
-                } else {
-                    $pagedIds = array_slice($ids, $cursor);
-                }
-            }
-
-            $returned = count($pagedIds);
-            $nextCursor = null;
-            $hasMore = false;
-            if ($limit > 0 && $cursor + $returned < $total) {
-                $nextCursor = $cursor + $returned;
-                $hasMore = true;
-            }
+            $pagination = IndexList::paginateIds($ids, $cursor, $limit);
+            $pagedIds = $pagination['ids'];
+            $paginationMeta = $pagination['pagination'];
+            $returned = $paginationMeta['returned'];
+            $total = $paginationMeta['total'];
 
             foreach ($pagedIds as $id) {
                 $file = $scan->blueprints[$id] ?? null;
@@ -301,7 +263,7 @@ final class BlueprintTools
                     'dataError' => $dataError,
                 ];
 
-                $blueprints[$id] = $this->selectFields($entry, $fields, $id);
+                $blueprints[$id] = IndexList::selectFields($entry, $fields, $id);
             }
 
             if ($idsOnly === false) {
@@ -321,14 +283,7 @@ final class BlueprintTools
                     'activeSource' => $activeSource,
                     'overriddenOnly' => $overriddenOnly,
                 ],
-                'pagination' => [
-                    'cursor' => $cursor,
-                    'limit' => $limit,
-                    'nextCursor' => $nextCursor,
-                    'hasMore' => $hasMore,
-                    'returned' => $returned,
-                    'total' => $total,
-                ],
+                'pagination' => $paginationMeta,
                 'counts' => [
                     'extensions' => 0,
                     'files' => $total,
@@ -378,7 +333,7 @@ final class BlueprintTools
     )]
     #[McpTool(
         name: 'kirby_blueprint_read',
-        description: 'Read a single Kirby blueprint by id (e.g. pages/home). Prefers runtime `kirby mcp:blueprint` (includes plugin-registered blueprints) and returns structured JSON. Use withData=false to omit the large data payload and avoid truncation. Set debug=true to include CLI stdout/stderr.',
+        description: 'Read a single Kirby blueprint by id (e.g. pages/home). Prefers runtime `kirby mcp:blueprint` (includes plugin-registered blueprints) and returns structured JSON. Use withData=false to omit the large data payload and avoid truncation. Set debug=true to include CLI stdout/stderr. Resource template: `kirby://blueprint/{encodedId}`.',
         annotations: new ToolAnnotations(
             title: 'Blueprint Read',
             readOnlyHint: true,
@@ -405,65 +360,43 @@ final class BlueprintTools
                 ];
             }
 
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $blueprintsRoot = $runtime->root('blueprints', $projectRoot . '/site/blueprints') ?? ($projectRoot . '/site/blueprints');
 
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
-            $blueprintsRoot = $roots->get('blueprints') ?? ($projectRoot . '/site/blueprints');
+            $args = [RuntimeCommands::BLUEPRINT, $id];
+            if ($debug === true) {
+                $args[] = '--debug';
+            }
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php';
+            $result = (new RuntimeCommandRunner($runtime))->runMarkedJson(
+                expectedCommandRelativePath: RuntimeCommands::BLUEPRINT_FILE,
+                args: $args,
+                timeoutSeconds: 60,
+            );
 
-            if (is_file($expectedCommandFile)) {
-                $env = [];
-                if (is_string($host) && trim($host) !== '') {
-                    $env['KIRBY_HOST'] = trim($host);
-                }
-
-                $args = ['mcp:blueprint', $id];
-                if ($debug === true) {
-                    $args[] = '--debug';
-                }
-
-                $cliResult = (new KirbyCliRunner())->run(
-                    projectRoot: $projectRoot,
-                    args: $args,
-                    env: $env,
-                    timeoutSeconds: 60,
-                );
-
-                $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-                if (!is_array($payload)) {
-                    return [
-                        'ok' => false,
+            if ($result->installed === true) {
+                if (!is_array($result->payload)) {
+                    return $result->parseErrorResponse([
                         'mode' => 'runtime',
                         'projectRoot' => $projectRoot,
                         'host' => $host,
                         'blueprintsRoot' => $blueprintsRoot,
                         'id' => $id,
-                        'parseError' => 'Unable to parse JSON output from Kirby CLI command.',
-                        'cliMeta' => [
-                            'exitCode' => $cliResult->exitCode,
-                            'timedOut' => $cliResult->timedOut,
-                        ],
-                        'message' => $debug === true
-                            ? null
-                            : 'Retry with debug=true to include CLI stdout/stderr.',
-                        'cli' => $debug === true ? $cliResult->toArray() : null,
-                    ];
+                        'cliMeta' => $result->cliMeta(),
+                        'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                        'cli' => $debug === true ? $result->cli() : null,
+                    ]);
                 }
 
-                /** @var array<string, mixed> $payload */
-                $response = array_merge($payload, [
+                /** @var array<string, mixed> $response */
+                $response = array_merge($result->payload, [
                     'mode' => 'runtime',
                     'projectRoot' => $projectRoot,
                     'host' => $host,
                     'blueprintsRoot' => $blueprintsRoot,
-                    'cliMeta' => [
-                        'exitCode' => $cliResult->exitCode,
-                        'timedOut' => $cliResult->timedOut,
-                    ],
+                    'cliMeta' => $result->cliMeta(),
                 ]);
 
                 if ($withData === false) {
@@ -471,7 +404,7 @@ final class BlueprintTools
                 }
 
                 if ($debug === true) {
-                    $response['cli'] = $cliResult->toArray();
+                    $response['cli'] = $result->cli();
                 }
 
                 return $response;
@@ -544,52 +477,4 @@ final class BlueprintTools
         }
     }
 
-    /**
-     * @param array<int, string>|null $fields
-     * @param array<string, mixed> $entry
-     * @return array<string, mixed>
-     */
-    private function selectFields(array $entry, ?array $fields, string $id): array
-    {
-        if (!is_array($fields)) {
-            return $entry;
-        }
-
-        $wanted = [];
-        foreach ($fields as $field) {
-            if (!is_string($field)) {
-                continue;
-            }
-
-            $field = trim($field);
-            if ($field === '') {
-                continue;
-            }
-
-            $wanted[] = $field;
-        }
-
-        $wanted = array_values(array_unique($wanted));
-        if ($wanted === []) {
-            return $entry;
-        }
-
-        if (!in_array('id', $wanted, true)) {
-            $wanted[] = 'id';
-        }
-
-        $selected = [];
-        foreach ($wanted as $field) {
-            if ($field === 'id') {
-                $selected['id'] = $id;
-                continue;
-            }
-
-            if (array_key_exists($field, $entry)) {
-                $selected[$field] = $entry[$field];
-            }
-        }
-
-        return $selected;
-    }
 }

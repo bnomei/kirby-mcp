@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-return \Bnomei\KirbyMcp\Runtime\McpBlueprintCommand::definition();
+return \Bnomei\KirbyMcp\Mcp\Commands\Blueprint::definition();

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
-use Bnomei\KirbyMcp\Project\KirbyRoots;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Mcp\Exception\ToolCallException;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Schema\ToolAnnotations;
@@ -53,7 +52,7 @@ final class RootsTools
     )]
     #[McpTool(
         name: 'kirby_roots',
-        description: 'Return Kirby’s resolved folder roots (kirby()->roots) via `kirby roots`. Uses configured default host (KIRBY_MCP_HOST/KIRBY_HOST or .kirby-mcp/mcp.json) when present.',
+        description: 'Return Kirby’s resolved folder roots (kirby()->roots) via `kirby roots`. Uses configured default host (KIRBY_MCP_HOST/KIRBY_HOST or .kirby-mcp/mcp.json) when present. Resource: `kirby://roots`.',
         annotations: new ToolAnnotations(
             title: 'Kirby Roots',
             readOnlyHint: true,
@@ -63,22 +62,13 @@ final class RootsTools
     public function roots(?ClientGateway $client = null): array
     {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
 
-            $env = [];
-            if (is_string($host) && $host !== '') {
-                $env['KIRBY_HOST'] = $host;
-            }
-
-            $cliResult = (new KirbyCliRunner())->run(
-                projectRoot: $projectRoot,
-                args: ['roots'],
-                env: $env,
-                timeoutSeconds: 30,
-            );
-
-            $roots = KirbyRoots::fromCliOutput($cliResult->stdout);
+            $inspection = $runtime->rootsInspection();
+            $roots = $inspection->roots;
+            $cliResult = $inspection->cliResult;
 
             return [
                 'projectRoot' => $projectRoot,

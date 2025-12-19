@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\CodeIndexTools;
 
-it('supports idsOnly for templates/snippets/controllers/models/plugins index tools', function (): void {
+it('supports idsOnly for templates/snippets/collections/controllers/models/plugins index tools', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();
 
@@ -23,6 +23,11 @@ it('supports idsOnly for templates/snippets/controllers/models/plugins index too
     expect($snippets)->toHaveKey('snippetIds');
     expect($snippets['snippetIds'])->toContain('header');
     expect($snippets)->not()->toHaveKey('snippets');
+
+    $collections = $tools->collectionsIndex(idsOnly: true);
+    expect($collections)->toHaveKey('collectionIds');
+    expect($collections['collectionIds'])->toContain('notes');
+    expect($collections)->not()->toHaveKey('collections');
 
     $controllers = $tools->controllersIndex(idsOnly: true);
     expect($controllers)->toHaveKey('controllerIds');

@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Bnomei\KirbyMcp\Mcp\Tools\CliTools;
+use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
 
-it('lists Kirby CLI commands via MCP tool', function (): void {
+it('lists Kirby CLI commands via kirby://commands', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();
 
     putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $data = (new CliTools())->listCliCommands();
+    $data = (new CliResources())->commands();
 
     expect($data['cli']['exitCode'])->toBe(0);
     expect($data['commands'])->toContain('version');

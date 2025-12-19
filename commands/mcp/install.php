@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-return \Bnomei\KirbyMcp\Runtime\McpInstallCommand::definition();
+return \Bnomei\KirbyMcp\Mcp\Commands\Install::definition();

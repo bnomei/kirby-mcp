@@ -8,10 +8,38 @@ use Bnomei\KirbyMcp\Support\Json;
 
 final class ComposerInspector
 {
+    /** @var array<string, array{composerJsonMtime:int, composerLockMtime:int, audit: ComposerAudit}> */
+    private static array $cache = [];
+
+    public static function clearCache(): int
+    {
+        $count = count(self::$cache);
+        self::$cache = [];
+
+        return $count;
+    }
+
     public function inspect(string $projectRoot): ComposerAudit
     {
         $composerJsonPath = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'composer.json';
         $composerLockPath = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'composer.lock';
+
+        $composerJsonMtime = filemtime($composerJsonPath);
+        $composerJsonMtime = is_int($composerJsonMtime) ? $composerJsonMtime : 0;
+
+        $composerLockMtime = is_file($composerLockPath) ? filemtime($composerLockPath) : false;
+        $composerLockMtime = is_int($composerLockMtime) ? $composerLockMtime : 0;
+
+        $cacheKey = rtrim($projectRoot, DIRECTORY_SEPARATOR);
+        $cached = self::$cache[$cacheKey] ?? null;
+        if (
+            is_array($cached)
+            && ($cached['composerJsonMtime'] ?? null) === $composerJsonMtime
+            && ($cached['composerLockMtime'] ?? null) === $composerLockMtime
+            && ($cached['audit'] ?? null) instanceof ComposerAudit
+        ) {
+            return $cached['audit'];
+        }
 
         $composerJson = Json::decodeFile($composerJsonPath);
         $composerLock = is_file($composerLockPath) ? Json::decodeFile($composerLockPath) : null;
@@ -25,13 +53,21 @@ final class ComposerInspector
 
         $tools = $this->detectTools($composerJson, $scripts);
 
-        return new ComposerAudit(
+        $audit = new ComposerAudit(
             projectRoot: $projectRoot,
             composerJson: $composerJson,
             composerLock: $composerLock,
             scripts: $scripts,
             tools: $tools,
         );
+
+        self::$cache[$cacheKey] = [
+            'composerJsonMtime' => $composerJsonMtime,
+            'composerLockMtime' => $composerLockMtime,
+            'audit' => $audit,
+        ];
+
+        return $audit;
     }
 
     /**

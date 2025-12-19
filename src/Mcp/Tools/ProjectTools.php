@@ -9,7 +9,7 @@ use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
-use Bnomei\KirbyMcp\Project\EnvironmentDetector;
+use Bnomei\KirbyMcp\Project\ProjectInfoInspector;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
@@ -60,7 +60,7 @@ final class ProjectTools
     )]
     #[McpTool(
         name: 'kirby_composer_audit',
-        description: 'Parse composer.json/lock to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/pint/phpcs/php-cs-fixer). Returns “how to run” commands.',
+        description: 'Parse composer.json/lock to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/pint/phpcs/php-cs-fixer). Returns “how to run” commands. Resource: `kirby://composer`.',
         annotations: new ToolAnnotations(
             title: 'Composer Audit',
             readOnlyHint: true,
@@ -116,8 +116,8 @@ final class ProjectTools
         ],
     )]
     #[McpTool(
-        name: 'kirby_project_info',
-        description: 'Return project runtime info (PHP + Kirby version via Kirby CLI), composer audit, and local environment detection (Herd/DDEV/Docker).',
+        name: 'kirby_info',
+        description: 'Return project runtime info (PHP + Kirby version via Kirby CLI), composer audit, and local environment detection (Herd/DDEV/Docker). Resource: `kirby://info`.',
         annotations: new ToolAnnotations(
             title: 'Project Info',
             readOnlyHint: true,
@@ -128,36 +128,16 @@ final class ProjectTools
     {
         try {
             $projectRoot = $this->context->projectRoot();
-
-            $composerAudit = (new ComposerInspector())->inspect($projectRoot);
-            if (!isset($composerAudit->composerJson['require']['getkirby/cms'])) {
-                throw new ToolCallException('This MCP server supports composer-based Kirby installs only (missing getkirby/cms).');
-            }
-
-            $environment = (new EnvironmentDetector())->detect($projectRoot);
-
-            $cliResult = (new KirbyCliRunner())->run(
-                projectRoot: $projectRoot,
-                args: ['version'],
-                timeoutSeconds: 30,
-            );
-
-            return [
-                'projectRoot' => $projectRoot,
-                'phpVersion' => PHP_VERSION,
-                'kirbyVersion' => trim($cliResult->stdout),
-                'environment' => $environment->toArray(),
-                'composer' => $composerAudit->toArray(),
-            ];
+            return (new ProjectInfoInspector())->inspect($projectRoot);
         } catch (ToolCallException $exception) {
             McpLog::error($client, [
-                'tool' => 'kirby_project_info',
+                'tool' => 'kirby_info',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
             McpLog::error($client, [
-                'tool' => 'kirby_project_info',
+                'tool' => 'kirby_info',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
             ]);

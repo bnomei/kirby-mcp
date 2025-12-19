@@ -9,11 +9,19 @@ it('initializes and returns guidance for a composer-based Kirby project', functi
     SessionState::reset();
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $data = (new SessionTools())->init();
+    $output = (new SessionTools())->init();
 
-    expect($data)->toHaveKey('initialized', true);
-    expect($data)->toHaveKey('instructions');
-    expect($data['instructions'])->toContain('CLI-first');
-    expect($data['recommendedNextTools'])->toContain('kirby_project_info');
+    expect($output)->toBeString();
+    expect($output)->toContain('<Kirby>');
+    expect($output)->toContain('Kirby MCP initialization (tool-first)');
+    expect($output)->toContain('Use `kirby://...` resources and resource templates first');
+    expect($output)->toContain('## Project Root');
+    expect($output)->toContain('`' . cmsPath() . '`');
+    expect($output)->toContain('## Environment');
+    expect($output)->toContain('## Composer Audit');
+    expect($output)->toContain('## Project Info');
+    expect($output)->toContain('kirby://prompts');
+    expect($output)->toContain('kirby://prompt/{name}');
+    expect($output)->toContain('kirby_project_tour');
     expect(SessionState::initCalled())->toBeTrue();
 });

@@ -1,30 +1,58 @@
-#!/usr/bin/env php
+#!/usr/bin/env -S php -d display_errors=0 -d display_startup_errors=0
 <?php
 
 declare(strict_types=1);
 
-if (!defined('KIRBY_HELPER_DUMP')) {
-    define('KIRBY_HELPER_DUMP', false);
+$prepend = __DIR__ . '/../src/Cli/kirby-cli-prepend.php';
+if (is_file($prepend)) {
+    require_once $prepend;
+} else {
+    if (!defined('KIRBY_HELPER_DUMP')) {
+        define('KIRBY_HELPER_DUMP', false);
+    }
+
+    if (!defined('KIRBY_HELPER_E')) {
+        define('KIRBY_HELPER_E', false);
+    }
 }
 
-if (!defined('KIRBY_HELPER_E')) {
-    define('KIRBY_HELPER_E', false);
+$autoloadPath = $GLOBALS['_composer_autoload_path'] ?? null;
+
+if (is_string($autoloadPath) && $autoloadPath !== '' && is_file($autoloadPath)) {
+    require_once $autoloadPath;
+} elseif (is_file(dirname(__DIR__, 3) . '/autoload.php')) {
+    require_once dirname(__DIR__, 3) . '/autoload.php';
+} else {
+    require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-require __DIR__ . '/../vendor/autoload.php';
-
+use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
+use Bnomei\KirbyMcp\Mcp\Handlers\RequireInitForToolsHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\SetLogLevelHandler;
+use Bnomei\KirbyMcp\Mcp\Resources\ExtensionReferenceResources;
+use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
+use Bnomei\KirbyMcp\Mcp\Resources\HookReferenceResources;
+use Bnomei\KirbyMcp\Mcp\Resources\PanelReferenceResources;
+use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
+use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 use Bnomei\KirbyMcp\Project\ProjectRootFinder;
 use Mcp\Server;
+use Mcp\Server\Builder as McpServerBuilder;
 use Mcp\Schema\ServerCapabilities;
 use Mcp\Server\Transport\StdioTransport;
 
 $projectRoot = null;
 $projectFlagProvided = false;
+$subcommand = null;
 
 for ($index = 1; $index < count($argv); $index++) {
     $arg = $argv[$index] ?? null;
     if (!is_string($arg)) {
+        continue;
+    }
+
+    if ($arg === 'install' || $arg === 'update' || $arg === 'ide:status' || $arg === 'ide:generate') {
+        $subcommand = $arg;
         continue;
     }
 
@@ -59,10 +87,489 @@ if (is_string($projectRoot) && $projectRoot !== '') {
     }
 }
 
-$server = Server::builder()
+if ($subcommand === 'install' || $subcommand === 'update') {
+    $root = getenv('KIRBY_MCP_PROJECT_ROOT');
+    $root = is_string($root) && $root !== '' ? $root : null;
+
+    if ($root === null) {
+        $detected = (new ProjectRootFinder())->findKirbyProjectRoot();
+        $root = is_string($detected) && $detected !== '' ? $detected : null;
+    }
+
+    if ($root === null) {
+        fwrite(STDERR, "Kirby MCP: unable to determine Kirby project root. Use --project=/path/to/kirby-project.\n");
+        exit(1);
+    }
+
+    $force = in_array('--force', $argv, true);
+    $json = in_array('--json', $argv, true);
+
+    $configResult = [
+        'path' => null,
+        'created' => false,
+        'skipped' => false,
+        'error' => null,
+    ];
+
+    $configDir = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '.kirby-mcp';
+    $configPath = $configDir . DIRECTORY_SEPARATOR . 'mcp.json';
+    $altConfigPath = $configDir . DIRECTORY_SEPARATOR . 'config.json';
+
+    if (is_file($configPath) || is_file($altConfigPath)) {
+        $configResult['path'] = is_file($configPath) ? $configPath : $altConfigPath;
+        $configResult['skipped'] = true;
+    } else {
+        if (!is_dir($configDir) && !mkdir($configDir, 0777, true) && !is_dir($configDir)) {
+            $configResult['path'] = $configPath;
+            $configResult['error'] = 'Failed to create directory: ' . $configDir;
+        } else {
+            $contents = json_encode([
+                'cache' => [
+                    'ttlSeconds' => 60,
+                ],
+                'docs' => [
+                    'ttlSeconds' => 86400,
+                ],
+                'dumps' => [
+                    'enabled' => true,
+                    'maxBytes' => 2097152,
+                ],
+                'cli' => [
+                    'allow' => [],
+                    'allowWrite' => [],
+                    'deny' => [],
+                ],
+                'ide' => [
+                    'typeHintScanBytes' => 16384,
+                ],
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            if (!is_string($contents)) {
+                $configResult['path'] = $configPath;
+                $configResult['error'] = 'Failed to encode JSON for config file.';
+            } else {
+                $written = file_put_contents($configPath, $contents . "\n");
+                if ($written === false) {
+                    $configResult['path'] = $configPath;
+                    $configResult['error'] = 'Failed to write config file: ' . $configPath;
+                } else {
+                    $configResult['path'] = $configPath;
+                    $configResult['created'] = true;
+                }
+            }
+        }
+    }
+
+    $writeMode = $subcommand === 'update' ? true : $force;
+
+    $installer = new RuntimeCommandsInstaller();
+    $installResult = null;
+    $installError = null;
+
+    try {
+        $installResult = $installer->install(projectRoot: $root, force: $writeMode);
+    } catch (Throwable $exception) {
+        $installError = $exception->getMessage();
+
+        $fallbackRoot = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
+        try {
+            $installResult = $installer->install(
+                projectRoot: $root,
+                force: $writeMode,
+                commandsRootOverride: $fallbackRoot,
+            );
+        } catch (Throwable $fallbackException) {
+            $installError = $installError . ' | Fallback failed: ' . $fallbackException->getMessage();
+        }
+    }
+
+    if ($installResult === null) {
+        $payload = [
+            'ok' => false,
+            'command' => $subcommand,
+            'projectRoot' => $root,
+            'error' => $installError ?? 'Runtime commands install failed.',
+            'config' => $configResult,
+        ];
+
+        if ($json === true) {
+            echo JsonMarkers::START . "\n";
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+            echo JsonMarkers::END . "\n";
+        } else {
+            fwrite(STDERR, "Kirby MCP {$subcommand}\n");
+            fwrite(STDERR, "Project: {$root}\n");
+            fwrite(STDERR, "Error: " . ($payload['error'] ?? 'Runtime commands install failed.') . "\n");
+        }
+
+        exit(1);
+    }
+
+    $payload = [
+        'ok' => $installResult->errors === [] && $configResult['error'] === null,
+        'command' => $subcommand,
+        'projectRoot' => $installResult->projectRoot,
+        'commandsRoot' => $installResult->commandsRoot,
+        'installed' => $installResult->installed,
+        'skipped' => $installResult->skipped,
+        'errors' => $installResult->errors,
+        'config' => $configResult,
+    ];
+
+    if ($json === true) {
+        echo JsonMarkers::START . "\n";
+        echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        echo JsonMarkers::END . "\n";
+    } else {
+        echo "Kirby MCP {$subcommand}\n";
+        echo "Project: {$installResult->projectRoot}\n";
+        echo "Runtime commands target: " . rtrim($installResult->commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . "mcp\n";
+        echo "Runtime commands installed: " . count($installResult->installed) . "\n";
+        echo "Runtime commands skipped: " . count($installResult->skipped) . "\n";
+
+        if ($configResult['created'] === true && is_string($configResult['path'])) {
+            echo "Config created: {$configResult['path']}\n";
+        } elseif ($configResult['skipped'] === true && is_string($configResult['path'])) {
+            echo "Config exists: {$configResult['path']}\n";
+        } elseif (is_string($configResult['error'])) {
+            echo "Config error: {$configResult['error']}\n";
+        }
+
+        if ($installResult->errors !== []) {
+            echo "Runtime command install errors:\n";
+            foreach ($installResult->errors as $error) {
+                echo "- {$error['path']}: {$error['error']}\n";
+            }
+        }
+
+        echo "\n";
+        echo "Next:\n";
+        echo "- Start MCP server: vendor/bin/kirby-mcp\n";
+        echo "- Check runtime status: vendor/bin/kirby-mcp --project={$installResult->projectRoot} (then call kirby_runtime_status)\n";
+    }
+
+    exit($payload['ok'] === true ? 0 : 1);
+}
+
+if ($subcommand === 'ide:status' || $subcommand === 'ide:generate') {
+    $root = getenv('KIRBY_MCP_PROJECT_ROOT');
+    $root = is_string($root) && $root !== '' ? $root : null;
+
+    if ($root === null) {
+        $detected = (new ProjectRootFinder())->findKirbyProjectRoot();
+        $root = is_string($detected) && $detected !== '' ? $detected : null;
+    }
+
+    if ($root === null) {
+        fwrite(STDERR, "Kirby MCP: unable to determine Kirby project root. Use --project=/path/to/kirby-project.\n");
+        exit(1);
+    }
+
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $root);
+
+    $json = in_array('--json', $argv, true);
+    $rawJson = in_array('--raw-json', $argv, true) || in_array('--plain-json', $argv, true);
+    $help = in_array('--help', $argv, true) || in_array('-h', $argv, true);
+
+    try {
+        $ide = new IdeTools();
+
+        if ($subcommand === 'ide:status') {
+            if ($help === true) {
+                echo "Kirby MCP ide:status\n";
+                echo "Usage: vendor/bin/kirby-mcp ide:status [--project=/path] [--details] [--limit=N] [--json|--raw-json]\n";
+                exit(0);
+            }
+
+            $withDetails = in_array('--details', $argv, true) || in_array('--with-details', $argv, true);
+            $limit = 50;
+
+            for ($index = 1; $index < count($argv); $index++) {
+                $arg = $argv[$index] ?? null;
+                if (!is_string($arg)) {
+                    continue;
+                }
+
+                if (str_starts_with($arg, '--limit=')) {
+                    $value = substr($arg, strlen('--limit='));
+                    $parsed = filter_var($value, FILTER_VALIDATE_INT);
+                    if ($parsed !== false) {
+                        $limit = (int) $parsed;
+                    }
+                    continue;
+                }
+
+                if ($arg === '--limit') {
+                    $next = $argv[$index + 1] ?? null;
+                    $parsed = is_string($next) ? filter_var($next, FILTER_VALIDATE_INT) : false;
+                    if ($parsed !== false) {
+                        $limit = (int) $parsed;
+                        $index++;
+                    }
+                    continue;
+                }
+            }
+
+            $status = $ide->ideHelpersStatus(withDetails: $withDetails, limit: $limit);
+
+            if ($rawJson === true) {
+                echo json_encode($status, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+                exit(0);
+            }
+
+            if ($json === true) {
+                echo JsonMarkers::START . "\n";
+                echo json_encode($status, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+                echo JsonMarkers::END . "\n";
+                exit(0);
+            }
+
+            echo "Kirby MCP ide:status\n";
+            echo "Project: {$status['projectRoot']}\n";
+            if (is_string($status['host'] ?? null) && $status['host'] !== '') {
+                echo "Host: {$status['host']}\n";
+            }
+
+            $templates = $status['templates'] ?? [];
+            $snippets = $status['snippets'] ?? [];
+            $controllers = $status['controllers'] ?? [];
+            $pageModels = $status['pageModels'] ?? [];
+
+            echo "Templates: " . ($templates['withKirbyVarHints'] ?? 0) . "/" . ($templates['total'] ?? 0) . " with @var hints\n";
+            echo "Snippets: " . ($snippets['withKirbyVarHints'] ?? 0) . "/" . ($snippets['total'] ?? 0) . " with @var hints\n";
+            echo "Controllers: " . ($controllers['withKirbyTypeHints'] ?? 0) . "/" . ($controllers['closureControllers'] ?? 0) . " typed closures\n";
+            echo "Page models: " . ($pageModels['withKirbyTypeHints'] ?? 0) . "/" . ($pageModels['pageModelFiles'] ?? 0) . " typed models\n";
+
+            $helpers = $status['helpers'] ?? [];
+            if (is_array($helpers) && $helpers !== []) {
+                echo "Helpers:\n";
+                foreach ($helpers as $helper) {
+                    if (!is_array($helper)) {
+                        continue;
+                    }
+                    $path = $helper['path'] ?? '';
+                    $exists = ($helper['exists'] ?? false) === true ? 'yes' : 'no';
+                    $stale = ($helper['stale'] ?? null) === true ? 'stale' : 'fresh';
+                    if (($helper['exists'] ?? false) !== true) {
+                        $stale = 'n/a';
+                    }
+                    echo "- {$path} (exists: {$exists}, {$stale})\n";
+                }
+            }
+
+            $recs = $status['recommendations'] ?? [];
+            if (is_array($recs) && $recs !== []) {
+                echo "Recommendations:\n";
+                foreach ($recs as $rec) {
+                    if (is_string($rec) && $rec !== '') {
+                        echo "- {$rec}\n";
+                    }
+                }
+            }
+
+            exit(0);
+        }
+
+        if ($subcommand === 'ide:generate') {
+            if ($help === true) {
+                echo "Kirby MCP ide:generate\n";
+                echo "Usage: vendor/bin/kirby-mcp ide:generate [--project=/path] [--write] [--dry-run] [--force] [--prefer-runtime|--prefer-filesystem] [--json|--raw-json]\n";
+                echo "Defaults: --dry-run --prefer-runtime\n";
+                exit(0);
+            }
+
+            $dryRun = true;
+            if (in_array('--write', $argv, true)) {
+                $dryRun = false;
+            } elseif (in_array('--dry-run', $argv, true)) {
+                $dryRun = true;
+            }
+
+            $force = in_array('--force', $argv, true);
+
+            $preferRuntime = true;
+            if (in_array('--prefer-filesystem', $argv, true) || in_array('--filesystem', $argv, true)) {
+                $preferRuntime = false;
+            } elseif (in_array('--prefer-runtime', $argv, true) || in_array('--runtime', $argv, true)) {
+                $preferRuntime = true;
+            }
+
+            $result = $ide->generateIdeHelpers(dryRun: $dryRun, force: $force, preferRuntime: $preferRuntime);
+
+            if ($rawJson === true) {
+                echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+                exit(($result['ok'] ?? false) === true ? 0 : 1);
+            }
+
+            if ($json === true) {
+                echo JsonMarkers::START . "\n";
+                echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+                echo JsonMarkers::END . "\n";
+                exit(($result['ok'] ?? false) === true ? 0 : 1);
+            }
+
+            echo "Kirby MCP ide:generate\n";
+            echo "Project: {$result['projectRoot']}\n";
+            echo "Dry run: " . (($result['dryRun'] ?? false) === true ? 'yes' : 'no') . "\n";
+            echo "Source: {$result['source']}\n";
+            if (is_array($result['sources'] ?? null)) {
+                $sources = $result['sources'];
+                $blueprints = is_string($sources['blueprints'] ?? null) ? $sources['blueprints'] : null;
+                $snippets = is_string($sources['snippets'] ?? null) ? $sources['snippets'] : null;
+                if ($blueprints !== null || $snippets !== null) {
+                    echo "Sources: blueprints=" . ($blueprints ?? 'n/a') . " snippets=" . ($snippets ?? 'n/a') . "\n";
+                }
+            }
+            echo "Output: {$result['outputDir']}\n";
+
+            $files = $result['files'] ?? [];
+            if (is_array($files) && $files !== []) {
+                echo "Files:\n";
+                foreach ($files as $file) {
+                    if (!is_array($file)) {
+                        continue;
+                    }
+
+                    $action = $file['action'] ?? 'unknown';
+                    $path = $file['path'] ?? '';
+                    $ok = ($file['ok'] ?? false) === true ? 'ok' : 'error';
+                    $reason = $file['reason'] ?? null;
+                    $error = $file['error'] ?? null;
+
+                    echo "- {$action}: {$path} ({$ok})\n";
+                    if (is_string($reason) && $reason !== '') {
+                        echo "  reason: {$reason}\n";
+                    }
+                    if (is_string($error) && $error !== '') {
+                        echo "  error: {$error}\n";
+                    }
+                }
+            }
+
+            $stats = $result['stats'] ?? [];
+            if (is_array($stats) && $stats !== []) {
+                echo "Stats:\n";
+                echo "- blueprints: " . ($stats['blueprints'] ?? 0) . "\n";
+                $fields = $stats['fields'] ?? [];
+                if (is_array($fields)) {
+                    echo "- fields: page=" . ($fields['page'] ?? 0)
+                        . " file=" . ($fields['file'] ?? 0)
+                        . " user=" . ($fields['user'] ?? 0)
+                        . " site=" . ($fields['site'] ?? 0) . "\n";
+                }
+                $collisions = $stats['collisions'] ?? [];
+                if (is_array($collisions)) {
+                    echo "- collisions: page=" . ($collisions['page'] ?? 0)
+                        . " file=" . ($collisions['file'] ?? 0)
+                        . " user=" . ($collisions['user'] ?? 0)
+                        . " site=" . ($collisions['site'] ?? 0) . "\n";
+                }
+            }
+
+            $notes = $result['notes'] ?? [];
+            if (is_array($notes) && $notes !== []) {
+                echo "Notes:\n";
+                foreach ($notes as $note) {
+                    if (is_string($note) && $note !== '') {
+                        echo "- {$note}\n";
+                    }
+                }
+            }
+
+            exit(($result['ok'] ?? false) === true ? 0 : 1);
+        }
+    } catch (Throwable $exception) {
+        fwrite(STDERR, "Kirby MCP {$subcommand} failed: " . $exception->getMessage() . "\n");
+        exit(1);
+    }
+}
+
+/**
+ * Register sized markdown resources for resources/list.
+ *
+ * The size field cannot be dynamic with PHP attributes; registering these resources
+ * manually allows us to provide accurate byte sizes.
+ */
+function registerSizedMarkdownResources(McpServerBuilder $builder): void
+{
+    try {
+        $contents = (new ExtensionReferenceResources())->extensionsList();
+        $builder->addResource(
+            [ExtensionReferenceResources::class, 'extensionsList'],
+            'kirby://extensions',
+            'extensions',
+            'List Kirby plugin extensions (links to kirby://extension/{name}).',
+            'text/markdown',
+            strlen($contents),
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if sizing fails.
+    }
+
+    try {
+        $contents = (new HookReferenceResources())->hooksList();
+        $builder->addResource(
+            [HookReferenceResources::class, 'hooksList'],
+            'kirby://hooks',
+            'hooks',
+            'List Kirby plugin hook names (links to kirby://hook/{name}).',
+            'text/markdown',
+            strlen($contents),
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if sizing fails.
+    }
+
+    try {
+        $panel = new PanelReferenceResources();
+
+        $fields = $panel->fieldsList();
+        $builder->addResource(
+            [PanelReferenceResources::class, 'fieldsList'],
+            'kirby://fields',
+            'panel_fields',
+            'List Kirby Panel field types (links to kirby://field/{type}).',
+            'text/markdown',
+            strlen($fields),
+        );
+
+        $sections = $panel->sectionsList();
+        $builder->addResource(
+            [PanelReferenceResources::class, 'sectionsList'],
+            'kirby://sections',
+            'panel_sections',
+            'List Kirby Panel section types (links to kirby://section/{type}).',
+            'text/markdown',
+            strlen($sections),
+        );
+    } catch (Throwable) {
+        // Keep resources available via attribute discovery if sizing fails.
+    }
+
+    try {
+        $contents = (new GlossaryResources())->glossaryList();
+        $builder->addResource(
+            [GlossaryResources::class, 'glossaryList'],
+            'kirby://glossary',
+            'glossary',
+            'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
+            'text/markdown',
+            strlen($contents),
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if sizing fails.
+    }
+}
+
+$builder = Server::builder()
     ->setServerInfo('Kirby MCP', '0.0.0')
-    ->setInstructions('Call kirby_init once per session. Use kirby_tool_suggest if unsure which tool/resource to use.')
+    ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
+
+registerSizedMarkdownResources($builder);
+
+$server = $builder
     ->setDiscovery(dirname(__DIR__), ['src'])
+    ->addRequestHandler(new RequireInitForToolsHandler())
     ->addRequestHandler(new SetLogLevelHandler())
     ->setCapabilities(new ServerCapabilities(
         tools: true,

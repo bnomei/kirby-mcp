@@ -34,7 +34,10 @@
   "autoload": {
     "psr-4": {
       "Bnomei\\KirbyMcp\\": "src/"
-    }
+    },
+    "files": [
+      "src/mcp-dump.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

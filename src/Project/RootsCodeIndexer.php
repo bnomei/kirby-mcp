@@ -120,6 +120,48 @@ final class RootsCodeIndexer
     /**
      * @return array{
      *   projectRoot: string,
+     *   collectionsRoot: string,
+     *   exists: bool,
+     *   collections: array<string, array{
+     *     id: string,
+     *     name: string,
+     *     absolutePath: string,
+     *     relativePath: string,
+     *     rootRelativePath: string
+     *   }>
+     * }
+     */
+    public function collections(string $projectRoot, KirbyRoots $roots): array
+    {
+        $collectionsRoot = $this->resolveRoot($projectRoot, $roots, 'collections', 'site/collections');
+        $files = $this->scanPhpFiles($collectionsRoot);
+
+        $collections = [];
+        foreach ($files as $rootRelativePath => $absolutePath) {
+            $id = $this->stripPhpExtension($rootRelativePath);
+
+            $collections[$id] = [
+                'id' => $id,
+                'name' => $id,
+                'absolutePath' => $absolutePath,
+                'relativePath' => $this->relativeToProject($projectRoot, $absolutePath),
+                'rootRelativePath' => $rootRelativePath,
+            ];
+        }
+
+        ksort($collections);
+
+        return [
+            'projectRoot' => $projectRoot,
+            'collectionsRoot' => $collectionsRoot,
+            'exists' => is_dir($collectionsRoot),
+            'collections' => $collections,
+        ];
+    }
+
+    /**
+     * @return array{
+     *   projectRoot: string,
      *   controllersRoot: string,
      *   exists: bool,
      *   controllers: array<string, array{

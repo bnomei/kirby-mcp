@@ -10,4 +10,21 @@
 return [
   'debug' => true,
   'yaml.handler' => 'symfony', // already makes use of the more modern Symfony YAML parser: https://getkirby.com/docs/reference/system/options/yaml (will become the default in a future Kirby version)
+  'vendorname.pluginname.someoption' => 5,
+  'vendorname.pluginname.arrayoption' => [
+    'a' => 1,
+    'b' => [
+      'c' => 2,
+    ],
+  ],
+  'vendorname.pluginname.closureoption' => static fn (): int => 123,
+  'routes' => [
+    [
+      'pattern' => 'mcp-test/config-route',
+      'method' => 'GET',
+      'action' => static function () {
+        return 'ok';
+      },
+    ],
+  ],
 ];

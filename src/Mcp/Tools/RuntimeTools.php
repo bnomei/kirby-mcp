@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
 use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
+use Bnomei\KirbyMcp\Dumps\McpDumpContext;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
+use Bnomei\KirbyMcp\Mcp\DumpState;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
-use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Support\StaticCache;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
@@ -18,6 +23,8 @@ use Mcp\Server\ClientGateway;
 
 final class RuntimeTools
 {
+    public const ENV_ENABLE_EVAL = 'KIRBY_MCP_ENABLE_EVAL';
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -63,7 +70,11 @@ final class RuntimeTools
         try {
             $projectRoot = $this->context->projectRoot();
 
-            return (new RuntimeCommandsInstaller())->install($projectRoot, $force)->toArray();
+            $result = (new RuntimeCommandsInstaller())->install($projectRoot, $force);
+            StaticCache::clearPrefix('cli:');
+            StaticCache::clearPrefix('completion:');
+
+            return $result->toArray();
         } catch (\Throwable $exception) {
             McpLog::error($client, [
                 'tool' => 'kirby_runtime_install',
@@ -112,11 +123,10 @@ final class RuntimeTools
     )]
     public function runtimeStatus(): array
     {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
-
-        $commandsRoot = (new KirbyRootsInspector())->inspect($projectRoot, $host)->commandsRoot()
-            ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
+        $runtime = new KirbyRuntimeContext($this->context);
+        $projectRoot = $runtime->projectRoot();
+        $host = $runtime->host();
+        $commandsRoot = $runtime->commandsRoot();
 
         $mcpCommandsDir = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp';
 
@@ -214,22 +224,14 @@ final class RuntimeTools
         bool $noCache = false,
         bool $debug = false,
     ): array {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
+        $traceId = McpDumpContext::generateTraceId();
+        DumpState::setLastTraceId($traceId);
 
-        $commandsRoot = $this->commandsRoot($projectRoot, $host);
-        $expectedCommandFile = $this->commandFile($commandsRoot, 'mcp/render.php');
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context, [
+            'KIRBY_MCP_TRACE_ID' => $traceId,
+        ]));
 
-        if (!is_file($expectedCommandFile)) {
-            return [
-                'ok' => false,
-                'needsRuntimeInstall' => true,
-                'message' => 'Kirby MCP runtime CLI commands are not installed in this project. Run kirby_runtime_install first.',
-                'expectedCommandFile' => $expectedCommandFile,
-            ];
-        }
-
-        $args = ['mcp:render'];
+        $args = [RuntimeCommands::RENDER];
         if (is_string($id) && $id !== '') {
             $args[] = $id;
         }
@@ -245,37 +247,24 @@ final class RuntimeTools
             $args[] = '--debug';
         }
 
-        $env = [];
-        if (is_string($host) && $host !== '') {
-            $env['KIRBY_HOST'] = $host;
+        $result = $runner->runMarkedJson(RuntimeCommands::RENDER_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return array_merge($result->needsRuntimeInstallResponse(), [
+                'traceId' => $traceId,
+            ]);
         }
 
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
-            args: $args,
-            env: $env,
-            timeoutSeconds: 60,
-        );
-
-        $parseError = null;
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
+                'cli' => $result->cli(),
+                'traceId' => $traceId,
+            ]);
         }
 
-        if (!is_array($payload)) {
-            return [
-                'ok' => false,
-                'parseError' => $parseError ?? 'Unable to parse JSON output from Kirby CLI command.',
-                'cli' => $cliResult->toArray(),
-            ];
-        }
-
-        /** @var array<mixed> $payload */
-        return array_merge($payload, [
-            'cli' => $cliResult->toArray(),
+        return array_merge($result->payload, [
+            'cli' => $result->cli(),
+            'traceId' => $traceId,
         ]);
     }
 
@@ -297,7 +286,7 @@ final class RuntimeTools
     )]
     #[McpTool(
         name: 'kirby_read_page_content',
-        description: 'Read a page’s content (current version; drafts/changes-aware) by id or uuid via the installed `kirby mcp:page:content` CLI command. Requires kirby_runtime_install first.',
+        description: 'Read a page’s content (current version; drafts/changes-aware) by id or uuid via the installed `kirby mcp:page:content` CLI command. Requires kirby_runtime_install first. Resource template: `kirby://page/content/{encodedIdOrUuid}`.',
         annotations: new ToolAnnotations(
             title: 'Read Page Content',
             readOnlyHint: true,
@@ -309,21 +298,9 @@ final class RuntimeTools
         ?string $language = null,
         int $maxCharsPerField = 20000,
     ): array {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
-        $commandsRoot = $this->commandsRoot($projectRoot, $host);
-        $expectedCommandFile = $this->commandFile($commandsRoot, 'mcp/page/content.php');
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
-        if (!is_file($expectedCommandFile)) {
-            return [
-                'ok' => false,
-                'needsRuntimeInstall' => true,
-                'message' => 'Kirby MCP runtime CLI commands are not installed in this project. Run kirby_runtime_install first.',
-                'expectedCommandFile' => $expectedCommandFile,
-            ];
-        }
-
-        $args = ['mcp:page:content'];
+        $args = [RuntimeCommands::PAGE_CONTENT];
         if (is_string($id) && $id !== '') {
             $args[] = $id;
         }
@@ -335,37 +312,20 @@ final class RuntimeTools
             $args[] = '--language=' . trim($language);
         }
 
-        $env = [];
-        if (is_string($host) && $host !== '') {
-            $env['KIRBY_HOST'] = $host;
+        $result = $runner->runMarkedJson(RuntimeCommands::PAGE_CONTENT_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $result->needsRuntimeInstallResponse();
         }
 
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
-            args: $args,
-            env: $env,
-            timeoutSeconds: 60,
-        );
-
-        $parseError = null;
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]);
         }
 
-        if (!is_array($payload)) {
-            return [
-                'ok' => false,
-                'parseError' => $parseError ?? 'Unable to parse JSON output from Kirby CLI command.',
-                'cli' => $cliResult->toArray(),
-            ];
-        }
-
-        /** @var array<mixed> $payload */
-        return array_merge($payload, [
-            'cli' => $cliResult->toArray(),
+        return array_merge($result->payload, [
+            'cli' => $result->cli(),
         ]);
     }
 
@@ -390,7 +350,7 @@ final class RuntimeTools
     )]
     #[McpTool(
         name: 'kirby_update_page_content',
-        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. Requires confirm=true and kirby_runtime_install first.',
+        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`; it uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. Requires kirby_runtime_install first.',
         annotations: new ToolAnnotations(
             title: 'Update Page Content',
             readOnlyHint: false,
@@ -406,26 +366,13 @@ final class RuntimeTools
         ?string $language = null,
         int $maxCharsPerField = 20000,
     ): array {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
         $id = trim($id);
         if ($id === '') {
             return [
                 'ok' => false,
                 'message' => 'id must not be empty.',
-            ];
-        }
-
-        $commandsRoot = $this->commandsRoot($projectRoot, $host);
-        $expectedCommandFile = $this->commandFile($commandsRoot, 'mcp/page/update.php');
-
-        if (!is_file($expectedCommandFile)) {
-            return [
-                'ok' => false,
-                'needsRuntimeInstall' => true,
-                'message' => 'Kirby MCP runtime CLI commands are not installed in this project. Run kirby_runtime_install first.',
-                'expectedCommandFile' => $expectedCommandFile,
             ];
         }
 
@@ -441,7 +388,7 @@ final class RuntimeTools
         }
 
         $args = [
-            'mcp:page:update',
+            RuntimeCommands::PAGE_UPDATE,
             $id,
             '--data=' . $json,
             '--max=' . $maxCharsPerField,
@@ -459,38 +406,104 @@ final class RuntimeTools
             $args[] = '--language=' . trim($language);
         }
 
-        $env = [];
-        if (is_string($host) && $host !== '') {
-            $env['KIRBY_HOST'] = $host;
+        $result = $runner->runMarkedJson(RuntimeCommands::PAGE_UPDATE_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $result->needsRuntimeInstallResponse();
         }
 
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
-            args: $args,
-            env: $env,
-            timeoutSeconds: 60,
-        );
-
-        $parseError = null;
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]);
         }
 
-        if (!is_array($payload)) {
+        return array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+    }
+
+    /**
+     * Execute PHP code inside Kirby runtime via the installed CLI command `mcp:eval`.
+     *
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use like `tinker` / a REPL for quick inspection in Kirby runtime (execute small PHP snippets in project context). Disabled by default; requires explicit enable + confirm.',
+        keywords: [
+            'eval' => 100,
+            'tinker' => 80,
+            'php -r' => 70,
+            'execute' => 60,
+            'inspect' => 50,
+            'debug' => 40,
+            'repl' => 30,
+            'runtime' => 30,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_eval',
+        description: 'Tinker/REPL (`tinker`): Execute PHP code in Kirby runtime via the installed `kirby mcp:eval` CLI command and return structured JSON (captured stdout + return value). Call it repeatedly like a REPL for quick inspection/debugging; tip: end with `return ...;` to capture a value. Disabled by default; enable via env `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` `{\"eval\":{\"enabled\":true}}`. Requires confirm=true and kirby_runtime_install first.',
+        annotations: new ToolAnnotations(
+            title: 'Eval (CLI)',
+            readOnlyHint: false,
+            destructiveHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function evalPhp(
+        string $code,
+        bool $confirm = false,
+        int $maxChars = 20000,
+        int $timeoutSeconds = 60,
+        bool $debug = false,
+    ): array {
+        $projectRoot = $this->context->projectRoot();
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $enabled = $this->isEvalEnabled($projectRoot);
+        if ($enabled !== true) {
             return [
                 'ok' => false,
-                'parseError' => $parseError ?? 'Unable to parse JSON output from Kirby CLI command.',
-                'cli' => $cliResult->toArray(),
+                'enabled' => false,
+                'needsEnable' => true,
+                'message' => 'Eval is disabled by default. Enable via env ' . self::ENV_ENABLE_EVAL . '=1 or via .kirby-mcp/mcp.json: {"eval":{"enabled":true}}.',
             ];
         }
 
-        /** @var array<mixed> $payload */
-        return array_merge($payload, [
-            'cli' => $cliResult->toArray(),
-        ]);
+        $args = [RuntimeCommands::EVAL, $code, '--max=' . max(0, $maxChars)];
+
+        if ($confirm === true) {
+            $args[] = '--confirm';
+        }
+
+        if ($debug === true) {
+            $args[] = '--debug';
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::EVAL_FILE, $args, timeoutSeconds: $timeoutSeconds);
+
+        if ($result->installed !== true) {
+            return $result->needsRuntimeInstallResponse();
+        }
+
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
+                'cliMeta' => $result->cliMeta(),
+                'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                'cli' => $debug === true ? $result->cli() : null,
+            ]);
+        }
+
+        /** @var array<string, mixed> $response */
+        $response = $result->payload;
+        $response['cliMeta'] = $result->cliMeta();
+
+        if ($debug === true) {
+            $response['cli'] = $result->cli();
+        }
+
+        return $response;
     }
 
     /**
@@ -529,26 +542,9 @@ final class RuntimeTools
         bool $withDisplayName = false,
         bool $debug = false,
     ): array {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
-        $commandsRoot = $this->commandsRoot($projectRoot, $host);
-        $expectedCommandFile = $this->commandFile($commandsRoot, 'mcp/blueprints.php');
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
-        if (!is_file($expectedCommandFile)) {
-            return [
-                'ok' => false,
-                'needsRuntimeInstall' => true,
-                'message' => 'Kirby MCP runtime CLI commands are not installed in this project. Run kirby_runtime_install first.',
-                'expectedCommandFile' => $expectedCommandFile,
-            ];
-        }
-
-        $env = [];
-        if (is_string($host) && $host !== '') {
-            $env['KIRBY_HOST'] = $host;
-        }
-
-        $args = ['mcp:blueprints'];
+        $args = [RuntimeCommands::BLUEPRINTS];
         if ($idsOnly === true) {
             $args[] = '--ids-only';
         } elseif ($withDisplayName === true) {
@@ -579,59 +575,29 @@ final class RuntimeTools
             $args[] = '--debug';
         }
 
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
-            args: $args,
-            env: $env,
-            timeoutSeconds: 60,
-        );
+        $result = $runner->runMarkedJson(RuntimeCommands::BLUEPRINTS_FILE, $args, timeoutSeconds: 60);
 
-        $parseError = null;
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if ($result->installed !== true) {
+            return $result->needsRuntimeInstallResponse();
         }
 
-        if (!is_array($payload)) {
-            return [
-                'ok' => false,
-                'parseError' => $parseError ?? 'Unable to parse JSON output from Kirby CLI command.',
-                'cliMeta' => [
-                    'exitCode' => $cliResult->exitCode,
-                    'timedOut' => $cliResult->timedOut,
-                ],
-                'message' => $debug === true
-                    ? null
-                    : 'Retry with debug=true to include CLI stdout/stderr.',
-                'cli' => $debug === true ? $cliResult->toArray() : null,
-            ];
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
+                'cliMeta' => $result->cliMeta(),
+                'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                'cli' => $debug === true ? $result->cli() : null,
+            ]);
         }
 
-        /** @var array<string, mixed> $payload */
-        $response = $payload;
-        $response['cliMeta'] = [
-            'exitCode' => $cliResult->exitCode,
-            'timedOut' => $cliResult->timedOut,
-        ];
+        /** @var array<string, mixed> $response */
+        $response = $result->payload;
+        $response['cliMeta'] = $result->cliMeta();
 
         if ($debug === true) {
-            $response['cli'] = $cliResult->toArray();
+            $response['cli'] = $result->cli();
         }
 
         return $response;
-    }
-
-    private function commandsRoot(string $projectRoot, ?string $host = null): string
-    {
-        return (new KirbyRootsInspector())->inspect($projectRoot, $host)->commandsRoot()
-            ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-    }
-
-    private function commandFile(string $commandsRoot, string $relativePath): string
-    {
-        return rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
     }
 
     /**
@@ -664,5 +630,18 @@ final class RuntimeTools
         sort($expected);
 
         return $expected;
+    }
+
+    private function isEvalEnabled(string $projectRoot): bool
+    {
+        $raw = getenv(self::ENV_ENABLE_EVAL);
+        if (is_string($raw) && $raw !== '') {
+            $normalized = strtolower(trim($raw));
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return true;
+            }
+        }
+
+        return KirbyMcpConfig::load($projectRoot)->evalEnabled();
     }
 }

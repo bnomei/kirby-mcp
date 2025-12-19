@@ -6,6 +6,20 @@ use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\CliTools;
 use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
 
+it('runs a Kirby CLI command and returns raw output via kirby_run_cli_command', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $result = (new CliTools())->runCliCommand(command: 'version');
+
+    expect($result['ok'])->toBeTrue();
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
+});
+
 it('runs an allowlisted read-only Kirby CLI command', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();
@@ -13,16 +27,12 @@ it('runs an allowlisted read-only Kirby CLI command', function (): void {
     putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $result = (new CliTools())->runCli(command: 'version');
+    $result = (new CliTools())->runCliCommand(command: 'version');
 
     expect($result['ok'])->toBeTrue();
-    $cliResult = $result['cli'];
-    if (!is_array($cliResult)) {
-        throw new RuntimeException('Expected cli result output.');
-    }
-
-    expect($cliResult['exitCode'])->toBe(0);
-    expect($cliResult['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
+    expect($result['policy']['matchedAllow'])->toBe('version');
+    expect($result['exitCode'])->toBe(0);
+    expect($result['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
 });
 
 it('blocks write-capable commands unless allowWrite=true', function (): void {
@@ -32,11 +42,11 @@ it('blocks write-capable commands unless allowWrite=true', function (): void {
     putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $result = (new CliTools())->runCli(command: 'make:template', arguments: ['mcp_test_template']);
+    $result = (new CliTools())->runCliCommand(command: 'make:template', arguments: ['mcp_test_template']);
 
     expect($result['ok'])->toBeFalse();
     expect($result['message'])->toContain('allowWrite=true');
-    expect($result['cli'])->toBeNull();
+    expect($result['exitCode'])->toBeNull();
 });
 
 it('extracts marked JSON when running an mcp:* command', function (): void {
@@ -53,7 +63,7 @@ it('extracts marked JSON when running an mcp:* command', function (): void {
     $commandsRoot = $install['commandsRoot'];
 
     try {
-        $result = $cli->runCli(command: 'mcp:render', arguments: ['--type=html', '--max=2000']);
+        $result = $cli->runCliCommand(command: 'mcp:render', arguments: ['--type=html', '--max=2000']);
 
         expect($result['ok'])->toBeTrue();
         expect($result['mcpJson'])->toBeArray();
@@ -68,7 +78,9 @@ it('extracts marked JSON when running an mcp:* command', function (): void {
         }
 
         foreach ([
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'page',
+            rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'config',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp',
             rtrim($commandsRoot, DIRECTORY_SEPARATOR),
         ] as $dir) {
@@ -112,7 +124,7 @@ it('respects deny patterns from .kirby-mcp/mcp.json', function (): void {
     file_put_contents($configFile, json_encode(['cli' => ['deny' => ['version']]], JSON_THROW_ON_ERROR));
 
     try {
-        $result = (new CliTools())->runCli(command: 'version');
+        $result = (new CliTools())->runCliCommand(command: 'version');
 
         expect($result['ok'])->toBeFalse();
         expect($result['policy']['matchedDeny'])->toBe('version');

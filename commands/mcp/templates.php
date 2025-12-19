@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-return \Bnomei\KirbyMcp\Runtime\McpTemplatesCommand::definition();
+return \Bnomei\KirbyMcp\Mcp\Commands\Templates::definition();

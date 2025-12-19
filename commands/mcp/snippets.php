@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-return \Bnomei\KirbyMcp\Runtime\McpSnippetsCommand::definition();
+return \Bnomei\KirbyMcp\Mcp\Commands\Snippets::definition();

@@ -17,12 +17,14 @@ final class DocsTools
     /**
      * Search the official Kirby site index (Guide/Reference/Cookbook/Kosmos/Plugins) via `getkirby.com/search.json`.
      *
-     * Note: For any official docs result (`docs/...`), this tool returns `crawlUrl` with `.md` appended
-     * so agents can fetch markdown directly.
+     * For official Kirby docs pages (`docs/...`), this tool can also fetch the crawl-friendly `.md` page(s)
+     * and return the markdown content directly.
      *
      * @return array{
      *   query: string,
      *   area: string,
+     *   fetch: int,
+     *   maxChars: int,
      *   sourceUrl: string,
      *   pagination: array{page:int, firstPage:int, lastPage:int, pages:int, offset:int, limit:int, total:int, start:int, end:int}|null,
      *   results: array<int, array{
@@ -36,14 +38,31 @@ final class DocsTools
      *     crawlUrl: string,
      *     markdownUrl: string|null
      *   }>
+     *   documents: array<int, array{
+     *     objectId: string,
+     *     title: string,
+     *     markdownUrl: string,
+     *     markdown: string|null,
+     *     truncated: bool,
+     *     error: string|null
+     *   }>,
+     *   document: array{
+     *     objectId: string,
+     *     title: string,
+     *     markdownUrl: string,
+     *     markdown: string|null,
+     *     truncated: bool,
+     *     error: string|null
+     *   }|null
      * }
      */
     #[McpToolIndex(
-        whenToUse: 'Use when you need official Kirby docs links (Guide/Reference/Cookbook/Kosmos/Plugins) for a topic; returns crawl-friendly `.md` URLs for docs pages.',
+        whenToUse: 'Use as a slower, online fallback when you need official Kirby docs links (Guide/Reference/Cookbook/Kosmos/Plugins) for a topic; prefer kirby_search first.',
         keywords: [
             'docs' => 100,
             'documentation' => 90,
-            'search' => 80,
+            'online' => 80,
+            'search' => 40,
             'reference' => 70,
             'cookbook' => 70,
             'guide' => 70,
@@ -53,15 +72,15 @@ final class DocsTools
         ],
     )]
     #[McpTool(
-        name: 'kirby_docs_search',
-        description: 'Search official Kirby docs via `getkirby.com/search.json`. Returns titles/intros/URLs; for docs pages it returns crawl-friendly `.md` URLs.',
+        name: 'kirby_online',
+        description: 'Search official Kirby docs via `getkirby.com/search.json` and fetch markdown (`.md`) for docs pages. Slower online fallback; prefer kirby_search first. Does not use the local knowledge base.',
         annotations: new ToolAnnotations(
-            title: 'Kirby Docs Search',
+            title: 'Kirby Online',
             readOnlyHint: true,
             openWorldHint: true,
         ),
     )]
-    public function search(string $query, string $area = 'all', int $limit = 10, ?ClientGateway $client = null): array
+    public function search(string $query, string $area = 'all', int $limit = 10, int $fetch = 1, int $maxChars = 20000, ?ClientGateway $client = null): array
     {
         try {
             $query = trim($query);
@@ -75,6 +94,8 @@ final class DocsTools
             }
 
             $limit = max(1, min(50, $limit));
+            $fetch = max(0, min(10, $fetch));
+            $maxChars = max(0, $maxChars);
 
             $url = 'https://getkirby.com/search.json?q=' . rawurlencode($query)
                 . '&area=' . rawurlencode($area)
@@ -116,22 +137,67 @@ final class DocsTools
                 }
             }
 
+            $documents = [];
+            if ($fetch > 0) {
+                $remaining = $fetch;
+                foreach ($results as $result) {
+                    if ($remaining <= 0) {
+                        break;
+                    }
+
+                    $markdownUrl = $result['markdownUrl'] ?? null;
+                    if (!is_string($markdownUrl) || trim($markdownUrl) === '') {
+                        continue;
+                    }
+
+                    $markdown = null;
+                    $truncated = false;
+                    $error = null;
+
+                    try {
+                        $markdown = $this->httpGet($markdownUrl, 'text/plain');
+
+                        if ($maxChars > 0 && strlen($markdown) > $maxChars) {
+                            $markdown = substr($markdown, 0, $maxChars);
+                            $truncated = true;
+                        }
+                    } catch (\Throwable $exception) {
+                        $error = $exception->getMessage();
+                    }
+
+                    $documents[] = [
+                        'objectId' => $result['objectId'],
+                        'title' => $result['title'],
+                        'markdownUrl' => $markdownUrl,
+                        'markdown' => $markdown,
+                        'truncated' => $truncated,
+                        'error' => $error,
+                    ];
+
+                    $remaining--;
+                }
+            }
+
             return [
                 'query' => $query,
                 'area' => $area,
+                'fetch' => $fetch,
+                'maxChars' => $maxChars,
                 'sourceUrl' => $url,
                 'pagination' => $pagination,
                 'results' => $results,
+                'documents' => $documents,
+                'document' => $documents[0] ?? null,
             ];
         } catch (ToolCallException $exception) {
             McpLog::error($client, [
-                'tool' => 'kirby_docs_search',
+                'tool' => 'kirby_online',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
             McpLog::error($client, [
-                'tool' => 'kirby_docs_search',
+                'tool' => 'kirby_online',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
             ]);
@@ -156,7 +222,7 @@ final class DocsTools
         return $decoded;
     }
 
-    private function httpGet(string $url): string
+    private function httpGet(string $url, string $accept = 'application/json'): string
     {
         $userAgent = 'kirby-mcp (MCP server)';
 
@@ -174,19 +240,23 @@ final class DocsTools
                 CURLOPT_TIMEOUT => 20,
                 CURLOPT_USERAGENT => $userAgent,
                 CURLOPT_HTTPHEADER => [
-                    'Accept: application/json',
+                    'Accept: ' . $accept,
                 ],
             ]);
 
             $response = curl_exec($handle);
             if (!is_string($response)) {
                 $error = curl_error($handle);
-                curl_close($handle);
+                if (PHP_VERSION_ID < 80500) {
+                    curl_close($handle);
+                }
                 throw new \RuntimeException('HTTP request failed: ' . ($error !== '' ? $error : 'unknown error'));
             }
 
             $status = (int)curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-            curl_close($handle);
+            if (PHP_VERSION_ID < 80500) {
+                curl_close($handle);
+            }
 
             if ($status < 200 || $status >= 300) {
                 throw new \RuntimeException('HTTP request failed with status ' . $status);
@@ -201,7 +271,7 @@ final class DocsTools
                 'timeout' => 20,
                 'header' => implode("\r\n", [
                     'User-Agent: ' . $userAgent,
-                    'Accept: application/json',
+                    'Accept: ' . $accept,
                 ]),
             ],
         ]);

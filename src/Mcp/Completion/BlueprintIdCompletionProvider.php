@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Completion;
 
 use Bnomei\KirbyMcp\Blueprint\BlueprintScanner;
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
-use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Support\StaticCache;
 use Mcp\Capability\Completion\ProviderInterface;
 
 final class BlueprintIdCompletionProvider implements ProviderInterface
@@ -17,50 +19,48 @@ final class BlueprintIdCompletionProvider implements ProviderInterface
     {
         $currentValue = trim($currentValue);
 
-        $context = new ProjectContext();
-        $projectRoot = $context->projectRoot();
-        $host = $context->kirbyHost();
+        $runtime = new KirbyRuntimeContext(new ProjectContext());
+        $projectRoot = $runtime->projectRoot();
+        $host = $runtime->host();
 
-        $cacheKey = rtrim($projectRoot, DIRECTORY_SEPARATOR) . '|' . trim((string) $host);
-        static $cachedIdsByProject = [];
+        $ttlSeconds = KirbyMcpConfig::load($projectRoot)->cacheTtlSeconds();
+        $cacheKey = 'completion:blueprints:' . sha1(rtrim($projectRoot, DIRECTORY_SEPARATOR) . '|' . trim((string) $host));
 
-        if (!isset($cachedIdsByProject[$cacheKey])) {
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
-            $blueprintsRoot = $roots->get('blueprints') ?? ($projectRoot . '/site/blueprints');
+        $ids = null;
+        if ($ttlSeconds > 0) {
+            $cached = StaticCache::get($cacheKey);
+            if (is_array($cached)) {
+                $ids = array_values(array_filter($cached, static fn (mixed $id): bool => is_string($id) && $id !== ''));
+            }
+        }
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprints.php';
+        if (!is_array($ids)) {
+            $blueprintsRoot = $runtime->root(
+                key: 'blueprints',
+                fallback: rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'blueprints',
+            );
 
             $ids = [];
 
-            if (is_file($expectedCommandFile)) {
-                $env = [];
-                if (is_string($host) && trim($host) !== '') {
-                    $env['KIRBY_HOST'] = trim($host);
-                }
+            $result = (new RuntimeCommandRunner($runtime))->runMarkedJson(
+                expectedCommandRelativePath: RuntimeCommands::BLUEPRINTS_FILE,
+                args: [RuntimeCommands::BLUEPRINTS, '--ids-only'],
+                timeoutSeconds: 60,
+            );
 
-                $cliResult = (new KirbyCliRunner())->run(
-                    projectRoot: $projectRoot,
-                    args: ['mcp:blueprints', '--ids-only'],
-                    env: $env,
-                    timeoutSeconds: 60,
-                );
-
-                $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-                if (is_array($payload) && is_array($payload['blueprints'] ?? null)) {
-                    foreach ($payload['blueprints'] as $entry) {
-                        if (!is_array($entry)) {
-                            continue;
-                        }
-
-                        $id = $entry['id'] ?? null;
-                        if (!is_string($id) || $id === '') {
-                            continue;
-                        }
-
-                        $ids[] = $id;
+            $payload = $result->payload;
+            if (is_array($payload) && is_array($payload['blueprints'] ?? null)) {
+                foreach ($payload['blueprints'] as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
                     }
+
+                    $id = $entry['id'] ?? null;
+                    if (!is_string($id) || $id === '') {
+                        continue;
+                    }
+
+                    $ids[] = $id;
                 }
             }
 
@@ -72,11 +72,10 @@ final class BlueprintIdCompletionProvider implements ProviderInterface
             $ids = array_values(array_unique($ids));
             sort($ids);
 
-            $cachedIdsByProject[$cacheKey] = $ids;
+            if ($ttlSeconds > 0) {
+                StaticCache::set($cacheKey, $ids, $ttlSeconds);
+            }
         }
-
-        /** @var array<int, string> $ids */
-        $ids = $cachedIdsByProject[$cacheKey];
 
         $encodedIds = [];
         foreach ($ids as $id) {

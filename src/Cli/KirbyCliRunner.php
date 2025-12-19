@@ -28,14 +28,20 @@ final class KirbyCliRunner
             );
         }
 
+        $prepend = __DIR__ . DIRECTORY_SEPARATOR . 'kirby-cli-prepend.php';
+        $command = array_merge([$binary], $args);
+        if (is_file($prepend)) {
+            $command = array_merge([PHP_BINARY, '-d', 'auto_prepend_file=' . $prepend, $binary], $args);
+        }
+
         $process = new Process(
-            command: array_merge([$binary], $args),
+            command: $command,
             cwd: $projectRoot,
-            env: $env + [
+            env: $this->mergedEnv($env + [
                 // Prevent wrapped output where possible.
                 'COLUMNS' => '160',
                 'LINES' => '60',
-            ],
+            ]),
         );
 
         $process->setTimeout($timeoutSeconds);
@@ -87,6 +93,35 @@ final class KirbyCliRunner
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, string> $overrides
+     * @return array<string, string>
+     */
+    private function mergedEnv(array $overrides): array
+    {
+        $base = getenv();
+        if (!is_array($base)) {
+            $base = [];
+        }
+
+        // Normalize to string-only env vars.
+        $base = array_filter(
+            $base,
+            static fn (mixed $value): bool => is_string($value),
+        );
+
+        // Ensure explicit overrides win.
+        foreach ($overrides as $key => $value) {
+            if (!is_string($key) || $key === '' || !is_string($value)) {
+                continue;
+            }
+
+            $base[$key] = $value;
+        }
+
+        return $base;
     }
 
     private function resolvePath(string $path, string $projectRoot): ?string

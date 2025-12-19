@@ -2,4 +2,4 @@
 
 declare(strict_types=1);
 
-return \Bnomei\KirbyMcp\Runtime\McpRenderCommand::definition();
+return \Bnomei\KirbyMcp\Mcp\Commands\Render::definition();

@@ -37,6 +37,22 @@ it('indexes snippets via Kirby roots', function (): void {
     expect($index['snippets'])->toHaveKey('blocks/gallery');
 });
 
+it('indexes collections via Kirby roots', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    $tools = new CodeIndexTools();
+
+    $index = $tools->collectionsIndex();
+
+    expect($index['exists'])->toBeTrue();
+    expect($index['collections'])->toHaveKey('notes');
+    expect($index['collections']['notes']['relativePath'])->toBe('site/collections/notes.php');
+});
+
 it('indexes controllers via Kirby roots', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();

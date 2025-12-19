@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
-use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Project\RootsCodeIndexer;
+use Bnomei\KirbyMcp\Support\IndexList;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
@@ -57,49 +59,47 @@ final class CodeIndexTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
 
             $templatesRoot = $roots->get('templates') ?? ($projectRoot . '/site/templates');
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'templates.php';
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $templatesRoot,
+                expectedCommandRelativePath: RuntimeCommands::TEMPLATES_FILE,
+                command: RuntimeCommands::TEMPLATES,
+                listKey: 'templates',
+                rootKey: 'templatesRoot',
+                idsKey: 'templateIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: $activeSource,
+                overriddenOnly: $overriddenOnly,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
 
-            if (is_file($expectedCommandFile)) {
-                return $this->runtimeIndexList(
-                    projectRoot: $projectRoot,
-                    host: $host,
-                    rootPathFallback: $templatesRoot,
-                    expectedCommandFile: $expectedCommandFile,
-                    command: 'mcp:templates',
-                    listKey: 'templates',
-                    rootKey: 'templatesRoot',
-                    idsKey: 'templateIds',
-                    idsOnly: $idsOnly,
-                    fields: $fields,
-                    activeSource: $activeSource,
-                    overriddenOnly: $overriddenOnly,
-                    limit: $limit,
-                    cursor: $cursor,
-                    debug: $debug,
-                    augmentEntry: function (array $entry) use ($projectRoot): array {
-                        $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
-                        if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
-                            $entry['absolutePath'] = $activeAbsolutePath;
-                            $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
-                        } else {
-                            $entry['absolutePath'] = null;
-                            $entry['relativePath'] = null;
-                        }
+                    $rootRelativePath = $entry['file']['templatesRoot']['relativeToTemplatesRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
 
-                        $rootRelativePath = $entry['file']['templatesRoot']['relativeToTemplatesRoot'] ?? null;
-                        $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+                    return $entry;
+                },
+            );
 
-                        return $entry;
-                    },
-                );
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
             }
 
             $data = (new RootsCodeIndexer())->templates($projectRoot, $roots);
@@ -190,49 +190,47 @@ final class CodeIndexTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
 
             $snippetsRoot = $roots->get('snippets') ?? ($projectRoot . '/site/snippets');
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'snippets.php';
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $snippetsRoot,
+                expectedCommandRelativePath: RuntimeCommands::SNIPPETS_FILE,
+                command: RuntimeCommands::SNIPPETS,
+                listKey: 'snippets',
+                rootKey: 'snippetsRoot',
+                idsKey: 'snippetIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: $activeSource,
+                overriddenOnly: $overriddenOnly,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
 
-            if (is_file($expectedCommandFile)) {
-                return $this->runtimeIndexList(
-                    projectRoot: $projectRoot,
-                    host: $host,
-                    rootPathFallback: $snippetsRoot,
-                    expectedCommandFile: $expectedCommandFile,
-                    command: 'mcp:snippets',
-                    listKey: 'snippets',
-                    rootKey: 'snippetsRoot',
-                    idsKey: 'snippetIds',
-                    idsOnly: $idsOnly,
-                    fields: $fields,
-                    activeSource: $activeSource,
-                    overriddenOnly: $overriddenOnly,
-                    limit: $limit,
-                    cursor: $cursor,
-                    debug: $debug,
-                    augmentEntry: function (array $entry) use ($projectRoot): array {
-                        $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
-                        if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
-                            $entry['absolutePath'] = $activeAbsolutePath;
-                            $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
-                        } else {
-                            $entry['absolutePath'] = null;
-                            $entry['relativePath'] = null;
-                        }
+                    $rootRelativePath = $entry['file']['snippetsRoot']['relativeToSnippetsRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
 
-                        $rootRelativePath = $entry['file']['snippetsRoot']['relativeToSnippetsRoot'] ?? null;
-                        $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+                    return $entry;
+                },
+            );
 
-                        return $entry;
-                    },
-                );
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
             }
 
             $data = (new RootsCodeIndexer())->snippets($projectRoot, $roots);
@@ -293,6 +291,137 @@ final class CodeIndexTools
      * @return array<string, mixed>
      */
     #[McpToolIndex(
+        whenToUse: 'Use to list available Kirby named collections with file paths. Prefers runtime truth (includes plugin-registered collections) when runtime commands are installed.',
+        keywords: [
+            'collection' => 100,
+            'collections' => 100,
+            'named collection' => 80,
+            'query' => 20,
+            'reuse' => 20,
+            'index' => 20,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_collections_index',
+        description: 'Index Kirby named collections keyed by id (e.g. articles/latest). Defaults to a compact payload (no raw CLI stdout/stderr). Prefers runtime `kirby mcp:collections` (includes plugin-registered collections); falls back to filesystem scan when runtime commands are not installed. Supports idsOnly, fields selection, filters, and pagination to avoid truncation.',
+        annotations: new ToolAnnotations(
+            title: 'Collections Index',
+            readOnlyHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function collectionsIndex(
+        ?ClientGateway $client = null,
+        bool $idsOnly = false,
+        ?array $fields = null,
+        ?string $activeSource = null,
+        bool $overriddenOnly = false,
+        int $limit = 0,
+        int $cursor = 0,
+        bool $debug = false,
+    ): array {
+        try {
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
+
+            $collectionsRoot = $roots->get('collections') ?? ($projectRoot . '/site/collections');
+
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $collectionsRoot,
+                expectedCommandRelativePath: RuntimeCommands::COLLECTIONS_FILE,
+                command: RuntimeCommands::COLLECTIONS,
+                listKey: 'collections',
+                rootKey: 'collectionsRoot',
+                idsKey: 'collectionIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: $activeSource,
+                overriddenOnly: $overriddenOnly,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
+
+                    $rootRelativePath = $entry['file']['collectionsRoot']['relativeToCollectionsRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+
+                    return $entry;
+                },
+            );
+
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
+            }
+
+            $data = (new RootsCodeIndexer())->collections($projectRoot, $roots);
+
+            return $this->filesystemIndexList(
+                projectRoot: $projectRoot,
+                host: $host,
+                data: $data,
+                rootKey: 'collectionsRoot',
+                rootFallback: $collectionsRoot,
+                listKey: 'collections',
+                idsKey: 'collectionIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: $activeSource,
+                overriddenOnly: $overriddenOnly,
+                limit: $limit,
+                cursor: $cursor,
+                needsRuntimeInstall: true,
+                message: 'Runtime CLI commands are not installed; only filesystem collections are indexed. Run kirby_runtime_install to include plugin-registered collections.',
+                buildEntry: function (string $id, array $entry) use ($projectRoot): array {
+                    $absolutePath = $entry['absolutePath'] ?? null;
+                    $rootRelativePath = $entry['rootRelativePath'] ?? null;
+
+                    return [
+                        'id' => $id,
+                        'name' => $entry['name'] ?? $id,
+                        'absolutePath' => $absolutePath,
+                        'relativePath' => is_string($absolutePath) ? $this->relativeToProject($projectRoot, $absolutePath) : null,
+                        'rootRelativePath' => is_string($rootRelativePath) ? $rootRelativePath : null,
+                        'activeSource' => 'file',
+                        'sources' => ['file'],
+                        'overriddenByFile' => false,
+                        'file' => [
+                            'active' => is_string($absolutePath) ? [
+                                'absolutePath' => $absolutePath,
+                            ] : null,
+                            'collectionsRoot' => is_string($absolutePath) ? [
+                                'absolutePath' => $absolutePath,
+                                'relativeToCollectionsRoot' => is_string($rootRelativePath) ? $rootRelativePath : null,
+                            ] : null,
+                            'extension' => null,
+                        ],
+                    ];
+                },
+            );
+        } catch (\Throwable $exception) {
+            McpLog::error($client, [
+                'tool' => 'kirby_collections_index',
+                'error' => $exception->getMessage(),
+                'exception' => $exception::class,
+            ]);
+            throw new ToolCallException($exception->getMessage());
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
         whenToUse: 'Use to list available Kirby controllers with file paths. Prefers runtime truth (includes plugin-registered controllers) when runtime commands are installed.',
         keywords: [
             'controller' => 100,
@@ -320,49 +449,47 @@ final class CodeIndexTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
 
             $controllersRoot = $roots->get('controllers') ?? ($projectRoot . '/site/controllers');
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'controllers.php';
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $controllersRoot,
+                expectedCommandRelativePath: RuntimeCommands::CONTROLLERS_FILE,
+                command: RuntimeCommands::CONTROLLERS,
+                listKey: 'controllers',
+                rootKey: 'controllersRoot',
+                idsKey: 'controllerIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: $activeSource,
+                overriddenOnly: $overriddenOnly,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
 
-            if (is_file($expectedCommandFile)) {
-                return $this->runtimeIndexList(
-                    projectRoot: $projectRoot,
-                    host: $host,
-                    rootPathFallback: $controllersRoot,
-                    expectedCommandFile: $expectedCommandFile,
-                    command: 'mcp:controllers',
-                    listKey: 'controllers',
-                    rootKey: 'controllersRoot',
-                    idsKey: 'controllerIds',
-                    idsOnly: $idsOnly,
-                    fields: $fields,
-                    activeSource: $activeSource,
-                    overriddenOnly: $overriddenOnly,
-                    limit: $limit,
-                    cursor: $cursor,
-                    debug: $debug,
-                    augmentEntry: function (array $entry) use ($projectRoot): array {
-                        $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
-                        if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
-                            $entry['absolutePath'] = $activeAbsolutePath;
-                            $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
-                        } else {
-                            $entry['absolutePath'] = null;
-                            $entry['relativePath'] = null;
-                        }
+                    $rootRelativePath = $entry['file']['controllersRoot']['relativeToControllersRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
 
-                        $rootRelativePath = $entry['file']['controllersRoot']['relativeToControllersRoot'] ?? null;
-                        $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+                    return $entry;
+                },
+            );
 
-                        return $entry;
-                    },
-                );
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
             }
 
             $data = (new RootsCodeIndexer())->controllers($projectRoot, $roots);
@@ -465,49 +592,47 @@ final class CodeIndexTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
 
             $modelsRoot = $roots->get('models') ?? ($projectRoot . '/site/models');
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'models.php';
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $modelsRoot,
+                expectedCommandRelativePath: RuntimeCommands::MODELS_FILE,
+                command: RuntimeCommands::MODELS,
+                listKey: 'models',
+                rootKey: 'modelsRoot',
+                idsKey: 'modelIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: null,
+                overriddenOnly: false,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
 
-            if (is_file($expectedCommandFile)) {
-                return $this->runtimeIndexList(
-                    projectRoot: $projectRoot,
-                    host: $host,
-                    rootPathFallback: $modelsRoot,
-                    expectedCommandFile: $expectedCommandFile,
-                    command: 'mcp:models',
-                    listKey: 'models',
-                    rootKey: 'modelsRoot',
-                    idsKey: 'modelIds',
-                    idsOnly: $idsOnly,
-                    fields: $fields,
-                    activeSource: null,
-                    overriddenOnly: false,
-                    limit: $limit,
-                    cursor: $cursor,
-                    debug: $debug,
-                    augmentEntry: function (array $entry) use ($projectRoot): array {
-                        $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
-                        if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
-                            $entry['absolutePath'] = $activeAbsolutePath;
-                            $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
-                        } else {
-                            $entry['absolutePath'] = null;
-                            $entry['relativePath'] = null;
-                        }
+                    $rootRelativePath = $entry['file']['modelsRoot']['relativeToModelsRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
 
-                        $rootRelativePath = $entry['file']['modelsRoot']['relativeToModelsRoot'] ?? null;
-                        $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+                    return $entry;
+                },
+            );
 
-                        return $entry;
-                    },
-                );
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
             }
 
             $data = (new RootsCodeIndexer())->models($projectRoot, $roots);
@@ -599,49 +724,47 @@ final class CodeIndexTools
         bool $debug = false,
     ): array {
         try {
-            $projectRoot = $this->context->projectRoot();
-            $host = $this->context->kirbyHost();
-            $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+            $runtime = new KirbyRuntimeContext($this->context);
+            $projectRoot = $runtime->projectRoot();
+            $host = $runtime->host();
+            $roots = $runtime->roots();
 
             $pluginsRoot = $roots->get('plugins') ?? ($projectRoot . '/site/plugins');
 
-            $commandsRoot = $roots->commandsRoot()
-                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-            $expectedCommandFile = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'plugins.php';
+            $runtimeIndex = $this->runtimeIndexList(
+                runtime: $runtime,
+                rootPathFallback: $pluginsRoot,
+                expectedCommandRelativePath: RuntimeCommands::PLUGINS_FILE,
+                command: RuntimeCommands::PLUGINS,
+                listKey: 'plugins',
+                rootKey: 'pluginsRoot',
+                idsKey: 'pluginIds',
+                idsOnly: $idsOnly,
+                fields: $fields,
+                activeSource: null,
+                overriddenOnly: false,
+                limit: $limit,
+                cursor: $cursor,
+                debug: $debug,
+                augmentEntry: function (array $entry) use ($projectRoot): array {
+                    $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
+                    if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
+                        $entry['absolutePath'] = $activeAbsolutePath;
+                        $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
+                    } else {
+                        $entry['absolutePath'] = null;
+                        $entry['relativePath'] = null;
+                    }
 
-            if (is_file($expectedCommandFile)) {
-                return $this->runtimeIndexList(
-                    projectRoot: $projectRoot,
-                    host: $host,
-                    rootPathFallback: $pluginsRoot,
-                    expectedCommandFile: $expectedCommandFile,
-                    command: 'mcp:plugins',
-                    listKey: 'plugins',
-                    rootKey: 'pluginsRoot',
-                    idsKey: 'pluginIds',
-                    idsOnly: $idsOnly,
-                    fields: $fields,
-                    activeSource: null,
-                    overriddenOnly: false,
-                    limit: $limit,
-                    cursor: $cursor,
-                    debug: $debug,
-                    augmentEntry: function (array $entry) use ($projectRoot): array {
-                        $activeAbsolutePath = $entry['file']['active']['absolutePath'] ?? null;
-                        if (is_string($activeAbsolutePath) && $activeAbsolutePath !== '') {
-                            $entry['absolutePath'] = $activeAbsolutePath;
-                            $entry['relativePath'] = $this->relativeToProject($projectRoot, $activeAbsolutePath);
-                        } else {
-                            $entry['absolutePath'] = null;
-                            $entry['relativePath'] = null;
-                        }
+                    $rootRelativePath = $entry['file']['pluginsRoot']['relativeToPluginsRoot'] ?? null;
+                    $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
 
-                        $rootRelativePath = $entry['file']['pluginsRoot']['relativeToPluginsRoot'] ?? null;
-                        $entry['rootRelativePath'] = is_string($rootRelativePath) ? $rootRelativePath : null;
+                    return $entry;
+                },
+            );
 
-                        return $entry;
-                    },
-                );
+            if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
+                return $runtimeIndex;
             }
 
             $data = (new RootsCodeIndexer())->plugins($projectRoot, $roots);
@@ -681,10 +804,9 @@ final class CodeIndexTools
      * @return array<string, mixed>
      */
     private function runtimeIndexList(
-        string $projectRoot,
-        ?string $host,
+        KirbyRuntimeContext $runtime,
         string $rootPathFallback,
-        string $expectedCommandFile,
+        string $expectedCommandRelativePath,
         string $command,
         string $listKey,
         string $rootKey,
@@ -698,19 +820,8 @@ final class CodeIndexTools
         bool $debug,
         callable $augmentEntry,
     ): array {
-        if (!is_file($expectedCommandFile)) {
-            return [
-                'ok' => false,
-                'needsRuntimeInstall' => true,
-                'message' => 'Kirby MCP runtime CLI commands are not installed in this project. Run kirby_runtime_install first.',
-                'expectedCommandFile' => $expectedCommandFile,
-            ];
-        }
-
-        $env = [];
-        if (is_string($host) && trim($host) !== '') {
-            $env['KIRBY_HOST'] = trim($host);
-        }
+        $projectRoot = $runtime->projectRoot();
+        $host = $runtime->host();
 
         $args = [$command];
         if ($idsOnly === true) {
@@ -737,39 +848,30 @@ final class CodeIndexTools
             $args[] = '--debug';
         }
 
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
+        $result = (new RuntimeCommandRunner($runtime))->runMarkedJson(
+            expectedCommandRelativePath: $expectedCommandRelativePath,
             args: $args,
-            env: $env,
             timeoutSeconds: 60,
         );
 
-        $parseError = null;
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if ($result->installed !== true) {
+            return $result->needsRuntimeInstallResponse();
         }
 
-        if (!is_array($payload)) {
-            return [
-                'ok' => false,
+        if (!is_array($result->payload)) {
+            return $result->parseErrorResponse([
                 'mode' => 'runtime',
                 'projectRoot' => $projectRoot,
                 'host' => $host,
                 $rootKey => $rootPathFallback,
-                'parseError' => $parseError ?? 'Unable to parse JSON output from Kirby CLI command.',
-                'cliMeta' => [
-                    'exitCode' => $cliResult->exitCode,
-                    'timedOut' => $cliResult->timedOut,
-                ],
-                'message' => $debug === true
-                    ? null
-                    : 'Retry with debug=true to include CLI stdout/stderr.',
-                'cli' => $debug === true ? $cliResult->toArray() : null,
-            ];
+                'cliMeta' => $result->cliMeta(),
+                'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                'cli' => $debug === true ? $result->cli() : null,
+            ]);
         }
+
+        /** @var array<string, mixed> $payload */
+        $payload = $result->payload;
 
         $list = $payload[$listKey] ?? null;
         $ids = [];
@@ -793,7 +895,7 @@ final class CodeIndexTools
                 }
 
                 $entry = $augmentEntry($entry);
-                $byId[$id] = $this->selectFields($entry, $fields, $id);
+                $byId[$id] = IndexList::selectFields($entry, $fields, $id);
             }
         }
 
@@ -818,10 +920,7 @@ final class CodeIndexTools
             'counts' => $payload['counts'] ?? null,
             'filters' => $payload['filters'] ?? null,
             'pagination' => $payload['pagination'] ?? null,
-            'cliMeta' => [
-                'exitCode' => $cliResult->exitCode,
-                'timedOut' => $cliResult->timedOut,
-            ],
+            'cliMeta' => $result->cliMeta(),
         ];
 
         if ($idsOnly === true) {
@@ -831,7 +930,7 @@ final class CodeIndexTools
         }
 
         if ($debug === true) {
-            $response['cli'] = $cliResult->toArray();
+            $response['cli'] = $result->cliResult?->toArray();
         }
 
         return $response;
@@ -893,8 +992,9 @@ final class CodeIndexTools
 
         $filteredTotal = count($ids);
 
-        $pagination = $this->paginateIds($ids, $cursor, $limit);
+        $pagination = IndexList::paginateIds($ids, $cursor, $limit);
         $pagedIds = $pagination['ids'];
+        $paginationMeta = $pagination['pagination'];
 
         $byId = [];
         if ($idsOnly === false) {
@@ -905,7 +1005,7 @@ final class CodeIndexTools
                 }
 
                 $built = $buildEntry($id, $entry);
-                $byId[$id] = $this->selectFields($built, $fields, $id);
+                $byId[$id] = IndexList::selectFields($built, $fields, $id);
             }
 
             ksort($byId);
@@ -928,13 +1028,13 @@ final class CodeIndexTools
             $rootKey => $root,
             'exists' => $exists,
             'filters' => $filters,
-            'pagination' => $pagination['pagination'],
+            'pagination' => $paginationMeta,
             'counts' => [
                 'extensions' => 0,
                 'files' => $unfilteredTotal,
                 'total' => $unfilteredTotal,
                 'filtered' => $filteredTotal,
-                'returned' => $pagination['pagination']['returned'],
+                'returned' => $paginationMeta['returned'],
                 'overriddenByFile' => 0,
             ],
         ];
@@ -954,106 +1054,6 @@ final class CodeIndexTools
         }
 
         return $response;
-    }
-
-    /**
-     * @param array<int, string> $ids
-     * @return array{
-     *   ids: array<int, string>,
-     *   pagination: array{cursor:int, limit:int, nextCursor:int|null, hasMore:bool, returned:int, total:int}
-     * }
-     */
-    private function paginateIds(array $ids, int $cursor, int $limit): array
-    {
-        if ($cursor < 0) {
-            $cursor = 0;
-        }
-
-        if ($limit < 0) {
-            $limit = 0;
-        }
-
-        $total = count($ids);
-
-        $paged = $ids;
-        if ($cursor > 0 || $limit > 0) {
-            if ($cursor >= $total) {
-                $paged = [];
-            } elseif ($limit > 0) {
-                $paged = array_slice($ids, $cursor, $limit);
-            } else {
-                $paged = array_slice($ids, $cursor);
-            }
-        }
-
-        $returned = count($paged);
-        $nextCursor = null;
-        $hasMore = false;
-        if ($limit > 0 && $cursor + $returned < $total) {
-            $nextCursor = $cursor + $returned;
-            $hasMore = true;
-        }
-
-        return [
-            'ids' => $paged,
-            'pagination' => [
-                'cursor' => $cursor,
-                'limit' => $limit,
-                'nextCursor' => $nextCursor,
-                'hasMore' => $hasMore,
-                'returned' => $returned,
-                'total' => $total,
-            ],
-        ];
-    }
-
-    /**
-     * @param array<int, string>|null $fields
-     * @param array<string, mixed> $entry
-     * @return array<string, mixed>
-     */
-    private function selectFields(array $entry, ?array $fields, string $id): array
-    {
-        if (!is_array($fields)) {
-            return $entry;
-        }
-
-        $wanted = [];
-        foreach ($fields as $field) {
-            if (!is_string($field)) {
-                continue;
-            }
-
-            $field = trim($field);
-            if ($field === '') {
-                continue;
-            }
-
-            $wanted[] = $field;
-        }
-
-        $wanted = array_values(array_unique($wanted));
-        if ($wanted === []) {
-            return $entry;
-        }
-
-        if (!in_array('id', $wanted, true)) {
-            $wanted[] = 'id';
-        }
-
-        $selected = [];
-        foreach ($wanted as $field) {
-            if ($field === 'id') {
-                $selected['id'] = $id;
-                continue;
-            }
-
-            if (array_key_exists($field, $entry)) {
-                $selected[$field] = $entry[$field];
-            }
-        }
-
-        return $selected;
     }
 
     private function relativeToProject(string $projectRoot, string $absolutePath): string

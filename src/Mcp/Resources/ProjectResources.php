@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
-use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
+use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
-use Bnomei\KirbyMcp\Project\EnvironmentDetector;
-use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Bnomei\KirbyMcp\Project\ProjectInfoInspector;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Exception\ResourceReadException;
 
@@ -33,37 +33,33 @@ final class ProjectResources
      *     tools: array<string, mixed>
      *   }
      * }
-     */
+    */
     #[McpResource(
-        uri: 'kirby://project/info',
-        name: 'project_info',
+        uri: 'kirby://info',
+        name: 'info',
         description: 'Project runtime info (PHP + Kirby version via CLI), composer audit, and local environment detection (Herd/DDEV/Docker).',
         mimeType: 'application/json',
+    )]
+    #[McpToolIndex(
+        whenToUse: 'Use to get quick project context: versions (PHP/Kirby), composer audit, and local environment signals.',
+        keywords: [
+            'info' => 100,
+            'project' => 60,
+            'version' => 40,
+            'composer' => 30,
+            'environment' => 30,
+            'roots' => 20,
+        ],
     )]
     public function projectInfo(): array
     {
         $projectRoot = $this->context->projectRoot();
 
-        $composerAudit = (new ComposerInspector())->inspect($projectRoot);
-        if (!isset($composerAudit->composerJson['require']['getkirby/cms'])) {
-            throw new ResourceReadException('This MCP server supports composer-based Kirby installs only (missing getkirby/cms).');
+        try {
+            return (new ProjectInfoInspector())->inspect($projectRoot);
+        } catch (\Throwable $exception) {
+            throw new ResourceReadException($exception->getMessage());
         }
-
-        $environment = (new EnvironmentDetector())->detect($projectRoot);
-
-        $cliResult = (new KirbyCliRunner())->run(
-            projectRoot: $projectRoot,
-            args: ['version'],
-            timeoutSeconds: 30,
-        );
-
-        return [
-            'projectRoot' => $projectRoot,
-            'phpVersion' => PHP_VERSION,
-            'kirbyVersion' => trim($cliResult->stdout),
-            'environment' => $environment->toArray(),
-            'composer' => $composerAudit->toArray(),
-        ];
     }
 
     /**
@@ -74,12 +70,24 @@ final class ProjectResources
      *   scripts: array<string, mixed>,
      *   tools: array<string, mixed>
      * }
-     */
+    */
     #[McpResource(
-        uri: 'kirby://project/composer',
-        name: 'project_composer',
+        uri: 'kirby://composer',
+        name: 'composer',
         description: 'Composer audit (composer.json/lock): detects test runner and quality tools; returns “how to run” commands.',
         mimeType: 'application/json',
+    )]
+    #[McpToolIndex(
+        whenToUse: 'Use to inspect composer scripts/tools (tests, phpstan, formatting) and Kirby dependency versions.',
+        keywords: [
+            'composer' => 100,
+            'scripts' => 40,
+            'test' => 30,
+            'phpstan' => 20,
+            'pint' => 20,
+            'tools' => 20,
+            'audit' => 60,
+        ],
     )]
     public function composerAudit(): array
     {
@@ -93,16 +101,31 @@ final class ProjectResources
      * @return array{projectRoot:string, host:string|null, roots: array<string, string>}
      */
     #[McpResource(
-        uri: 'kirby://project/roots',
-        name: 'project_roots',
+        uri: 'kirby://roots',
+        name: 'roots',
         description: 'Kirby roots (kirby()->roots) discovered via Kirby CLI using the configured default host (KIRBY_MCP_HOST/KIRBY_HOST or .kirby-mcp/mcp.json) when present.',
         mimeType: 'application/json',
     )]
+    #[McpToolIndex(
+        whenToUse: 'Use to discover Kirby roots (content, site, templates, snippets, blueprints, plugins) as resolved by Kirby at runtime.',
+        keywords: [
+            'roots' => 100,
+            'paths' => 60,
+            'content' => 40,
+            'site' => 30,
+            'templates' => 30,
+            'snippets' => 30,
+            'blueprints' => 30,
+            'plugins' => 30,
+            'runtime' => 20,
+        ],
+    )]
     public function roots(): array
     {
-        $projectRoot = $this->context->projectRoot();
-        $host = $this->context->kirbyHost();
-        $roots = (new KirbyRootsInspector())->inspect($projectRoot, $host);
+        $runtime = new KirbyRuntimeContext($this->context);
+        $projectRoot = $runtime->projectRoot();
+        $host = $runtime->host();
+        $roots = $runtime->roots();
 
         return [
             'projectRoot' => $projectRoot,
