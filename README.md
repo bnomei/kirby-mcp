@@ -29,8 +29,25 @@ Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples
 Use these once your MCP client is connected to the server.
 
 ```text
-Use the Kirby MCP to make a plan to ...
+Use the Kirby MCP to make a plan to... build a contact form page.
 ```
+
+<details>
+<summary>Agent response example:</summary>
+
+```text
+Here’s a Kirby MCP–driven plan for a new contact form page in this project:
+
+- Confirm requirements: fields (name/email/message), spam protection (honeypot + csrf()), success UX (inline vs redirect), and whether to store submissions.
+- Panel setup: reuse existing blueprint site/blueprints/pages/contact.yml; update site/blueprints/site.yml so the site “pages” section allows creating template contact.
+- Create the page: add content/4_contact/contact.txt (or create via Panel once allowed) and fill recipient, subject, success, text.
+- Frontend: add site/templates/contact.php + a snippet like site/snippets/contact-form.php (escape all echoed user input; include hidden CSRF field + honeypot).
+- Controller: add site/controllers/contact.php to handle POST: check csrf(get('csrf')), validate with invalid(), then send mail via $kirby->email() using replyTo (never use user input as from) and an email template like site/templates/emails/contact.text.php (optional contact.html.php).
+- Email config: add site/config/config.php email.transport/email.presets (current kirby://config/email is null).
+- Verify with MCP: render the page via kirby_render_page(id='contact', noCache=true); debug with mcp_dump() + kirby_dump_log_tail(traceId=...); inspect blueprint/roots via kirby_blueprint_read(id='pages/contact') and kirby://roots.
+```
+
+</details>
 
 ```text
 Append " with AI" to the title of the home page with Kirby MCP.
