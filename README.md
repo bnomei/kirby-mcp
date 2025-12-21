@@ -9,9 +9,9 @@
 [![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da&icon=discord&label)](https://discordapp.com/users/bnomei)
 [![Buymecoffee](https://flat.badgen.net/badge/icon/donate?icon=buymeacoffee&color=FF813F&label)](https://www.buymeacoffee.com/bnomei)
 
-CLI-first MCP server for Kirby CMS (composer-based Kirby projects). It lets an IDE/agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks.
+CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks.
 
-> [!WARNING] Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversion with the agent!
+> [!WARNING] Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
 
 ## Quickstart
 
@@ -32,7 +32,7 @@ Use these once your MCP client is connected to the server.
 ### Planning & content
 
 > [!TIP]
-> "Use the Kirby MCP to make a plan to..." is a reliable way to get your agent to use the tools and resources this MCP server provides. If you prompt it to action, it tends to edit files directly based on its training and skills.
+> "Use the Kirby MCP to make a plan to..." is a reliable way to get your agent to use the tools and resources this MCP server provides. If you prompt it to take action, it tends to edit files directly based on its training and skills.
 
 ```text
 Use the Kirby MCP to make a plan to... build a contact form page.
@@ -99,7 +99,7 @@ What is the kirby://config/debug for production?
 ### Search & docs
 
 > [!TIP]
-> The MCP server ships with a local knowledge base about Kirby. It consists of a glossary, common tasks and update guides for content fields. This reduces the need to rely on external resources and is wicked fast.
+> The MCP server ships with a local knowledge base about Kirby. It consists of a glossary, common tasks, and update guides for content fields. This reduces the need to rely on external resources and is very fast.
 
 ```text
 kirby search for collection filtering
@@ -122,21 +122,21 @@ kirby search online for panel permissions
 > Your agent will use the next tool under the hood itself, but you can use it as well to quickly check what the MCP server knows about a given topic.
 
 ```text
-What mcp tool should I use to... list plugins? 
+What mcp tool should I use to... list plugins?
 ```
 `kirby_tool_suggest`
 
 ### Inventory (runtime + filesystem)
 
 ```text
-list blueprints, templates,  snippets, collections, controllers, models, plugins, routes, roots
+list blueprints, templates, snippets, collections, controllers, models, plugins, routes, roots
 ```
 `kirby_blueprints_loaded`, `kirby_blueprints_index`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_collections_index`, `kirby_controllers_index`, `kirby_models_index`, `kirby_plugins_index`, `kirby_routes_index`, `kirby_roots`
 
 ### Debug, tinker/eval and running commands
 
 > [!IMPORTANT]
-> The `kirby_eval` tool is disabled by default and CLI commands are protected by a white-/black-list, see config and security below.
+> The `kirby_eval` tool is disabled by default and CLI commands are protected by an allowlist/denylist, see config and security below.
 
 ```text
 kirby MCP tinker $site->index()->count()
@@ -162,10 +162,10 @@ My home page renders incorrectly. Help me debug it with mcp_dump() to return the
 > [!INFO]
 > `kirby_init` is required once per session before calling any other tool or resource but the agent should figure this out automatically. Some capabilities require the runtime wrappers because they query Kirby at runtime. Installing/updating them should happen automatically as well.
 
-The MCP server tells the agent during initialisation when to use which tool and resource. It also deeply references them within its own knowledge base to ensure the agent knows where to find the information it needs and how to proceed next. 
+At initialization, the server tells the agent which tools/resources to use. The knowledge base cross-references them so the agent can find the next step.
 
 <details>
-<summary🛠️ Tools</summary>
+<summary>🛠️ Tools</summary>
 
 - `kirby_blueprint_read` — read a single blueprint by id
 - `kirby_blueprints_index` — index blueprints, includes plugin-registered ones when runtime is installed
@@ -292,7 +292,7 @@ From the Kirby project directory:
 claude mcp add kirby -- vendor/bin/kirby-mcp
 ```
 
-Or explicit:
+Or explicitly:
 
 ```bash
 claude mcp add kirby -- vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project
@@ -313,7 +313,7 @@ Or configure in `config.toml` under `[mcp_servers.kirby]` (see Codex CLI docs).
 Start the server (point it at a composer-based Kirby project):
 
 - From the Kirby project root: `vendor/bin/kirby-mcp`
-- Or explicit: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
+- Or explicitly: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
 
 
 
