@@ -213,10 +213,10 @@ At initialization, the server tells the agent which tools/resources to use. The 
 
 <details>
 
+<summary>📚 Resources</summary>
+
 > [!TIP]
 > Call a resource to bring condensed knowledge into the current context of your agent.
-
-<summary>📚 Resources</summary>
 
 Resources (read-only):
 
