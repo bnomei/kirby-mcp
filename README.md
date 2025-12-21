@@ -37,6 +37,7 @@ Use these once your MCP client is connected to the server.
 ```text
 Use the Kirby MCP to make a plan to... build a contact form page.
 ```
+
 `kirby_roots`, `kirby_blueprint_read`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_render_page`, `kirby_dump_log_tail`, `kirby://config/{option}`
 
 <details>
@@ -56,27 +57,29 @@ Here’s a Kirby MCP–driven plan for a new contact form page in this project:
 
 </details>
 
-----
+---
 
 ```text
 Show me the fields available on the home page blueprint and what they do using the MCP.
 ```
+
 `kirby_blueprint_read`, `kirby_blueprints_index`
 
-----
+---
 
 ```text
 Show me the current content of the about page.
 ```
+
 `kirby_read_page_content`
 
-----
+---
 
 ```text
 Append " with AI" to the title of the home page with Kirby MCP.
 ```
-`kirby_read_page_content`, `kirby_update_page_content`,  `kirby://field/text/update-schema`
 
+`kirby_read_page_content`, `kirby_update_page_content`, `kirby://field/text/update-schema`
 
 ### Resource shortcuts
 
@@ -86,15 +89,16 @@ Append " with AI" to the title of the home page with Kirby MCP.
 ```text
 kirby://glossary/collection
 ```
+
 `kirby://glossary/{term}`
 
-----
+---
 
 ```text
 What is the kirby://config/debug for production?
 ```
-`kirby://config/{option}`
 
+`kirby://config/{option}`
 
 ### Search & docs
 
@@ -104,9 +108,10 @@ What is the kirby://config/debug for production?
 ```text
 kirby search for collection filtering
 ```
+
 `kirby_search`
 
-----
+---
 
 > [!TIP]
 > But sometimes you or your agent needs to dig deeper. That is why the MCP server also provides a fallback to the official Kirby search and docs (not including the forum). You can trigger it by mentioning `search online` in your prompt.
@@ -114,9 +119,10 @@ kirby search for collection filtering
 ```text
 kirby search online for panel permissions
 ```
+
 `kirby_online`
 
-----
+---
 
 > [!TIP]
 > Your agent will use the next tool under the hood itself, but you can use it as well to quickly check what the MCP server knows about a given topic.
@@ -124,6 +130,7 @@ kirby search online for panel permissions
 ```text
 What mcp tool should I use to... list plugins?
 ```
+
 `kirby_tool_suggest`
 
 ### Inventory (runtime + filesystem)
@@ -131,6 +138,7 @@ What mcp tool should I use to... list plugins?
 ```text
 list blueprints, templates, snippets, collections, controllers, models, plugins, routes, roots
 ```
+
 `kirby_blueprints_loaded`, `kirby_blueprints_index`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_collections_index`, `kirby_controllers_index`, `kirby_models_index`, `kirby_plugins_index`, `kirby_routes_index`, `kirby_roots`
 
 ### Debug, tinker/eval and running commands
@@ -141,20 +149,23 @@ list blueprints, templates, snippets, collections, controllers, models, plugins,
 ```text
 kirby MCP tinker $site->index()->count()
 ```
+
 `kirby_eval`
 
-----
+---
 
 ```text
 run kirby cli command uuid:populate
 ```
+
 `kirby_run_cli_command`
 
-----
+---
 
 ```text
 My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.
 ```
+
 `kirby_render_page`, `kirby_dump_log_tail`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_models_index`
 
 ## Capabilities
@@ -314,8 +325,6 @@ Start the server (point it at a composer-based Kirby project):
 
 - From the Kirby project root: `vendor/bin/kirby-mcp`
 - Or explicitly: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
-
-
 
 ## IDE helpers (optional, for humans)
 

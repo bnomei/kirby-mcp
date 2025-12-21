@@ -78,7 +78,7 @@ final class ToolExamplesResources
                         ],
                     ],
                 ],
-                'notes' => 'The data argument must be a JSON object mapping field keys to values (not an array). Read kirby://field/{type}/update-schema first, then set payloadValidatedWithFieldSchemas=true.',
+                'notes' => 'The data argument must be a JSON object mapping field keys to values (not an array). Pass the object directly; a JSON-encoded string is accepted for compatibility. Read kirby://field/{type}/update-schema first, then set payloadValidatedWithFieldSchemas=true.',
             ],
             [
                 'tool' => 'kirby_run_cli_command',

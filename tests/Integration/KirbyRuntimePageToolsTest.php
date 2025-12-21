@@ -239,7 +239,7 @@ it('updates page content via runtime CLI (confirm=true) and restores fixture', f
         // Test passing JSON string - edge case handling
         $updateJsonString = $tools->updatePageContent(
             id: 'home',
-            data: ['{"headline":"MCP Test Headline (JSON string)"}'], // @phpstan-ignore-line
+            data: '{"headline":"MCP Test Headline (JSON string)"}',
             payloadValidatedWithFieldSchemas: true,
             confirm: true,
         );

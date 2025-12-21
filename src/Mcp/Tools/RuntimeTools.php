@@ -18,6 +18,7 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Support\StaticCache;
+use Mcp\Capability\Attribute\Schema;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\Result\CallToolResult;
@@ -417,7 +418,7 @@ final class RuntimeTools
     /**
      * Update a page's content via the runtime CLI command `mcp:page:update`.
      *
-     * @param array<string, mixed> $data
+     * @param array<string, mixed>|string $data
      * @return array<string, mixed>
      */
     #[McpToolIndex(
@@ -435,7 +436,7 @@ final class RuntimeTools
     )]
     #[McpTool(
         name: 'kirby_update_page_content',
-        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. PREREQUISITE: Read `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`; it uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. PREREQUISITE: Read `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
         annotations: new ToolAnnotations(
             title: 'Update Page Content',
             readOnlyHint: false,
@@ -445,7 +446,12 @@ final class RuntimeTools
     )]
     public function updatePageContent(
         string $id,
-        array $data,
+        #[Schema(
+            type: 'object',
+            description: 'JSON object mapping field keys to values (pass the object directly).',
+            additionalProperties: true,
+        )]
+        array|string $data,
         bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,
         bool $validate = false,
@@ -472,6 +478,32 @@ final class RuntimeTools
                     'kirby://fields/update-schema',
                     'kirby://field/{type}/update-schema',
                 ],
+            ]);
+        }
+
+        if (is_string($data)) {
+            $raw = trim($data);
+            if ($raw === '') {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'data must be a non-empty JSON object (pass an object or a JSON string containing an object).',
+                ]);
+            }
+
+            try {
+                $data = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'Invalid JSON for data: ' . $exception->getMessage(),
+                ]);
+            }
+        }
+
+        if (!is_array($data)) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'data must be a JSON object mapping field keys to values.',
             ]);
         }
 
