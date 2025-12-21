@@ -184,7 +184,7 @@ At initialization, the server tells the agent which tools/resources to use. The 
 - `kirby_blueprints_loaded` — list blueprint ids loaded at runtime
 - `kirby_cache_clear` — clear in-memory caches for this MCP session (StaticCache, config, composer, roots, tool index)
 - `kirby_cli_version` — run `kirby version` and return stdout, stderr and exit code
-- `kirby_composer_audit` — parse composer.json and composer.lock for scripts and quality tools
+- `kirby_composer_audit` — parse composer.json for scripts and quality tools
 - `kirby_collections_index` — index named collections, includes plugin-registered ones when runtime is installed
 - `kirby_controllers_index` — index controllers, includes plugin-registered ones when runtime is installed
 - `kirby_online` — search official Kirby docs (online fallback) and optionally fetch markdown pages

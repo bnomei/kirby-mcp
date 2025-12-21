@@ -17,7 +17,6 @@ final class ProjectInfoInspector
      *   composer: array{
      *     projectRoot: string,
      *     composerJson: array<mixed>,
-     *     composerLock: array<mixed>|null,
      *     scripts: array<string, mixed>,
      *     tools: array<string, mixed>
      *   }

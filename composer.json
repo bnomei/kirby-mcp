@@ -1,7 +1,7 @@
 {
   "name": "bnomei/kirby-mcp",
   "description": "A CLI-first MCP server for Kirby CMS",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "library",
   "license": "MIT",
   "require": {
@@ -59,7 +59,7 @@
   "scripts": {
     "coverage": "herd coverage ./vendor/bin/pest --coverage-clover=coverage.xml",
     "test": "php -d auto_prepend_file=tests/prepend.php vendor/bin/pest",
-    "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
+    "analyse": "php -d auto_prepend_file=tests/prepend.php vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
     "format": "vendor/bin/pint",
     "mcp": "bin/kirby-mcp",
     "cms:patch-kirby-helpers": [

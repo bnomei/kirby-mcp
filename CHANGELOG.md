@@ -5,6 +5,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
-## [1.0.0] - TBD
+## [1.0.2] - 2025-12-21
+
+- Remove composer.lock from composer audit outputs to reduce payload size for init/info tools/resources. thanks @medienbaecker
+
+## [1.0.1] - 2025-12-21
+
+- Fixed CI workflows and minor PHPStan reported errors.
+
+## [1.0.0] - 2025-12-21
 
 - Initial release.

@@ -45,7 +45,6 @@ final class ProjectTools
                 'properties' => [
                     'projectRoot' => ['type' => 'string'],
                     'composerJson' => ['type' => 'object'],
-                    'composerLock' => ['type' => ['object', 'null']],
                     'scripts' => ['type' => 'object'],
                     'tools' => ['type' => 'object'],
                 ],
@@ -66,7 +65,6 @@ final class ProjectTools
      * @return array{
      *   projectRoot: string,
      *   composerJson: array<mixed>,
-     *   composerLock: array<mixed>|null,
      *   scripts: array<string, mixed>,
      *   tools: array<string, mixed>
      * }
@@ -100,7 +98,7 @@ final class ProjectTools
     )]
     #[McpTool(
         name: 'kirby_composer_audit',
-        description: 'Parse composer.json/lock to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/pint/phpcs/php-cs-fixer). Returns “how to run” commands. Resource: `kirby://composer`.',
+        description: 'Parse composer.json to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/pint/phpcs/php-cs-fixer). Returns “how to run” commands. Resource: `kirby://composer`.',
         annotations: new ToolAnnotations(
             title: 'Composer Audit',
             readOnlyHint: true,
@@ -133,7 +131,6 @@ final class ProjectTools
      *   composer: array{
      *     projectRoot: string,
      *     composerJson: array<mixed>,
-     *     composerLock: array<mixed>|null,
      *     scripts: array<string, mixed>,
      *     tools: array<string, mixed>
      *   }

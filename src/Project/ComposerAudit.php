@@ -16,14 +16,12 @@ final readonly class ComposerAudit
 {
     /**
      * @param array<mixed> $composerJson
-     * @param array<mixed>|null $composerLock
      * @param array<string, mixed> $scripts
      * @param array<string, ToolDetection> $tools
      */
     public function __construct(
         public string $projectRoot,
         public array $composerJson,
-        public ?array $composerLock,
         public array $scripts,
         public array $tools,
     ) {
@@ -33,7 +31,6 @@ final readonly class ComposerAudit
      * @return array{
      *   projectRoot: string,
      *   composerJson: array<mixed>,
-     *   composerLock: array<mixed>|null,
      *   scripts: array<string, mixed>,
      *   tools: array<string, ToolDetection>
      * }
@@ -43,7 +40,6 @@ final readonly class ComposerAudit
         return [
             'projectRoot' => $this->projectRoot,
             'composerJson' => $this->composerJson,
-            'composerLock' => $this->composerLock,
             'scripts' => $this->scripts,
             'tools' => $this->tools,
         ];

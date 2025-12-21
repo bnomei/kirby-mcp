@@ -21,4 +21,5 @@ it('inspects project info for the cms fixture', function (): void {
     expect($composer)->toBeArray();
     expect($composer['projectRoot'])->toBe(cmsPath());
     expect($composer['composerJson']['require']['getkirby/cms'])->toBeString();
+    expect($composer)->not()->toHaveKey('composerLock');
 });

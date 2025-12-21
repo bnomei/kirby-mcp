@@ -40,3 +40,4 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 - Dump trace IDs are session-scoped; only use `DumpState` with the active `SessionInterface`.
 - Provide tool output schemas via `_meta.outputSchema` until the PHP MCP SDK supports first-class `outputSchema`; keep `structuredContent` + JSON text in sync.
 - Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually in `bin/kirby-mcp`.
+- Keep init/info payloads lean; omit heavy blobs like `composer.lock` from tool/resource outputs (composer audit does not return lock data).

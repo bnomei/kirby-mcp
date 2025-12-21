@@ -30,7 +30,6 @@ final class ProjectResources
      *   composer: array{
      *     projectRoot: string,
      *     composerJson: array<mixed>,
-     *     composerLock: array<mixed>|null,
      *     scripts: array<string, mixed>,
      *     tools: array<string, mixed>
      *   }
@@ -72,7 +71,6 @@ final class ProjectResources
      * @return array{
      *   projectRoot: string,
      *   composerJson: array<mixed>,
-     *   composerLock: array<mixed>|null,
      *   scripts: array<string, mixed>,
      *   tools: array<string, mixed>
      * }
@@ -80,7 +78,7 @@ final class ProjectResources
     #[McpResource(
         uri: 'kirby://composer',
         name: 'composer',
-        description: 'Composer audit (composer.json/lock): detects test runner and quality tools; returns “how to run” commands.',
+        description: 'Composer audit (composer.json): detects test runner and quality tools; returns “how to run” commands.',
         mimeType: 'application/json',
         annotations: new Annotations(
             audience: [Role::Assistant],
