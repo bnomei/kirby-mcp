@@ -4,13 +4,14 @@
 ![PHP 8.2](https://flat.badgen.net/badge/PHP/8.2?color=4E5B93&icon=php&label)
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-mcp?color=ae81ff&icon=github&label)
 ![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-mcp?color=272822&icon=github&label)
-[![Coverage](https://flat.badgen.net/codeclimate/coverage/bnomei/kirby-mcp?icon=codeclimate&label)](https://codeclimate.com/github/bnomei/kirby-mcp)
-[![Maintainability](https://flat.badgen.net/codeclimate/maintainability/bnomei/kirby-mcp?icon=codeclimate&label)](https://codeclimate.com/github/bnomei/kirby-mcp/issues)
+![Unittests](https://github.com/bnomei/kirby-mcp/actions/workflows/pest-tests.yml/badge.svg)
+![PHPStan](https://github.com/bnomei/kirby-mcp/actions/workflows/phpstan.yml/badge.svg)
 [![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da&icon=discord&label)](https://discordapp.com/users/bnomei)
 [![Buymecoffee](https://flat.badgen.net/badge/icon/donate?icon=buymeacoffee&color=FF813F&label)](https://www.buymeacoffee.com/bnomei)
 
-CLI-first MCP server for Kirby CMS (composer-based Kirby projects). It lets an IDE/agent inspect your Kirby project
-(blueprints, templates, plugins, docs) and—when needed—interact with a real Kirby runtime via installed command wrappers.
+CLI-first MCP server for Kirby CMS (composer-based Kirby projects). It lets an IDE/agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks.
+
+> [!WARNING] Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversion with the agent!
 
 ## Quickstart
 
@@ -26,11 +27,17 @@ Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples
 
 ## Copy-paste prompt examples
 
-Use these once your MCP client is connected to the server. The parenthetical hints show likely MCP tools/resources (not part of the prompt).
+Use these once your MCP client is connected to the server.
 
-**Planning & content**
+### Planning & content
 
-- `Use the Kirby MCP to make a plan to... build a contact form page.` (likely: `kirby_roots`, `kirby_blueprint_read`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_render_page`, `kirby_dump_log_tail`, `kirby://config/{option}`)
+> [!TIP]
+> "Use the Kirby MCP to make a plan to..." is a reliable way to get your agent to use the tools and resources this MCP server provides. If you prompt it to action, it tends to edit files directly based on its training and skills.
+
+```text
+Use the Kirby MCP to make a plan to... build a contact form page.
+```
+`kirby_roots`, `kirby_blueprint_read`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_render_page`, `kirby_dump_log_tail`, `kirby://config/{option}`
 
 <details>
 <summary>Agent response example:</summary>
@@ -49,101 +56,116 @@ Here’s a Kirby MCP–driven plan for a new contact form page in this project:
 
 </details>
 
-- `Append " with AI" to the title of the home page with Kirby MCP.` (tool: `kirby_update_page_content`; likely: `kirby_read_page_content`, `kirby://field/text/update-schema`)
-- `Show me the fields available on the home page blueprint and what they do using the MCP.` (tool: `kirby_blueprint_read`; likely: `kirby_blueprints_index`)
-- `Show me the current content of the home page.` (tool: `kirby_read_page_content`)
+----
 
-**Debug & tinker**
+```text
+Show me the fields available on the home page blueprint and what they do using the MCP.
+```
+`kirby_blueprint_read`, `kirby_blueprints_index`
 
-- `My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.` (tool: `kirby_render_page`, `kirby_dump_log_tail`; likely: `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_models_index`)
-- `kirby MCP tinker $site->index()->count()` (tool: `kirby_eval`)
+----
 
-**Search & docs**
+```text
+Show me the current content of the about page.
+```
+`kirby_read_page_content`
 
-- `kirby search for collection filtering` (tool: `kirby_search`)
-- `kirby search online for panel permissions` (tool: `kirby_online`)
+----
 
-**Inventory (runtime + filesystem)**
+```text
+Append " with AI" to the title of the home page with Kirby MCP.
+```
+`kirby_read_page_content`, `kirby_update_page_content`,  `kirby://field/text/update-schema`
 
-- `list blueprint ids loaded at runtime` (tool: `kirby_blueprints_loaded`)
-- `list blueprints (ids only)` (tool: `kirby_blueprints_index`)
-- `list templates` (tool: `kirby_templates_index`)
-- `list snippets` (tool: `kirby_snippets_index`)
-- `list collections` (tool: `kirby_collections_index`)
-- `list controllers` (tool: `kirby_controllers_index`)
-- `list models` (tool: `kirby_models_index`)
-- `list plugins` (tool: `kirby_plugins_index`)
-- `list routes` (tool: `kirby_routes_index`)
-- `show kirby roots` (tool: `kirby_roots`)
 
-**Project & runtime**
+### Resource shortcuts
 
-- `kirby init` (tool: `kirby_init`)
-- `install kirby mcp runtime commands` (tool: `kirby_runtime_install`)
-- `check kirby mcp runtime status` (tool: `kirby_runtime_status`)
-- `kirby info` (tool: `kirby_info`)
-- `kirby composer audit` (tool: `kirby_composer_audit`)
-- `kirby version` (tool: `kirby_cli_version`)
-- `run kirby cli command uuid:duplicates` (tool: `kirby_run_cli_command`)
-- `clear mcp cache` (tool: `kirby_cache_clear`)
-- `what mcp tool should I use to list plugins?` (tool: `kirby_tool_suggest`)
+> [!TIP]
+> Either on its own or with a prompt, the resources can be used to quickly bring knowledge and runtime information into the current context of your agent.
 
-**IDE helpers**
+```text
+kirby://glossary/collection
+```
+`kirby://glossary/{term}`
 
-- `ide helper status` (tool: `kirby_ide_helpers_status`)
-- `generate ide helpers` (tool: `kirby_generate_ide_helpers`)
+----
 
-**Resource shortcuts**
+```text
+What is the kirby://config/debug for production?
+```
+`kirby://config/{option}`
 
-- `kirby://config/debug` (resource: `kirby://config/{option}`)
-- `kirby://glossary/collection` (resource: `kirby://glossary/{term}`)
 
-## IDE helpers (optional, for humans)
+### Search & docs
 
-- Check baseline + freshness: `vendor/bin/kirby-mcp ide:status` (use `--details` and `--limit=N` for more output)
-- Generate regeneratable helper files: `vendor/bin/kirby-mcp ide:generate` (default is `--dry-run`; add `--write` to create files)
-- JSON output: `--json` (MCP markers) or `--raw-json` (plain JSON)
+> [!TIP]
+> The MCP server ships with a local knowledge base about Kirby. It consists of a glossary, common tasks and update guides for content fields. This reduces the need to rely on external resources and is wicked fast.
 
-## What it does (and doesn’t)
+```text
+kirby search for collection filtering
+```
+`kirby_search`
 
-- Provides MCP tools/resources for project inspection (blueprints, templates/snippets/collections, controllers/models, plugins, routes, roots).
-- Fetches official Kirby reference docs and ships a local Markdown knowledge base (`kb/`) for fast lookups.
-- Doesn’t modify your content by default; write-capable actions are guarded and require explicit opt-in/confirmation.
-- Only supports composer-based Kirby projects (Kirby CLI is used for many capabilities).
+----
 
-## What `install` / `update` change in your project
+> [!TIP]
+> But sometimes you or your agent needs to dig deeper. That is why the MCP server also provides a fallback to the official Kirby search and docs (not including the forum). You can trigger it by mentioning `search online` in your prompt.
 
-`vendor/bin/kirby-mcp install`:
+```text
+kirby search online for panel permissions
+```
+`kirby_online`
 
-- Creates `.kirby-mcp/mcp.json` if neither `.kirby-mcp/mcp.json` nor `.kirby-mcp/config.json` exist.
-- Copies runtime command wrappers into the project’s Kirby commands root (usually `site/commands/mcp/`).
-- Use `--force` to overwrite existing wrapper files.
+----
 
-`vendor/bin/kirby-mcp update`:
+> [!TIP]
+> Your agent will use the next tool under the hood itself, but you can use it as well to quickly check what the MCP server knows about a given topic.
 
-- Overwrites the runtime wrappers (use after upgrading this package).
-- Creates `.kirby-mcp/mcp.json` only if missing; it won’t overwrite an existing config.
+```text
+What mcp tool should I use to... list plugins? 
+```
+`kirby_tool_suggest`
 
-To remove everything:
+### Inventory (runtime + filesystem)
 
-- Delete the runtime wrappers folder (`site/commands/mcp/` in most projects).
-- Optionally delete `.kirby-mcp/` (config + caches + optional helper files).
+```text
+list blueprints, templates,  snippets, collections, controllers, models, plugins, routes, roots
+```
+`kirby_blueprints_loaded`, `kirby_blueprints_index`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_collections_index`, `kirby_controllers_index`, `kirby_models_index`, `kirby_plugins_index`, `kirby_routes_index`, `kirby_roots`
 
-## Security model
+### Debug, tinker/eval and running commands
 
-- `kirby_run_cli_command` is guarded by an allowlist; extend it via `.kirby-mcp/mcp.json` (`cli.allow`, `cli.allowWrite`) and block via `cli.deny`.
-- Write-capable actions require explicit opt-in (e.g. `allowWrite=true` or `confirm=true`, depending on the tool).
-- `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still confirm per call.
+> [!IMPORTANT]
+> The `kirby_eval` tool is disabled by default and CLI commands are protected by a white-/black-list, see config and security below.
+
+```text
+kirby MCP tinker $site->index()->count()
+```
+`kirby_eval`
+
+----
+
+```text
+run kirby cli command uuid:populate
+```
+`kirby_run_cli_command`
+
+----
+
+```text
+My home page renders incorrectly. Help me debug it with mcp_dump() to return the current $page object.
+```
+`kirby_render_page`, `kirby_dump_log_tail`, `kirby_templates_index`, `kirby_snippets_index`, `kirby_controllers_index`, `kirby_models_index`
 
 ## Capabilities
 
-Some capabilities require the runtime wrappers (installed via `vendor/bin/kirby-mcp install`) because they query Kirby at runtime.
+> [!INFO]
+> `kirby_init` is required once per session before calling any other tool or resource but the agent should figure this out automatically. Some capabilities require the runtime wrappers because they query Kirby at runtime. Installing/updating them should happen automatically as well.
 
-> [!IMPORTANT]
-> `kirby_init` is required once per session before calling any other tool but the agent should figure this out automatically.
+The MCP server tells the agent during initialisation when to use which tool and resource. It also deeply references them within its own knowledge base to ensure the agent knows where to find the information it needs and how to proceed next. 
 
 <details>
-<summary>Tools</summary>
+<summary🛠️ Tools</summary>
 
 - `kirby_blueprint_read` — read a single blueprint by id
 - `kirby_blueprints_index` — index blueprints, includes plugin-registered ones when runtime is installed
@@ -182,7 +204,7 @@ Some capabilities require the runtime wrappers (installed via `vendor/bin/kirby-
 > [!TIP]
 > Call a resource to bring condensed knowledge into the current context of your agent.
 
-<summary>Resources</summary>
+<summary>📚 Resources</summary>
 
 Resources (read-only):
 
@@ -217,7 +239,7 @@ Resource templates (dynamic):
 </details>
 
 <details>
-<summary>Prompts & completions</summary>
+<summary>💬 Prompts & completions</summary>
 
 Prompts:
 
@@ -293,6 +315,71 @@ Start the server (point it at a composer-based Kirby project):
 - From the Kirby project root: `vendor/bin/kirby-mcp`
 - Or explicit: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
 
+
+
+## IDE helpers (optional, for humans)
+
+The agent can both check and generate IDE helpers for your project: `kirby_ide_helpers_status` and `kirby_generate_ide_helpers`. You can also use the CLI commands yourself.
+
+- Check baseline + freshness: `vendor/bin/kirby-mcp ide:status` (use `--details` and `--limit=N` for more output)
+- Generate regeneratable helper files: `vendor/bin/kirby-mcp ide:generate` (default is `--dry-run`; add `--write` to create files)
+- JSON output: `--json` (MCP markers) or `--raw-json` (plain JSON)
+
+## What the MCP server does (and doesn’t)
+
+- Provides MCP tools/resources for project inspection (blueprints, templates/snippets/collections, controllers/models, plugins, routes, roots).
+- Fetches official Kirby reference docs and ships a local Markdown knowledge base (`kb/`) for fast lookups.
+- Doesn’t modify your content by default; write-capable actions run by the MCP are guarded and require explicit opt-in/confirmation. But your agent still can do whatever you allow it to!
+- Only supports composer-based Kirby projects (Kirby CLI is used for many capabilities).
+
+## Security model
+
+- `kirby_run_cli_command` is guarded by an allowlist; extend it via `.kirby-mcp/mcp.json` (`cli.allow`, `cli.allowWrite`) and block via `cli.deny`.
+- Write-capable actions require explicit opt-in (e.g. `allowWrite=true` or `confirm=true`, depending on the tool).
+- `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still confirm per call.
+
+## What `install` / `update` change in your project
+
+`vendor/bin/kirby-mcp install`:
+
+- Creates `.kirby-mcp/mcp.json` if neither `.kirby-mcp/mcp.json` nor `.kirby-mcp/config.json` exist.
+- Copies runtime command wrappers into the project’s Kirby commands root (usually `site/commands/mcp/`).
+- Use `--force` to overwrite existing wrapper files.
+
+`vendor/bin/kirby-mcp update`:
+
+- Overwrites the runtime wrappers (use after upgrading this package).
+- Creates `.kirby-mcp/mcp.json` only if missing; it won’t overwrite an existing config.
+
+To remove everything:
+
+- Delete the runtime wrappers folder (`site/commands/mcp/` in most projects).
+- Optionally delete `.kirby-mcp/` (config + caches + optional helper files).
+
+## Debug dumps (`mcp_dump`)
+
+This package provides a lightweight `mcp_dump()` helper that appends JSONL to `.kirby-mcp/dumps.jsonl` in the project root.
+
+**Secret redaction:** By default, dump output is scanned for sensitive data (API keys, tokens, passwords, IPs) and redacted before writing. This protects against accidentally leaking secrets. Configure via `dumps.secretPatterns` in `.kirby-mcp/mcp.json`:
+
+```json
+{
+  "dumps": {
+    "secretPatterns": []
+  }
+}
+```
+
+- Omit `secretPatterns` → use built-in patterns (OpenAI/Anthropic/GitHub/Stripe/AWS keys, JWTs, Bearer tokens, IPs, etc.)
+- Set to `[]` → disable redaction entirely
+- Set to `["/pattern1/", "/pattern2/"]` → use only your custom regex patterns
+
+Typical workflow for your coding agent:
+
+- Add `mcp_dump($anything)` (optionally chain `->green()`, `->label('...')`, `->caller()`, `->trace()`, `->pass($value)`) anywhere in templates/snippets/controllers.
+- Call `kirby_render_page` (it returns a `traceId`).
+- Call `kirby_dump_log_tail(traceId=...)` to retrieve the captured dump events for that render.
+
 ## Configuration
 
 Project config lives in `.kirby-mcp/mcp.json` (or `.kirby-mcp/config.json`) in the Kirby project root.
@@ -327,30 +414,6 @@ Environment variables:
 | `KIRBY_MCP_HOST` / `KIRBY_HOST` | Kirby host override (takes precedence over config).                            |
 | `KIRBY_MCP_DUMPS_ENABLED`       | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                      |
 | `KIRBY_MCP_ENABLE_EVAL`         | Enable eval override (takes precedence over config; still needs confirmation). |
-
-## Debug dumps (`mcp_dump`)
-
-This package provides a lightweight `mcp_dump()` helper that appends JSONL to `.kirby-mcp/dumps.jsonl` in the project root.
-
-**Secret redaction:** By default, dump output is scanned for sensitive data (API keys, tokens, passwords, IPs) and redacted before writing. This protects against accidentally leaking secrets. Configure via `dumps.secretPatterns` in `.kirby-mcp/mcp.json`:
-
-```json
-{
-  "dumps": {
-    "secretPatterns": []
-  }
-}
-```
-
-- Omit `secretPatterns` → use built-in patterns (OpenAI/Anthropic/GitHub/Stripe/AWS keys, JWTs, Bearer tokens, IPs, etc.)
-- Set to `[]` → disable redaction entirely
-- Set to `["/pattern1/", "/pattern2/"]` → use only your custom regex patterns
-
-Typical workflow for your coding agent:
-
-- Add `mcp_dump($anything)` (optionally chain `->green()`, `->label('...')`, `->caller()`, `->trace()`, `->pass($value)`) anywhere in templates/snippets/controllers.
-- Call `kirby_render_page` (it returns a `traceId`).
-- Call `kirby_dump_log_tail(traceId=...)` to retrieve the captured dump events for that render.
 
 ## Troubleshooting
 
