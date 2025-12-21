@@ -22,6 +22,9 @@ it('returns project info via the tool with structured output', function (): void
         $result = $tools->projectInfo($context);
 
         expect($result)->toBeInstanceOf(CallToolResult::class);
+        if (!$result instanceof CallToolResult) {
+            throw new RuntimeException('Expected a CallToolResult instance.');
+        }
         expect($result->structuredContent)->toBeArray();
         expect($result->structuredContent['projectRoot'])->toBe(cmsPath());
         expect($result->structuredContent['kirbyVersion'])->toBeString()->not()->toBe('');
@@ -46,6 +49,9 @@ it('returns kirby CLI version via the tool', function (): void {
         $result = $tools->kirbyCliVersion($context);
 
         expect($result)->toBeInstanceOf(CallToolResult::class);
+        if (!$result instanceof CallToolResult) {
+            throw new RuntimeException('Expected a CallToolResult instance.');
+        }
         expect($result->structuredContent)->toBeArray();
         expect($result->structuredContent['exitCode'])->toBe(0);
         expect($result->structuredContent['stdout'])->toBeString()->not()->toBe('');

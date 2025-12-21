@@ -60,6 +60,7 @@ it('normalizes objects and resources', function (): void {
 
     $handle = fopen('php://memory', 'r');
     expect($handle)->not->toBeFalse();
+    assert(is_resource($handle));
 
     try {
         expect(DumpValueNormalizer::normalize($handle))->toBe([

@@ -7,13 +7,13 @@ Keep GitHub Actions fast, reproducible, and aligned with local `composer` script
 ## System
 
 - `pest-tests.yml` runs Pest on PHP 8.5 (with Xdebug coverage).
-- `phpstan.yml` runs PHPStan on PHP 8.5 (`--error-format=github`).
+- `phpstan.yml` runs `composer analyse` (PHPStan on PHP 8.5 with the autoload helper fix) and uses `--error-format=github`.
 - `fix-php-code-style-issues.yml` runs Laravel Pint and auto-commits styling fixes.
 
 ## Workflows
 
 - If you change PHP support or `composer.json` scripts (`test`, `analyse`, `format`), update workflows to match.
-- Install steps in CI currently run `composer kirby`; keep this in sync with how deps are installed for CI.
+- Install steps in CI currently run `composer install`; keep this in sync with how deps are installed for CI.
 
 ## Guardrails
 

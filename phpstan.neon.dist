@@ -6,7 +6,7 @@ parameters:
     - src
     - tests
   excludePaths:
-    - tests/cms
+    - tests/cms (?)
     - vendor
   treatPhpDocTypesAsCertain: false
   reportUnmatchedIgnoredErrors: false

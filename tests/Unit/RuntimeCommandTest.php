@@ -57,7 +57,7 @@ final class RuntimeCommandTestCli extends CLI
         $this->kirby = $kirby;
     }
 
-    public function arg(string $name)
+    public function arg(string $name): mixed
     {
         return $this->args[$name] ?? null;
     }
@@ -124,5 +124,6 @@ it('formats error payloads and respects debug trace settings', function (): void
     $cliDebug = new RuntimeCommandTestCli(['debug' => true]);
     $trace = RuntimeCommandProbe::traceForCliPublic($cliDebug, $exception, 1);
     expect($trace)->toBeString();
+    assert(is_string($trace));
     expect(strlen($trace))->toBeLessThanOrEqual(1);
 });

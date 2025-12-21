@@ -35,6 +35,9 @@ it('reads home page content via runtime CLI', function (): void {
         $structured = $tools->readPageContent(context: $context);
 
         expect($structured)->toBeInstanceOf(CallToolResult::class);
+        if (!$structured instanceof CallToolResult) {
+            throw new RuntimeException('Expected a CallToolResult instance.');
+        }
         expect($structured->structuredContent)->toBeArray();
         expect($structured->structuredContent)->toHaveKey('ok', true);
         expect($structured->structuredContent['content'])->toHaveKey('title', 'Home');

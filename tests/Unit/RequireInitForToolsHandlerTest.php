@@ -15,6 +15,9 @@ use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
 use Mcp\Server\Session\SessionInterface;
 
+/**
+ * @implements RequestHandlerInterface<CallToolResult>
+ */
 final class FakeCallToolHandler implements RequestHandlerInterface
 {
     public int $calls = 0;

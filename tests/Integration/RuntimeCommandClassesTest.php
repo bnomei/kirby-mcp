@@ -37,7 +37,7 @@ final class RuntimeCommandIntegrationClimate extends CLImate
             $message = $arguments[0] ?? '';
             $this->messages[] = [
                 'method' => $requested_method,
-                'message' => is_string($message) ? $message : json_encode($message),
+                'message' => is_string($message) ? $message : (json_encode($message) ?: ''),
             ];
 
             return $this;
@@ -70,7 +70,7 @@ final class RuntimeCommandIntegrationCli extends CLI
         $this->roots = [];
     }
 
-    public function arg(string $name)
+    public function arg(string $name): mixed
     {
         return $this->args[$name] ?? null;
     }

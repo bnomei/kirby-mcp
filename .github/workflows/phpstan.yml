@@ -31,4 +31,4 @@ jobs:
         run: composer install
 
       - name: Run PHPStan
-        run: vendor/bin/phpstan --error-format=github
+        run: composer analyse -- --error-format=github

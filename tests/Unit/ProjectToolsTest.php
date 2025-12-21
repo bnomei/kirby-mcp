@@ -24,6 +24,9 @@ it('returns composer audit data via the tool with structured output', function (
         $result = $tools->composerAudit($context);
 
         expect($result)->toBeInstanceOf(CallToolResult::class);
+        if (!$result instanceof CallToolResult) {
+            throw new RuntimeException('Expected a CallToolResult instance.');
+        }
         expect($result->structuredContent)->toBeArray();
         expect($result->structuredContent['projectRoot'])->toBe(cmsPath());
     } finally {
