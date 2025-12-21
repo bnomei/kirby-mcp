@@ -29,8 +29,7 @@ final class SetLogLevelHandler implements RequestHandlerInterface
     {
         \assert($request instanceof SetLogLevelRequest);
 
-        LoggingState::setLevel($request->level);
-        $session->set('kirby_mcp.logging.level', $request->level->value);
+        LoggingState::setLevel($request->level, $session);
 
         return new Response($request->getId(), new EmptyResult());
     }

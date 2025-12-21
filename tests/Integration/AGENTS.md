@@ -14,8 +14,10 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 
 - Prefer asserting observable contracts: exit codes, returned arrays/JSON, created command files, rendered output.
 - Run just integration tests: `vendor/bin/pest tests/Integration`.
+- Coverage: run `composer cms:starterkit` then `herd coverage ./vendor/bin/pest --coverage` (see `TESTING.md`).
 
 ## Guardrails
 
 - Keep `tests/cms/` stable; avoid editing it unless the test explicitly requires it.
 - Avoid network calls; tests should pass offline.
+- Global `beforeEach` clears Kirby MCP static caches; don’t rely on cached state across tests.

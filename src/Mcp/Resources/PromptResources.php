@@ -9,6 +9,8 @@ use Bnomei\KirbyMcp\Mcp\PromptIndex;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class PromptResources
 {
@@ -30,6 +32,10 @@ final class PromptResources
         name: 'prompts',
         description: 'List MCP prompts with args/meta (fallback for clients without prompt support).',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.3,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list available MCP prompts and their arguments (useful when the client does not support prompts natively).',

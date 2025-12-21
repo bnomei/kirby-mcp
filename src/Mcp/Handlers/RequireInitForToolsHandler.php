@@ -20,11 +20,22 @@ use Mcp\Server\Session\SessionInterface;
  */
 final class RequireInitForToolsHandler implements RequestHandlerInterface
 {
+    /**
+     * @var RequestHandlerInterface<CallToolResult>
+     */
+    private RequestHandlerInterface $callToolHandler;
+
+    /**
+     * @param RequestHandlerInterface<CallToolResult> $callToolHandler
+     */
+    public function __construct(RequestHandlerInterface $callToolHandler)
+    {
+        $this->callToolHandler = $callToolHandler;
+    }
+
     public function supports(Request $request): bool
     {
-        return $request instanceof CallToolRequest
-            && $request->name !== 'kirby_init'
-            && !SessionState::initCalled();
+        return $request instanceof CallToolRequest;
     }
 
     /**
@@ -34,10 +45,14 @@ final class RequireInitForToolsHandler implements RequestHandlerInterface
     {
         \assert($request instanceof CallToolRequest);
 
-        $message = SessionTools::initRequiredMessage($request->name);
+        if ($request->name !== 'kirby_init' && !SessionState::initCalled($session)) {
+            $message = SessionTools::initRequiredMessage($request->name);
 
-        return new Response($request->getId(), CallToolResult::error([
-            new TextContent($message),
-        ]));
+            return new Response($request->getId(), CallToolResult::error([
+                new TextContent($message),
+            ]));
+        }
+
+        return $this->callToolHandler->handle($request, $session);
     }
 }

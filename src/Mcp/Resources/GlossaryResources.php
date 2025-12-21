@@ -9,6 +9,8 @@ use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class GlossaryResources
 {
@@ -19,6 +21,10 @@ final class GlossaryResources
         name: 'glossary',
         description: 'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.4,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to browse bundled Kirby glossary terms (quick local definitions); open a term via kirby://glossary/{term}.',

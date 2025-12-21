@@ -7,11 +7,16 @@ namespace Bnomei\KirbyMcp\Mcp\Tools;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Bnomei\KirbyMcp\Mcp\SessionState;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\RequestContext;
 
 final class MetaTools
 {
+    use StructuredToolResult;
+
     /**
      * Suggest which Kirby MCP tool(s) to call for a task.
      *
@@ -45,8 +50,12 @@ final class MetaTools
             openWorldHint: false,
         ),
     )]
-    public function suggestTools(?string $query = null, array $keywords = [], int $limit = 8): array
-    {
+    public function suggestTools(
+        ?string $query = null,
+        array $keywords = [],
+        int $limit = 8,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $keywordsFromQuery = is_string($query) && trim($query) !== ''
             ? $this->extractKeywordsFromQuery($query)
             : [];
@@ -99,12 +108,12 @@ final class MetaTools
         $limit = max(1, min(25, $limit));
         $scored = array_slice($scored, 0, $limit);
 
-        return [
+        return $this->maybeStructuredResult($context, [
             'query' => $query,
             'keywords' => $normalized,
-            'initRecommended' => !SessionState::initCalled(),
+            'initRecommended' => !SessionState::initCalled($context?->getSession()),
             'suggestions' => $scored,
-        ];
+        ]);
     }
 
     /**

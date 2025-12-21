@@ -13,7 +13,7 @@ final class RuntimeCommandRunner
     public const DEFAULT_PARSE_ERROR = 'Unable to parse JSON output from Kirby CLI command.';
 
     public function __construct(
-        private readonly KirbyRuntimeContext $runtime = new KirbyRuntimeContext(),
+        private readonly RuntimeContextInterface $runtime = new KirbyRuntimeContext(),
         private readonly KirbyCliRunner $cliRunner = new KirbyCliRunner(),
     ) {
     }
@@ -52,16 +52,27 @@ final class RuntimeCommandRunner
 
         $payload = null;
         $parseError = null;
+        $stderr = trim($cliResult->stderr);
 
-        try {
-            $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
-        } catch (\Throwable $exception) {
-            $payload = null;
-            $parseError = $exception->getMessage();
+        if ($cliResult->timedOut) {
+            $parseError = 'Kirby CLI command timed out after ' . $timeoutSeconds . 's.';
+        } elseif ($cliResult->exitCode !== 0) {
+            $parseError = 'Kirby CLI command failed with exit code ' . $cliResult->exitCode . '.';
+        } else {
+            try {
+                $payload = McpMarkedJsonExtractor::extract($cliResult->stdout);
+            } catch (\Throwable $exception) {
+                $payload = null;
+                $parseError = $exception->getMessage();
+            }
         }
 
         if (!is_array($payload) && (!is_string($parseError) || $parseError === '')) {
             $parseError = self::DEFAULT_PARSE_ERROR;
+        }
+
+        if (!is_array($payload) && is_string($parseError) && $parseError !== '' && $stderr !== '') {
+            $parseError .= ' stderr: ' . $stderr;
         }
 
         return new RuntimeCommandResult(

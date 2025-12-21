@@ -1,12 +1,13 @@
 {
   "name": "bnomei/kirby-mcp",
   "description": "A CLI-first MCP server for Kirby CMS",
+  "version": "1.0.0",
   "type": "library",
   "license": "MIT",
   "require": {
     "php": "^8.2",
     "getkirby/cli": "^1.0",
-    "mcp/sdk": "^0.1.0",
+    "mcp/sdk": "^0.2.0",
     "symfony/process": "^7.0",
     "symfony/yaml": "^7.0"
   },
@@ -14,7 +15,8 @@
     "getkirby/cms": "^5.2",
     "larastan/larastan": "^3.0",
     "laravel/pint": "^1.26",
-    "pestphp/pest": "^4.0"
+    "pestphp/pest": "^4.0",
+    "pestphp/pest-plugin-type-coverage": "^4.0"
   },
   "repositories": [
     {
@@ -55,6 +57,7 @@
     "bin/kirby-mcp"
   ],
   "scripts": {
+    "coverage": "herd coverage ./vendor/bin/pest --coverage-clover=coverage.xml",
     "test": "php -d auto_prepend_file=tests/prepend.php vendor/bin/pest",
     "analyse": "vendor/bin/phpstan analyse --autoload-file=tests/phpstan-autoload.php --memory-limit=512M",
     "format": "vendor/bin/pint",
@@ -79,6 +82,9 @@
       "rm -rf tests/cms",
       "vendor/bin/kirby install:kit starterkit tests/cms",
       "@cms:install-fixtures"
+    ],
+    "dist": [
+       "rm -rf tests/cms"
     ]
   },
   "minimum-stability": "stable",

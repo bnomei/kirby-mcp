@@ -15,16 +15,91 @@ use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Support\StaticCache;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class RuntimeTools
 {
+    use StructuredToolResult;
     public const ENV_ENABLE_EVAL = 'KIRBY_MCP_ENABLE_EVAL';
+
+    private const CLI_RESULT_SCHEMA = [
+        'type' => ['object', 'null'],
+        'properties' => [
+            'exitCode' => ['type' => 'integer'],
+            'stdout' => ['type' => 'string'],
+            'stderr' => ['type' => 'string'],
+            'timedOut' => ['type' => 'boolean'],
+        ],
+        'additionalProperties' => true,
+    ];
+
+    private const READ_PAGE_CONTENT_OUTPUT_SCHEMA = [
+        'oneOf' => [
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [true]],
+                    'page' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'id' => ['type' => 'string'],
+                            'uuid' => ['type' => 'string'],
+                            'template' => ['type' => 'string'],
+                            'url' => ['type' => 'string'],
+                        ],
+                        'required' => ['id', 'uuid', 'template', 'url'],
+                        'additionalProperties' => true,
+                    ],
+                    'language' => ['type' => ['string', 'null']],
+                    'keys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'truncatedKeys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'content' => [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ],
+                    'fieldSchemas' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'object'],
+                    ],
+                    'warningBlock' => ['type' => ['object', 'null']],
+                    'BEFORE_UPDATE_READ' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'warning' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok', 'page', 'keys', 'truncatedKeys', 'content', 'fieldSchemas', 'warning'],
+                'additionalProperties' => true,
+            ],
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [false]],
+                    'needsRuntimeInstall' => ['type' => 'boolean'],
+                    'message' => ['type' => 'string'],
+                    'expectedCommandFile' => ['type' => 'string'],
+                    'parseError' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok'],
+                'additionalProperties' => true,
+            ],
+        ],
+    ];
 
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
@@ -66,7 +141,7 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
-    public function runtimeInstall(?ClientGateway $client = null, bool $force = false): array
+    public function runtimeInstall(bool $force = false, ?RequestContext $context = null): array|CallToolResult
     {
         try {
             $projectRoot = $this->context->projectRoot();
@@ -75,9 +150,9 @@ final class RuntimeTools
             StaticCache::clearPrefix('cli:');
             StaticCache::clearPrefix('completion:');
 
-            return $result->toArray();
+            return $this->maybeStructuredResult($context, $result->toArray());
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_runtime_install',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -122,7 +197,7 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
-    public function runtimeStatus(): array
+    public function runtimeStatus(?RequestContext $context = null): array|CallToolResult
     {
         $runtime = new KirbyRuntimeContext($this->context);
         $projectRoot = $runtime->projectRoot();
@@ -136,7 +211,7 @@ final class RuntimeTools
         $expectedFiles = $this->expectedCommandFiles($sourceRoot);
 
         if ($expectedFiles === []) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'projectRoot' => $projectRoot,
                 'host' => $host,
                 'commandsRoot' => $commandsRoot,
@@ -147,7 +222,7 @@ final class RuntimeTools
                 'installedFiles' => [],
                 'missingFiles' => [],
                 'message' => 'Package runtime commands directory missing or contains no PHP command files.',
-            ];
+            ]);
         }
 
         $installedFiles = [];
@@ -176,7 +251,7 @@ final class RuntimeTools
                 ? 'Runtime commands are not installed. Run kirby_runtime_install (or `kirby mcp:install` once installed).'
                 : 'Runtime commands are partially installed. Run kirby_runtime_install (or `kirby mcp:update`) to install missing command files.');
 
-        return [
+        return $this->maybeStructuredResult($context, [
             'projectRoot' => $projectRoot,
             'host' => $host,
             'commandsRoot' => $commandsRoot,
@@ -187,7 +262,7 @@ final class RuntimeTools
             'installedFiles' => $installedFiles,
             'missingFiles' => $missingFiles,
             'message' => $message,
-        ];
+        ]);
     }
 
     /**
@@ -224,9 +299,10 @@ final class RuntimeTools
         int $maxChars = 20000,
         bool $noCache = false,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $traceId = McpDumpContext::generateTraceId();
-        DumpState::setLastTraceId($traceId);
+        DumpState::setLastTraceId($traceId, $context?->getSession());
 
         $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context, [
             'KIRBY_MCP_TRACE_ID' => $traceId,
@@ -251,28 +327,30 @@ final class RuntimeTools
         $result = $runner->runMarkedJson(RuntimeCommands::RENDER_FILE, $args, timeoutSeconds: 60);
 
         if ($result->installed !== true) {
-            return array_merge($result->needsRuntimeInstallResponse(), [
+            return $this->maybeStructuredResult($context, array_merge($result->needsRuntimeInstallResponse(), [
                 'traceId' => $traceId,
-            ]);
+            ]));
         }
 
         if (!is_array($result->payload)) {
-            return $result->parseErrorResponse([
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                 'cli' => $result->cli(),
                 'traceId' => $traceId,
-            ]);
+            ]));
         }
 
-        return array_merge($result->payload, [
+        $payload = array_merge($result->payload, [
             'cli' => $result->cli(),
             'traceId' => $traceId,
         ]);
+
+        return $this->maybeStructuredResult($context, $payload);
     }
 
     /**
      * Read a page's current content (drafts/changes-aware) via the runtime CLI command `mcp:page:content`.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|CallToolResult
      */
     #[McpToolIndex(
         whenToUse: 'Use to read a page’s current content (drafts/changes-aware) via the installed runtime CLI command (safer than reading content files directly).',
@@ -293,12 +371,16 @@ final class RuntimeTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
+        meta: [
+            'outputSchema' => self::READ_PAGE_CONTENT_OUTPUT_SCHEMA,
+        ],
     )]
     public function readPageContent(
         ?string $id = null,
         ?string $language = null,
         int $maxCharsPerField = 20000,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
         $args = [RuntimeCommands::PAGE_CONTENT];
@@ -316,18 +398,20 @@ final class RuntimeTools
         $result = $runner->runMarkedJson(RuntimeCommands::PAGE_CONTENT_FILE, $args, timeoutSeconds: 60);
 
         if ($result->installed !== true) {
-            return $result->needsRuntimeInstallResponse();
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
         }
 
         if (!is_array($result->payload)) {
-            return $result->parseErrorResponse([
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                 'cli' => $result->cli(),
-            ]);
+            ]));
         }
 
-        return array_merge($result->payload, [
+        $payload = array_merge($result->payload, [
             'cli' => $result->cli(),
         ]);
+
+        return $this->maybeStructuredResult($context, $payload);
     }
 
     /**
@@ -367,19 +451,20 @@ final class RuntimeTools
         bool $validate = false,
         ?string $language = null,
         int $maxCharsPerField = 20000,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
         $id = trim($id);
         if ($id === '') {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'message' => 'id must not be empty.',
-            ];
+            ]);
         }
 
         if ($payloadValidatedWithFieldSchemas !== true) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'needsSchemaValidation' => true,
                 'message' => 'Before updating, read kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
@@ -387,7 +472,7 @@ final class RuntimeTools
                     'kirby://fields/update-schema',
                     'kirby://field/{type}/update-schema',
                 ],
-            ];
+            ]);
         }
 
         $maxCharsPerField = max(0, $maxCharsPerField);
@@ -395,10 +480,10 @@ final class RuntimeTools
         try {
             $json = json_encode($data, JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'message' => 'Unable to encode data to JSON: ' . $exception->getMessage(),
-            ];
+            ]);
         }
 
         $args = [
@@ -423,18 +508,20 @@ final class RuntimeTools
         $result = $runner->runMarkedJson(RuntimeCommands::PAGE_UPDATE_FILE, $args, timeoutSeconds: 60);
 
         if ($result->installed !== true) {
-            return $result->needsRuntimeInstallResponse();
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
         }
 
         if (!is_array($result->payload)) {
-            return $result->parseErrorResponse([
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                 'cli' => $result->cli(),
-            ]);
+            ]));
         }
 
-        return array_merge($result->payload, [
+        $payload = array_merge($result->payload, [
             'cli' => $result->cli(),
         ]);
+
+        return $this->maybeStructuredResult($context, $payload);
     }
 
     /**
@@ -471,18 +558,19 @@ final class RuntimeTools
         int $maxChars = 20000,
         int $timeoutSeconds = 60,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $projectRoot = $this->context->projectRoot();
         $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
         $enabled = $this->isEvalEnabled($projectRoot);
         if ($enabled !== true) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'enabled' => false,
                 'needsEnable' => true,
                 'message' => 'Eval is disabled by default. Enable via env ' . self::ENV_ENABLE_EVAL . '=1 or via .kirby-mcp/mcp.json: {"eval":{"enabled":true}}.',
-            ];
+            ]);
         }
 
         $args = [RuntimeCommands::EVAL, $code, '--max=' . max(0, $maxChars)];
@@ -498,15 +586,15 @@ final class RuntimeTools
         $result = $runner->runMarkedJson(RuntimeCommands::EVAL_FILE, $args, timeoutSeconds: $timeoutSeconds);
 
         if ($result->installed !== true) {
-            return $result->needsRuntimeInstallResponse();
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
         }
 
         if (!is_array($result->payload)) {
-            return $result->parseErrorResponse([
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                 'cliMeta' => $result->cliMeta(),
                 'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
                 'cli' => $debug === true ? $result->cli() : null,
-            ]);
+            ]));
         }
 
         /** @var array<string, mixed> $response */
@@ -533,7 +621,7 @@ final class RuntimeTools
             $response['cli'] = $result->cli();
         }
 
-        return $response;
+        return $this->maybeStructuredResult($context, $response);
     }
 
     /**
@@ -571,7 +659,8 @@ final class RuntimeTools
         int $cursor = 0,
         bool $withDisplayName = false,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
 
         $args = [RuntimeCommands::BLUEPRINTS];
@@ -608,15 +697,15 @@ final class RuntimeTools
         $result = $runner->runMarkedJson(RuntimeCommands::BLUEPRINTS_FILE, $args, timeoutSeconds: 60);
 
         if ($result->installed !== true) {
-            return $result->needsRuntimeInstallResponse();
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
         }
 
         if (!is_array($result->payload)) {
-            return $result->parseErrorResponse([
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                 'cliMeta' => $result->cliMeta(),
                 'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
                 'cli' => $debug === true ? $result->cli() : null,
-            ]);
+            ]));
         }
 
         /** @var array<string, mixed> $response */
@@ -627,7 +716,7 @@ final class RuntimeTools
             $response['cli'] = $result->cli();
         }
 
-        return $response;
+        return $this->maybeStructuredResult($context, $response);
     }
 
     /**

@@ -11,10 +11,12 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 - Prompts live in `src/Mcp/Prompts/` as public methods annotated with `#[McpPrompt]`.
   `src/Mcp/PromptIndex.php` discovers them via reflection and exposes a fallback via `kirby://prompts` and `kirby://prompt/{name}`.
 - Resources live in `src/Mcp/Resources/` and expose `kirby://...` URIs.
-- Content field guides live in `kb/content/fields/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
+- Content field guides live in `kb/kirby/update-schema/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
 - Blueprint/page content outputs may include `fieldSchemas` maps with `_schemaRef` pointers to both panel refs and update schemas.
 - Command execution is routed through `src/Cli/` and guarded by `src/Mcp/Policies/`.
 - `src/Mcp/ToolIndex.php` may add curated “instance” entries for common resource templates (e.g. `kirby://section/pages`) to improve `kirby_tool_suggest`; keep these aligned with the corresponding docs/index sources.
+- Tool methods should accept `Mcp\Server\RequestContext` when they need session/client access (logging, structured output). Do not type-hint `ClientGateway` directly.
+- `DocsTools` is intentionally extensible so tests can override its HTTP fetches; keep network calls out of unit tests.
 
 ## Workflows
 
@@ -32,3 +34,8 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 - Keep `kirby_run_cli_command` defaults minimal; prefer dedicated tools/resources over broad allowlist patterns (especially for `mcp:*` runtime wrappers).
 - Return structured data; avoid `echo`/side effects from tools/resources.
 - All tool calls (except `kirby_init`) are init-guarded by `RequireInitForToolsHandler` and must prompt the client to call `kirby_init` first.
+- Init gating is session-scoped via `SessionInterface`; use `RequestContext` to access per-session state from tools when needed.
+- Logging level is session-scoped; read and set it via `LoggingState` using the active `SessionInterface` (`Protocol::SESSION_LOGGING_LEVEL`).
+- Dump trace IDs are session-scoped; only use `DumpState` with the active `SessionInterface`.
+- Provide tool output schemas via `_meta.outputSchema` until the PHP MCP SDK supports first-class `outputSchema`; keep `structuredContent` + JSON text in sync.
+- Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually in `bin/kirby-mcp`.

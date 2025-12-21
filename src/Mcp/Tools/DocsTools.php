@@ -7,13 +7,17 @@ namespace Bnomei\KirbyMcp\Mcp\Tools;
 use Bnomei\KirbyMcp\Docs\KirbyDocsUrl;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
-final class DocsTools
+class DocsTools
 {
+    use StructuredToolResult;
+
     /**
      * Search the official Kirby site index (Guide/Reference/Cookbook/Kosmos/Plugins) via `getkirby.com/search.json`.
      *
@@ -80,7 +84,7 @@ final class DocsTools
             openWorldHint: true,
         ),
     )]
-    public function search(string $query, string $area = 'all', int $limit = 10, int $fetch = 1, int $maxChars = 20000, ?ClientGateway $client = null): array
+    public function search(string $query, string $area = 'all', int $limit = 10, int $fetch = 1, int $maxChars = 20000, ?RequestContext $context = null): array|CallToolResult
     {
         try {
             $query = trim($query);
@@ -178,7 +182,7 @@ final class DocsTools
                 }
             }
 
-            return [
+            return $this->maybeStructuredResult($context, [
                 'query' => $query,
                 'area' => $area,
                 'fetch' => $fetch,
@@ -188,15 +192,15 @@ final class DocsTools
                 'results' => $results,
                 'documents' => $documents,
                 'document' => $documents[0] ?? null,
-            ];
+            ]);
         } catch (ToolCallException $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_online',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_online',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -222,7 +226,7 @@ final class DocsTools
         return $decoded;
     }
 
-    private function httpGet(string $url, string $accept = 'application/json'): string
+    protected function httpGet(string $url, string $accept = 'application/json'): string
     {
         $userAgent = 'kirby-mcp (MCP server)';
 

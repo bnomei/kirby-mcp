@@ -8,13 +8,17 @@ use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Exception\ToolCallException;
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class RootsTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -59,7 +63,7 @@ final class RootsTools
             openWorldHint: false,
         ),
     )]
-    public function roots(?ClientGateway $client = null): array
+    public function roots(?RequestContext $context = null): array|CallToolResult
     {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
@@ -70,15 +74,17 @@ final class RootsTools
             $roots = $inspection->roots;
             $cliResult = $inspection->cliResult;
 
-            return [
+            $payload = [
                 'projectRoot' => $projectRoot,
                 'host' => $host,
                 'roots' => $roots->toArray(),
                 'commandsRoot' => $roots->commandsRoot(),
                 'cli' => $cliResult->toArray(),
             ];
+
+            return $this->maybeStructuredResult($context, $payload);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_roots',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

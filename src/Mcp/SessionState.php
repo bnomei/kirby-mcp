@@ -4,22 +4,36 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp;
 
+use Mcp\Server\Session\SessionInterface;
+
 final class SessionState
 {
-    private static bool $initCalled = false;
+    private const INIT_KEY = 'kirby_mcp.session.init';
 
-    public static function reset(): void
+    public static function reset(?SessionInterface $session = null): void
     {
-        self::$initCalled = false;
+        if ($session === null) {
+            return;
+        }
+
+        $session->forget(self::INIT_KEY);
     }
 
-    public static function markInitCalled(): void
+    public static function markInitCalled(?SessionInterface $session = null): void
     {
-        self::$initCalled = true;
+        if ($session === null) {
+            return;
+        }
+
+        $session->set(self::INIT_KEY, true);
     }
 
-    public static function initCalled(): bool
+    public static function initCalled(?SessionInterface $session = null): bool
     {
-        return self::$initCalled;
+        if ($session === null) {
+            return false;
+        }
+
+        return (bool) $session->get(self::INIT_KEY, false);
     }
 }

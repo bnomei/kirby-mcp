@@ -11,6 +11,8 @@ use Bnomei\KirbyMcp\Project\ComposerInspector;
 use Bnomei\KirbyMcp\Project\ProjectInfoInspector;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class ProjectResources
 {
@@ -39,6 +41,10 @@ final class ProjectResources
         name: 'info',
         description: 'Project runtime info (PHP + Kirby version via CLI), composer audit, and local environment detection (Herd/DDEV/Docker).',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to get quick project context: versions (PHP/Kirby), composer audit, and local environment signals.',
@@ -76,6 +82,10 @@ final class ProjectResources
         name: 'composer',
         description: 'Composer audit (composer.json/lock): detects test runner and quality tools; returns “how to run” commands.',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to inspect composer scripts/tools (tests, phpstan, formatting) and Kirby dependency versions.',
@@ -105,6 +115,10 @@ final class ProjectResources
         name: 'roots',
         description: 'Kirby roots (kirby()->roots) discovered via Kirby CLI using the configured default host (KIRBY_MCP_HOST/KIRBY_HOST or .kirby-mcp/mcp.json) when present.',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to discover Kirby roots (content, site, templates, snippets, blueprints, plugins) as resolved by Kirby at runtime.',

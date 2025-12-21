@@ -9,12 +9,17 @@ use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Support\StaticCache;
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
+use Mcp\Server\RequestContext;
 
 final class CacheTools
 {
+    use StructuredToolResult;
+
     /**
      * Clear in-memory caches for the current MCP process.
      *
@@ -52,7 +57,7 @@ final class CacheTools
             openWorldHint: false,
         ),
     )]
-    public function clearCache(string $scope = 'all', ?string $prefix = null): array
+    public function clearCache(string $scope = 'all', ?string $prefix = null, ?RequestContext $context = null): array|CallToolResult
     {
         $scope = trim(strtolower($scope));
         $prefix = is_string($prefix) ? trim($prefix) : null;
@@ -66,7 +71,7 @@ final class CacheTools
 
         $allowed = ['all', 'static', 'cli', 'roots', 'tools', 'prefix', 'config', 'composer'];
         if (!in_array($scope, $allowed, true)) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'scope' => $scope,
                 'staticCache' => ['removed' => null, 'prefix' => null],
@@ -75,12 +80,12 @@ final class CacheTools
                 'rootsCache' => ['removed' => null],
                 'toolIndex' => ['cleared' => null],
                 'message' => 'Invalid scope. Allowed: ' . implode(', ', $allowed) . '.',
-            ];
+            ]);
         }
 
         if ($scope === 'prefix') {
             if (!is_string($prefix) || $prefix === '') {
-                return [
+                return $this->maybeStructuredResult($context, [
                     'ok' => false,
                     'scope' => $scope,
                     'staticCache' => ['removed' => null, 'prefix' => null],
@@ -89,7 +94,7 @@ final class CacheTools
                     'rootsCache' => ['removed' => null],
                     'toolIndex' => ['cleared' => null],
                     'message' => 'prefix is required when scope=prefix.',
-                ];
+                ]);
             }
         }
 
@@ -122,7 +127,7 @@ final class CacheTools
             $staticRemoved = StaticCache::clearPrefix($staticPrefix);
         }
 
-        return [
+        return $this->maybeStructuredResult($context, [
             'ok' => true,
             'scope' => $scope,
             'staticCache' => [
@@ -142,6 +147,6 @@ final class CacheTools
                 'cleared' => $toolIndexCleared,
             ],
             'message' => null,
-        ];
+        ]);
     }
 }

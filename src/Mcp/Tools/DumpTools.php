@@ -10,13 +10,17 @@ use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\DumpState;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class DumpTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -54,12 +58,12 @@ final class DumpTools
         ?string $traceId = null,
         ?string $path = null,
         int $limit = 50,
-        ?ClientGateway $client = null,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $projectRoot = $this->context->projectRoot();
 
-            $traceId = is_string($traceId) && trim($traceId) !== '' ? trim($traceId) : DumpState::lastTraceId();
+            $traceId = is_string($traceId) && trim($traceId) !== '' ? trim($traceId) : DumpState::lastTraceId($context?->getSession());
 
             $events = DumpLogReader::tail(
                 projectRoot: $projectRoot,
@@ -68,7 +72,7 @@ final class DumpTools
                 limit: $limit,
             );
 
-            return [
+            $payload = [
                 'ok' => true,
                 'projectRoot' => $projectRoot,
                 'file' => DumpLogWriter::filePath($projectRoot),
@@ -78,8 +82,10 @@ final class DumpTools
                 'count' => count($events),
                 'events' => $events,
             ];
+
+            return $this->maybeStructuredResult($context, $payload);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_dump_log_tail',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

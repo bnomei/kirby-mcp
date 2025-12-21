@@ -11,6 +11,8 @@ use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class HookReferenceResources extends AbstractMarkdownDocsResource
 {
@@ -21,6 +23,10 @@ final class HookReferenceResources extends AbstractMarkdownDocsResource
         name: 'hooks',
         description: 'List Kirby plugin hook names (links to kirby://hook/{name}).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.4,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list Kirby hook names, then open a specific hook reference via kirby://hook/{name}.',

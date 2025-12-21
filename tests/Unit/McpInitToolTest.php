@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\SessionState;
 use Bnomei\KirbyMcp\Mcp\Tools\SessionTools;
+use Mcp\Schema\Request\CallToolRequest;
+use Mcp\Server\RequestContext;
+use Mcp\Server\Session\InMemorySessionStore;
+use Mcp\Server\Session\Session;
 
 it('initializes and returns guidance for a composer-based Kirby project', function (): void {
-    SessionState::reset();
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $output = (new SessionTools())->init();
+    $session = new Session(new InMemorySessionStore(60));
+    $context = new RequestContext($session, new CallToolRequest('kirby_init', []));
+
+    $output = (new SessionTools())->init(context: $context);
 
     expect($output)->toBeString();
     expect($output)->toContain('<Kirby>');
@@ -23,5 +29,5 @@ it('initializes and returns guidance for a composer-based Kirby project', functi
     expect($output)->toContain('kirby://prompts');
     expect($output)->toContain('kirby://prompt/{name}');
     expect($output)->toContain('kirby_project_tour');
-    expect(SessionState::initCalled())->toBeTrue();
+    expect(SessionState::initCalled($session))->toBeTrue();
 });

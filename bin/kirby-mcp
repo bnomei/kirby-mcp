@@ -29,15 +29,29 @@ if (is_string($autoloadPath) && $autoloadPath !== '' && is_file($autoloadPath)) 
 use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
 use Bnomei\KirbyMcp\Mcp\Handlers\RequireInitForToolsHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\SetLogLevelHandler;
+use Bnomei\KirbyMcp\Mcp\ProjectContext;
+use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
+use Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources;
 use Bnomei\KirbyMcp\Mcp\Resources\ExtensionReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
 use Bnomei\KirbyMcp\Mcp\Resources\HookReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\PanelReferenceResources;
+use Bnomei\KirbyMcp\Docs\ExtensionReferenceIndex;
+use Bnomei\KirbyMcp\Docs\HookReferenceIndex;
+use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
+use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
 use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
 use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 use Bnomei\KirbyMcp\Project\ProjectRootFinder;
+use Mcp\Capability\Registry;
+use Mcp\Capability\Registry\Container;
+use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Server;
 use Mcp\Server\Builder as McpServerBuilder;
+use Mcp\Server\Handler\Request\CallToolHandler;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Resource;
+use Mcp\Schema\Enum\Role;
 use Mcp\Schema\ServerCapabilities;
 use Mcp\Server\Transport\StdioTransport;
 
@@ -485,22 +499,157 @@ if ($subcommand === 'ide:status' || $subcommand === 'ide:generate') {
 }
 
 /**
- * Register sized markdown resources for resources/list.
- *
- * The size field cannot be dynamic with PHP attributes; registering these resources
- * manually allows us to provide accurate byte sizes.
+ * @param array<int, string> $paths
  */
-function registerSizedMarkdownResources(McpServerBuilder $builder): void
+function resolveMaxMtime(array $paths): ?int
+{
+    $latest = null;
+
+    foreach ($paths as $path) {
+        if (!is_string($path) || $path === '' || !is_file($path)) {
+            continue;
+        }
+
+        $mtime = @filemtime($path);
+        if (is_int($mtime)) {
+            $latest = $latest === null ? $mtime : max($latest, $mtime);
+        }
+    }
+
+    return $latest;
+}
+
+function resolveClassMtime(string $className): ?int
 {
     try {
+        $reflection = new ReflectionClass($className);
+        $path = $reflection->getFileName();
+        if (is_string($path) && $path !== '') {
+            $mtime = @filemtime($path);
+            if (is_int($mtime)) {
+                return $mtime;
+            }
+        }
+    } catch (Throwable) {
+        return null;
+    }
+
+    return null;
+}
+
+function resolveKbPrefixMtime(string $prefix): ?int
+{
+    $kbRoot = KbDocuments::kbRoot();
+    if (!is_dir($kbRoot)) {
+        return null;
+    }
+
+    $projectRoot = KbDocuments::projectRoot();
+    $prefix = ltrim($prefix, '/');
+
+    $latest = null;
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($kbRoot, FilesystemIterator::SKIP_DOTS)
+    );
+
+    foreach ($iterator as $file) {
+        if (!$file->isFile() || strtolower($file->getExtension()) !== 'md') {
+            continue;
+        }
+
+        $name = strtolower($file->getFilename());
+        if ($name === 'plan.md' || $name === 'agents.md') {
+            continue;
+        }
+
+        $path = $file->getPathname();
+        $relative = ltrim(substr($path, strlen($projectRoot)), DIRECTORY_SEPARATOR);
+        $relative = str_replace(DIRECTORY_SEPARATOR, '/', $relative);
+
+        if (!str_starts_with($relative, $prefix)) {
+            continue;
+        }
+
+        $mtime = $file->getMTime();
+        $latest = $latest === null ? $mtime : max($latest, $mtime);
+    }
+
+    return $latest;
+}
+
+function resolveProjectMtime(string $projectRoot): ?int
+{
+    $projectRoot = rtrim($projectRoot, DIRECTORY_SEPARATOR);
+
+    return resolveMaxMtime([
+        $projectRoot . DIRECTORY_SEPARATOR . 'composer.json',
+        $projectRoot . DIRECTORY_SEPARATOR . 'composer.lock',
+        $projectRoot . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'kirby',
+    ]);
+}
+
+/**
+ * @param array<string, mixed>|array<int, mixed> $payload
+ */
+function resolveJsonSize(array $payload): ?int
+{
+    try {
+        $encoded = json_encode($payload, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+    } catch (Throwable) {
+        return null;
+    }
+
+    return is_string($encoded) ? strlen($encoded) : null;
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function resourceMetaFromMtime(?int $mtime): ?array
+{
+    if (!is_int($mtime)) {
+        return null;
+    }
+
+    $formatted = gmdate(DATE_ATOM, $mtime);
+    if (!is_string($formatted) || $formatted === '') {
+        return null;
+    }
+
+    return ['lastModified' => $formatted];
+}
+
+/**
+ * Register sized resources for resources/list.
+ *
+ * The size field cannot be dynamic with PHP attributes; registering these resources
+ * manually allows us to provide accurate byte sizes and metadata.
+ */
+function registerSizedMarkdownResources(Registry $registry): void
+{
+    $defaultAnnotations = new Annotations(
+        audience: [Role::Assistant],
+        priority: 0.4,
+    );
+    $importantAnnotations = new Annotations(
+        audience: [Role::Assistant],
+        priority: 0.5,
+    );
+
+    try {
         $contents = (new ExtensionReferenceResources())->extensionsList();
-        $builder->addResource(
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://extensions',
+                name: 'extensions',
+                description: 'List Kirby plugin extensions (links to kirby://extension/{name}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($contents),
+                meta: resourceMetaFromMtime(resolveClassMtime(ExtensionReferenceIndex::class)),
+            ),
             [ExtensionReferenceResources::class, 'extensionsList'],
-            'kirby://extensions',
-            'extensions',
-            'List Kirby plugin extensions (links to kirby://extension/{name}).',
-            'text/markdown',
-            strlen($contents),
+            true,
         );
     } catch (Throwable) {
         // Keep resource available via attribute discovery if sizing fails.
@@ -508,13 +657,18 @@ function registerSizedMarkdownResources(McpServerBuilder $builder): void
 
     try {
         $contents = (new HookReferenceResources())->hooksList();
-        $builder->addResource(
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://hooks',
+                name: 'hooks',
+                description: 'List Kirby plugin hook names (links to kirby://hook/{name}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($contents),
+                meta: resourceMetaFromMtime(resolveClassMtime(HookReferenceIndex::class)),
+            ),
             [HookReferenceResources::class, 'hooksList'],
-            'kirby://hooks',
-            'hooks',
-            'List Kirby plugin hook names (links to kirby://hook/{name}).',
-            'text/markdown',
-            strlen($contents),
+            true,
         );
     } catch (Throwable) {
         // Keep resource available via attribute discovery if sizing fails.
@@ -524,23 +678,33 @@ function registerSizedMarkdownResources(McpServerBuilder $builder): void
         $panel = new PanelReferenceResources();
 
         $fields = $panel->fieldsList();
-        $builder->addResource(
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://fields',
+                name: 'panel_fields',
+                description: 'List Kirby Panel field types (links to kirby://field/{type}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($fields),
+                meta: resourceMetaFromMtime(resolveClassMtime(PanelReferenceIndex::class)),
+            ),
             [PanelReferenceResources::class, 'fieldsList'],
-            'kirby://fields',
-            'panel_fields',
-            'List Kirby Panel field types (links to kirby://field/{type}).',
-            'text/markdown',
-            strlen($fields),
+            true,
         );
 
         $sections = $panel->sectionsList();
-        $builder->addResource(
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://sections',
+                name: 'panel_sections',
+                description: 'List Kirby Panel section types (links to kirby://section/{type}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($sections),
+                meta: resourceMetaFromMtime(resolveClassMtime(PanelReferenceIndex::class)),
+            ),
             [PanelReferenceResources::class, 'sectionsList'],
-            'kirby://sections',
-            'panel_sections',
-            'List Kirby Panel section types (links to kirby://section/{type}).',
-            'text/markdown',
-            strlen($sections),
+            true,
         );
     } catch (Throwable) {
         // Keep resources available via attribute discovery if sizing fails.
@@ -548,28 +712,146 @@ function registerSizedMarkdownResources(McpServerBuilder $builder): void
 
     try {
         $contents = (new GlossaryResources())->glossaryList();
-        $builder->addResource(
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://glossary',
+                name: 'glossary',
+                description: 'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($contents),
+                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/kirby/glossary/')),
+            ),
             [GlossaryResources::class, 'glossaryList'],
-            'kirby://glossary',
-            'glossary',
-            'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
-            'text/markdown',
-            strlen($contents),
+            true,
         );
     } catch (Throwable) {
         // Keep resource available via attribute discovery if sizing fails.
     }
+
+    try {
+        $contents = (new UpdateSchemaResources())->contentFieldsList();
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://fields/update-schema',
+                name: 'update_schema_fields',
+                description: 'List bundled content field update schemas (links to kirby://field/{type}/update-schema).',
+                mimeType: 'text/markdown',
+                annotations: $importantAnnotations,
+                size: strlen($contents),
+                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/kirby/update-schema/')),
+            ),
+            [UpdateSchemaResources::class, 'contentFieldsList'],
+            true,
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if sizing fails.
+    }
+
+    try {
+        $context = new ProjectContext();
+        $projectRoot = $context->projectRoot();
+        $lastModified = resolveProjectMtime($projectRoot);
+        $size = null;
+
+        try {
+            $payload = (new CliResources($context))->commands();
+            if (($payload['ok'] ?? false) === true) {
+                $size = resolveJsonSize($payload);
+            }
+        } catch (Throwable) {
+            // Ignore size calculation failures; still register metadata.
+        }
+
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://commands',
+                name: 'commands',
+                description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
+                mimeType: 'application/json',
+                annotations: $importantAnnotations,
+                size: $size,
+                meta: resourceMetaFromMtime($lastModified),
+            ),
+            [CliResources::class, 'commands'],
+            true,
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if registration fails.
+    }
 }
 
-$builder = Server::builder()
-    ->setServerInfo('Kirby MCP', '0.0.0')
-    ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
+function resolveKirbyMcpVersion(): string
+{
+    $composerJson = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'composer.json';
+    $composerVersion = null;
 
-registerSizedMarkdownResources($builder);
+    if (is_file($composerJson)) {
+        $contents = file_get_contents($composerJson);
+        if (is_string($contents) && trim($contents) !== '') {
+            try {
+                $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+                if (is_array($decoded)) {
+                    $version = $decoded['version'] ?? null;
+                    if (is_string($version) && trim($version) !== '') {
+                        $composerVersion = trim($version);
+                    }
+                }
+            } catch (Throwable) {
+                // Ignore invalid JSON and fall back to other sources.
+            }
+        }
+    }
+
+    if (class_exists(\Composer\InstalledVersions::class)) {
+        try {
+            if (\Composer\InstalledVersions::isInstalled('bnomei/kirby-mcp')) {
+                $pretty = \Composer\InstalledVersions::getPrettyVersion('bnomei/kirby-mcp');
+                $reference = \Composer\InstalledVersions::getReference('bnomei/kirby-mcp');
+
+                if (is_string($pretty) && $pretty !== '') {
+                    $isDev = str_starts_with($pretty, 'dev-') || $pretty === 'dev-main' || $pretty === 'dev-master';
+                    if ($isDev && is_string($composerVersion) && $composerVersion !== '') {
+                        if (is_string($reference) && $reference !== '') {
+                            return $composerVersion . '+' . substr($reference, 0, 7);
+                        }
+
+                        return $composerVersion;
+                    }
+
+                    if (is_string($reference) && $reference !== '') {
+                        return $pretty . '+' . substr($reference, 0, 7);
+                    }
+
+                    return $pretty;
+                }
+            }
+        } catch (Throwable) {
+            // Fall through to file-based/versionless fallback.
+        }
+    }
+
+    if (is_string($composerVersion) && $composerVersion !== '') {
+        return $composerVersion;
+    }
+
+    return '0.0.0';
+}
+
+$container = new Container();
+$registry = new Registry();
+$referenceHandler = new ReferenceHandler($container);
+$callToolHandler = new CallToolHandler($registry, $referenceHandler);
+
+$builder = Server::builder()
+    ->setContainer($container)
+    ->setRegistry($registry)
+    ->setServerInfo('Kirby MCP', resolveKirbyMcpVersion())
+    ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
 
 $server = $builder
     ->setDiscovery(dirname(__DIR__), ['src'])
-    ->addRequestHandler(new RequireInitForToolsHandler())
+    ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
     ->addRequestHandler(new SetLogLevelHandler())
     ->setCapabilities(new ServerCapabilities(
         tools: true,
@@ -579,5 +861,7 @@ $server = $builder
         completions: true,
     ))
     ->build();
+
+registerSizedMarkdownResources($registry);
 
 exit($server->run(new StdioTransport()));

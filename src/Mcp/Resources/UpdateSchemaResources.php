@@ -11,16 +11,22 @@ use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
-final class ContentFieldResources
+final class UpdateSchemaResources
 {
-    private const CONTENT_FIELDS_PREFIX = 'kb/content/fields/';
+    private const UPDATE_SCHEMA_PREFIX = 'kb/kirby/update-schema/';
 
     #[McpResource(
         uri: 'kirby://fields/update-schema',
         name: 'update_schema_fields',
         description: 'List bundled content field update schemas (links to kirby://field/{type}/update-schema).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to browse bundled content field update schemas; open a field guide via kirby://field/{type}/update-schema.',
@@ -41,7 +47,7 @@ final class ContentFieldResources
 
         $types = [];
         foreach (array_keys($documents) as $relativePath) {
-            if (!str_starts_with($relativePath, self::CONTENT_FIELDS_PREFIX) || !str_ends_with($relativePath, '.md')) {
+            if (!str_starts_with($relativePath, self::UPDATE_SCHEMA_PREFIX) || !str_ends_with($relativePath, '.md')) {
                 continue;
             }
 
@@ -73,7 +79,7 @@ final class ContentFieldResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://field/{type}/update-schema',
         name: 'update_schema_field',
-        description: 'Read a bundled content field update schema from kb/content/fields/{type}.md.',
+        description: 'Read a bundled content field update schema from kb/kirby/update-schema/{type}.md.',
         mimeType: 'text/markdown',
     )]
     #[McpToolIndex(
@@ -95,12 +101,12 @@ final class ContentFieldResources
     ): string {
         $type = $this->normalizeSlug($type, 'Field type');
 
-        $path = self::CONTENT_FIELDS_PREFIX . $type . '.md';
+        $path = self::UPDATE_SCHEMA_PREFIX . $type . '.md';
         $documents = KbDocuments::all();
 
         $markdown = $documents[$path] ?? null;
         if (!is_string($markdown) || $markdown === '') {
-            throw new ResourceReadException('Content field guide not found: ' . $type);
+            throw new ResourceReadException('Update schema guide not found: ' . $type);
         }
 
         return $markdown;

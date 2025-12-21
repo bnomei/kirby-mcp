@@ -11,6 +11,8 @@ use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class ExtensionReferenceResources extends AbstractMarkdownDocsResource
 {
@@ -21,6 +23,10 @@ final class ExtensionReferenceResources extends AbstractMarkdownDocsResource
         name: 'extensions',
         description: 'List Kirby plugin extensions (links to kirby://extension/{name}).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.4,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list Kirby plugin extension points, then open a specific extension reference via kirby://extension/{name}.',

@@ -206,7 +206,7 @@ Resource templates (dynamic):
 - `kirby://config/{option}` — read a Kirby config option by dot path
 - `kirby://extension/{name}` — Kirby extension reference markdown from getkirby.com, e.g. `commands` or `darkroom-drivers`
 - `kirby://field/{type}` — Kirby Panel field reference markdown from getkirby.com, e.g. `blocks` or `email`
-- `kirby://field/{type}/update-schema` — bundled content field guide from `kb/content/fields/{type}.md`
+- `kirby://field/{type}/update-schema` — bundled content field guide from `kb/kirby/update-schema/{type}.md`
 - `kirby://glossary/{term}` — read a bundled Kirby glossary entry by term, e.g. `api` or `kql`
 - `kirby://hook/{name}` — Kirby hook reference markdown from getkirby.com, e.g. `file.changeName:after` or `file-changename-after`
 - `kirby://page/content/{encodedIdOrUuid}` — read page content by URL-encoded id or uuid

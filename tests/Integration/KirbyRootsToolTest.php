@@ -12,7 +12,8 @@ it('exposes kirby roots via an MCP tool', function (): void {
     putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
     putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
 
-    $data = new RootsTools()->roots();
+    $rootsTools = new RootsTools();
+    $data = $rootsTools->roots();
 
     expect($data)->toHaveKey('roots');
     expect($data['roots'])->toHaveKey('index');

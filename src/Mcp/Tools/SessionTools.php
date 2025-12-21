@@ -14,7 +14,7 @@ use Bnomei\KirbyMcp\Project\EnvironmentDetector;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class SessionTools
 {
@@ -60,9 +60,9 @@ final class SessionTools
             openWorldHint: false,
         ),
     )]
-    public function init(?ClientGateway $client = null): string
+    public function init(?RequestContext $context = null): string
     {
-        SessionState::markInitCalled();
+        SessionState::markInitCalled($context?->getSession());
 
         try {
             $projectRoot = $this->context->projectRoot();
@@ -177,7 +177,6 @@ TEXT;
 
             try {
                 $ideStatus = (new IdeTools($this->context))->ideHelpersStatus(
-                    client: $client,
                     withDetails: false,
                     limit: 10,
                 );
@@ -192,13 +191,13 @@ TEXT;
 
             return "<Kirby>\n" . $markdown . "</Kirby>";
         } catch (ToolCallException $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_init',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_init',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

@@ -12,6 +12,8 @@ use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
 use Bnomei\KirbyMcp\Mcp\Completion\PanelFieldTypeCompletionProvider;
 use Bnomei\KirbyMcp\Mcp\Completion\PanelSectionTypeCompletionProvider;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class PanelReferenceResources extends AbstractMarkdownDocsResource
 {
@@ -22,6 +24,10 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
         name: 'panel_fields',
         description: 'List Kirby Panel field types (links to kirby://field/{type}).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.4,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list Kirby Panel field types, then open a specific field reference via kirby://field/{type} (e.g. kirby://field/text).',
@@ -59,6 +65,10 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
         name: 'panel_sections',
         description: 'List Kirby Panel section types (links to kirby://section/{type}).',
         mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.4,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list Kirby Panel section types, then open a specific section reference via kirby://section/{type}.',

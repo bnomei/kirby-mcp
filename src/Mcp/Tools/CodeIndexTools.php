@@ -13,13 +13,17 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Project\RootsCodeIndexer;
 use Bnomei\KirbyMcp\Support\IndexList;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class CodeIndexTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -49,7 +53,6 @@ final class CodeIndexTools
         ),
     )]
     public function templatesIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         ?string $activeSource = null,
@@ -57,7 +60,8 @@ final class CodeIndexTools
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -99,12 +103,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->templates($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -146,9 +150,9 @@ final class CodeIndexTools
                         ],
                     ];
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_templates_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -180,7 +184,6 @@ final class CodeIndexTools
         ),
     )]
     public function snippetsIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         ?string $activeSource = null,
@@ -188,7 +191,8 @@ final class CodeIndexTools
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -230,12 +234,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->snippets($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -276,9 +280,9 @@ final class CodeIndexTools
                         ],
                     ];
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_snippets_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -311,7 +315,6 @@ final class CodeIndexTools
         ),
     )]
     public function collectionsIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         ?string $activeSource = null,
@@ -319,7 +322,8 @@ final class CodeIndexTools
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -361,12 +365,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->collections($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -407,9 +411,9 @@ final class CodeIndexTools
                         ],
                     ];
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_collections_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -439,7 +443,6 @@ final class CodeIndexTools
         ),
     )]
     public function controllersIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         ?string $activeSource = null,
@@ -447,7 +450,8 @@ final class CodeIndexTools
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -489,12 +493,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->controllers($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -536,9 +540,9 @@ final class CodeIndexTools
                         ],
                     ];
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_controllers_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -584,13 +588,13 @@ final class CodeIndexTools
         ),
     )]
     public function modelsIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -632,12 +636,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->models($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -655,9 +659,9 @@ final class CodeIndexTools
                     $entry['id'] = $id;
                     return $entry;
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_models_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -716,13 +720,13 @@ final class CodeIndexTools
         ),
     )]
     public function pluginsIndex(
-        ?ClientGateway $client = null,
         bool $idsOnly = false,
         ?array $fields = null,
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -764,12 +768,12 @@ final class CodeIndexTools
             );
 
             if (($runtimeIndex['needsRuntimeInstall'] ?? false) !== true) {
-                return $runtimeIndex;
+                return $this->maybeStructuredResult($context, $runtimeIndex);
             }
 
             $data = (new RootsCodeIndexer())->plugins($projectRoot, $roots);
 
-            return $this->filesystemIndexList(
+            return $this->maybeStructuredResult($context, $this->filesystemIndexList(
                 projectRoot: $projectRoot,
                 host: $host,
                 data: $data,
@@ -787,9 +791,9 @@ final class CodeIndexTools
                     $entry['id'] = $id;
                     return $entry;
                 },
-            );
+            ));
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_plugins_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

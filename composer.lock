@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e12dafe3d6233010c5c8eed2329b1c8a",
+    "content-hash": "5d64d181efb64393c8afac37367c9943",
     "packages": [
         {
             "name": "doctrine/deprecations",
@@ -513,16 +513,16 @@
         },
         {
             "name": "mcp/sdk",
-            "version": "v0.1.0",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/modelcontextprotocol/php-sdk.git",
-                "reference": "470237ad0b42ac3a4408e5a34a4d7a53a3bccd4e"
+                "reference": "3b31954ac6909510e8f93e654323ecaaa85bc8f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/470237ad0b42ac3a4408e5a34a4d7a53a3bccd4e",
-                "reference": "470237ad0b42ac3a4408e5a34a4d7a53a3bccd4e",
+                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/3b31954ac6909510e8f93e654323ecaaa85bc8f3",
+                "reference": "3b31954ac6909510e8f93e654323ecaaa85bc8f3",
                 "shasum": ""
             },
             "require": {
@@ -544,7 +544,7 @@
                 "laminas/laminas-httphandlerrunner": "^2.12",
                 "nyholm/psr7": "^1.8",
                 "nyholm/psr7-server": "^1.1",
-                "php-cs-fixer/shim": "^3.84",
+                "php-cs-fixer/shim": "^3.91",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^10.5",
                 "psr/cache": "^3.0",
@@ -572,6 +572,7 @@
                     "Mcp\\Example\\EnvVariables\\": "examples/env-variables/",
                     "Mcp\\Example\\ExplicitRegistration\\": "examples/explicit-registration/",
                     "Mcp\\Example\\SchemaShowcase\\": "examples/schema-showcase/",
+                    "Mcp\\Example\\ClientLogging\\": "examples/client-logging/",
                     "Mcp\\Tests\\": "tests/"
                 }
             },
@@ -594,10 +595,10 @@
             ],
             "description": "Model Context Protocol SDK for Client and Server applications in PHP",
             "support": {
-                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.1.0",
+                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.2.0",
                 "issues": "https://github.com/modelcontextprotocol/php-sdk/issues"
             },
-            "time": "2025-11-20T18:48:17+00:00"
+            "time": "2025-12-20T07:50:08+00:00"
         },
         {
             "name": "opis/json-schema",
@@ -4716,6 +4717,95 @@
             "time": "2025-12-02T21:04:28+00:00"
         },
         {
+            "name": "nette/utils",
+            "version": "v4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nette/utils.git",
+                "reference": "fa1f0b8261ed150447979eb22e373b7b7ad5a8e0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nette/utils/zipball/fa1f0b8261ed150447979eb22e373b7b7ad5a8e0",
+                "reference": "fa1f0b8261ed150447979eb22e373b7b7ad5a8e0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "8.2 - 8.5"
+            },
+            "conflict": {
+                "nette/finder": "<3",
+                "nette/schema": "<1.2.2"
+            },
+            "require-dev": {
+                "jetbrains/phpstorm-attributes": "^1.2",
+                "nette/tester": "^2.5",
+                "phpstan/phpstan-nette": "^2.0@stable",
+                "tracy/tracy": "^2.9"
+            },
+            "suggest": {
+                "ext-gd": "to use Image",
+                "ext-iconv": "to use Strings::webalize(), toAscii(), chr() and reverse()",
+                "ext-intl": "to use Strings::webalize(), toAscii(), normalize() and compare()",
+                "ext-json": "to use Nette\\Utils\\Json",
+                "ext-mbstring": "to use Strings::lower() etc...",
+                "ext-tokenizer": "to use Nette\\Utils\\Reflection::getUseStatements()"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Nette\\": "src"
+                },
+                "classmap": [
+                    "src/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause",
+                "GPL-2.0-only",
+                "GPL-3.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "David Grudl",
+                    "homepage": "https://davidgrudl.com"
+                },
+                {
+                    "name": "Nette Community",
+                    "homepage": "https://nette.org/contributors"
+                }
+            ],
+            "description": "🛠  Nette Utils: lightweight utilities for string & array manipulation, image handling, safe JSON encoding/decoding, validation, slug or strong password generating etc.",
+            "homepage": "https://nette.org",
+            "keywords": [
+                "array",
+                "core",
+                "datetime",
+                "images",
+                "json",
+                "nette",
+                "paginator",
+                "password",
+                "slugify",
+                "string",
+                "unicode",
+                "utf-8",
+                "utility",
+                "validation"
+            ],
+            "support": {
+                "issues": "https://github.com/nette/utils/issues",
+                "source": "https://github.com/nette/utils/tree/v4.1.0"
+            },
+            "time": "2025-12-01T17:49:23+00:00"
+        },
+        {
             "name": "nikic/php-parser",
             "version": "v5.7.0",
             "source": {
@@ -4871,6 +4961,81 @@
                 }
             ],
             "time": "2025-11-20T02:55:25+00:00"
+        },
+        {
+            "name": "nunomaduro/pokio",
+            "version": "v0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nunomaduro/pokio.git",
+                "reference": "084ae842c9567a01b9693386e72bbf17ef086566"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nunomaduro/pokio/zipball/084ae842c9567a01b9693386e72bbf17ef086566",
+                "reference": "084ae842c9567a01b9693386e72bbf17ef086566",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3.0"
+            },
+            "conflict": {
+                "symplify/easy-parallel": "<11.2.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.24.0",
+                "peckphp/peck": "^0.1.3",
+                "pestphp/pest": "^4.0.0",
+                "pestphp/pest-plugin-type-coverage": "^4.0.0",
+                "phpstan/phpstan": "^2.1.22",
+                "rector/rector": "^2.1.4",
+                "symfony/var-dumper": "^7.3.2"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Functions.php"
+                ],
+                "psr-4": {
+                    "Pokio\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "Pokio is a dead simple asynchronous API for PHP that just works",
+            "keywords": [
+                "asynchronous",
+                "library",
+                "php",
+                "pokio"
+            ],
+            "support": {
+                "issues": "https://github.com/nunomaduro/pokio/issues",
+                "source": "https://github.com/nunomaduro/pokio/tree/v0.1.1"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/paypalme/enunomaduro",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2025-08-20T13:02:08+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -5346,6 +5511,75 @@
                 "source": "https://github.com/pestphp/pest-plugin-profanity/tree/v4.2.1"
             },
             "time": "2025-12-08T00:13:17+00:00"
+        },
+        {
+            "name": "pestphp/pest-plugin-type-coverage",
+            "version": "v4.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pestphp/pest-plugin-type-coverage.git",
+                "reference": "123bbf73d4b790373600132f503fd8d1453d40bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pestphp/pest-plugin-type-coverage/zipball/123bbf73d4b790373600132f503fd8d1453d40bb",
+                "reference": "123bbf73d4b790373600132f503fd8d1453d40bb",
+                "shasum": ""
+            },
+            "require": {
+                "nunomaduro/pokio": "^0.1.1",
+                "pestphp/pest-plugin": "^4.0.0",
+                "php": "^8.3",
+                "phpstan/phpstan": "^1.12.24|^2.1.31",
+                "tomasvotruba/type-coverage": "^1.0.0|^2.0.2"
+            },
+            "require-dev": {
+                "pestphp/pest": "^4.1.3",
+                "pestphp/pest-dev-tools": "^4.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "pest": {
+                    "plugins": [
+                        "Pest\\TypeCoverage\\Plugin"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pest\\TypeCoverage\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The Type Coverage plugin for Pest PHP.",
+            "keywords": [
+                "coverage",
+                "framework",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "type-coverage",
+                "unit"
+            ],
+            "support": {
+                "source": "https://github.com/pestphp/pest-plugin-type-coverage/tree/v4.0.3"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-11-02T23:10:59+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -8956,6 +9190,63 @@
                 }
             ],
             "time": "2025-12-08T11:19:18+00:00"
+        },
+        {
+            "name": "tomasvotruba/type-coverage",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/TomasVotruba/type-coverage.git",
+                "reference": "468354b3964120806a69890cbeb3fcf005876391"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/TomasVotruba/type-coverage/zipball/468354b3964120806a69890cbeb3fcf005876391",
+                "reference": "468354b3964120806a69890cbeb3fcf005876391",
+                "shasum": ""
+            },
+            "require": {
+                "nette/utils": "^3.2 || ^4.0",
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.0"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "phpstan": {
+                    "includes": [
+                        "config/extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "TomasVotruba\\TypeCoverage\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Measure type coverage of your project",
+            "keywords": [
+                "phpstan-extension",
+                "static analysis"
+            ],
+            "support": {
+                "issues": "https://github.com/TomasVotruba/type-coverage/issues",
+                "source": "https://github.com/TomasVotruba/type-coverage/tree/2.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.me/rectorphp",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-12-05T16:38:02+00:00"
         },
         {
             "name": "voku/portable-ascii",

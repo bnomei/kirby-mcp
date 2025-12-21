@@ -32,9 +32,9 @@ This complements:
 
 ## Folder organization
 
-- `kb/content/fields/<field>.md` (one field type per file, lowercase slug)
+- `kb/kirby/update-schema/<field>.md` (one field type per file, lowercase slug)
 - Optional: `kb/content/INDEX.md` (alphabetical index + categories)
-- Resource mapping (future): `kirby://field/{field}/update-schema` -> `kb/content/fields/<field>.md`
+- Resource mapping (future): `kirby://field/{field}/update-schema` -> `kb/kirby/update-schema/<field>.md`
 - Search: ensure `kirby_search` includes `kb/content` like it does for glossary/scenarios.
 
 ## Field guide format
@@ -144,7 +144,7 @@ We need to scan existing KB glossary/scenarios that mention `kirby_update_page_c
 Suggested steps:
 
 - Search KB for `kirby_update_page_content` usage.
-- For each match, add a short note or link pointing to `kirby://field/{field}/update-schema` (or the relevant field doc under `kb/content/fields/`).
+- For each match, add a short note or link pointing to `kirby://field/{field}/update-schema` (or the relevant field doc under `kb/kirby/update-schema/`).
 - Ensure glossary entries for blocks/layout/structure (and any field-heavy scenarios) reference the content field guidance.
 
 ## Content lab test suite plan (single plugin)

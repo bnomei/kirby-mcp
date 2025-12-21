@@ -13,6 +13,8 @@ use Bnomei\KirbyMcp\Support\StaticCache;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Capability\Attribute\McpResourceTemplate;
 use Mcp\Exception\ResourceReadException;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class CliResources
 {
@@ -39,6 +41,10 @@ final class CliResources
         name: 'commands',
         description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to list Kirby CLI commands available in the project (parsed from `kirby help`).',

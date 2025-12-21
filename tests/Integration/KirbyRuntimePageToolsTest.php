@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
+use Mcp\Schema\Request\CallToolRequest;
+use Mcp\Schema\Result\CallToolResult;
+use Mcp\Server\RequestContext;
+use Mcp\Server\Session\InMemorySessionStore;
+use Mcp\Server\Session\Session;
 
 it('reads home page content via runtime CLI', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
@@ -23,6 +28,16 @@ it('reads home page content via runtime CLI', function (): void {
         expect($result)->toHaveKey('ok', true);
         expect($result['content'])->toBeArray();
         expect($result['content'])->toHaveKey('title', 'Home');
+
+        $session = new Session(new InMemorySessionStore(60));
+        $request = (new CallToolRequest('kirby_read_page_content', []))->withId('test');
+        $context = new RequestContext($session, $request);
+        $structured = $tools->readPageContent(context: $context);
+
+        expect($structured)->toBeInstanceOf(CallToolResult::class);
+        expect($structured->structuredContent)->toBeArray();
+        expect($structured->structuredContent)->toHaveKey('ok', true);
+        expect($structured->structuredContent['content'])->toHaveKey('title', 'Home');
     } finally {
         foreach ($install['installed'] as $relativePath) {
             $path = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativePath;

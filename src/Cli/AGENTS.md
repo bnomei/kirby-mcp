@@ -22,4 +22,5 @@ Provide safe, testable Kirby CLI execution and output parsing for MCP tools and 
 
 - Never interpolate untrusted input into a shell command; treat paths/args as data.
 - Always capture and return stdout, stderr, and exit codes; don’t silently swallow failures.
+- Treat non-zero exit codes or timeouts as command failures; skip JSON parsing and surface stderr in parse errors.
 - Keep output formats stable (especially MCP JSON markers).

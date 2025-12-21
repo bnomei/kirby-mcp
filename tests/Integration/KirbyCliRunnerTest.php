@@ -10,7 +10,8 @@ it('runs the Kirby CLI against the cms fixture', function (): void {
 
     putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
 
-    $result = new KirbyCliRunner()->run(projectRoot: cmsPath(), args: ['version'], timeoutSeconds: 30);
+    $runner = new KirbyCliRunner();
+    $result = $runner->run(projectRoot: cmsPath(), args: ['version'], timeoutSeconds: 30);
 
     expect($result->exitCode)->toBe(0);
     expect($result->timedOut)->toBeFalse();

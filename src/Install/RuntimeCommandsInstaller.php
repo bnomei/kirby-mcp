@@ -50,7 +50,16 @@ final class RuntimeCommandsInstaller
             }
 
             $destinationDir = dirname($destinationPath);
-            if (!is_dir($destinationDir) && !mkdir($destinationDir, 0777, true) && !is_dir($destinationDir)) {
+            $blockedPath = $this->findBlockedPath($destinationDir);
+            if (is_string($blockedPath) && $blockedPath !== '') {
+                $errors[] = [
+                    'path' => $blockedPath,
+                    'error' => 'Destination directory path is blocked by a file',
+                ];
+                continue;
+            }
+
+            if (!is_dir($destinationDir) && !@mkdir($destinationDir, 0777, true) && !is_dir($destinationDir)) {
                 $errors[] = [
                     'path' => $destinationDir,
                     'error' => 'Failed to create directory',
@@ -67,12 +76,10 @@ final class RuntimeCommandsInstaller
                 continue;
             }
 
-            $written = file_put_contents($destinationPath, $contents);
-            if ($written === false) {
-                $errors[] = [
-                    'path' => $destinationPath,
-                    'error' => 'Failed to write file',
-                ];
+            $sourceMode = @fileperms($sourcePath);
+            $sourceMode = is_int($sourceMode) ? ($sourceMode & 0777) : null;
+
+            if ($this->writeFileAtomically($destinationPath, $contents, $sourceMode, $errors) === false) {
                 continue;
             }
 
@@ -94,5 +101,70 @@ final class RuntimeCommandsInstaller
     private function packageRoot(): string
     {
         return dirname(__DIR__, 2);
+    }
+
+    private function findBlockedPath(string $path): ?string
+    {
+        $current = rtrim($path, DIRECTORY_SEPARATOR);
+        while ($current !== '' && $current !== dirname($current)) {
+            if (is_file($current)) {
+                return $current;
+            }
+
+            if (is_dir($current)) {
+                return null;
+            }
+
+            $current = dirname($current);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int, array{path: string, error: string}> $errors
+     */
+    private function writeFileAtomically(string $destinationPath, string $contents, ?int $mode, array &$errors): bool
+    {
+        $destinationDir = dirname($destinationPath);
+        $tempFile = tempnam($destinationDir, 'kirby-mcp-');
+
+        if ($tempFile === false) {
+            $errors[] = [
+                'path' => $destinationPath,
+                'error' => 'Failed to create temp file for atomic write',
+            ];
+            return false;
+        }
+
+        $written = file_put_contents($tempFile, $contents);
+        if ($written === false) {
+            @unlink($tempFile);
+            $errors[] = [
+                'path' => $destinationPath,
+                'error' => 'Failed to write temp file for atomic write',
+            ];
+            return false;
+        }
+
+        if (is_int($mode)) {
+            @chmod($tempFile, $mode);
+        }
+
+        if (@rename($tempFile, $destinationPath)) {
+            return true;
+        }
+
+        if (is_file($destinationPath) && @unlink($destinationPath) && @rename($tempFile, $destinationPath)) {
+            return true;
+        }
+
+        @unlink($tempFile);
+        $errors[] = [
+            'path' => $destinationPath,
+            'error' => 'Failed to move temp file into place',
+        ];
+
+        return false;
     }
 }

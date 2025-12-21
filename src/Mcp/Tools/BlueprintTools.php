@@ -14,15 +14,19 @@ use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Support\IndexList;
 use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class BlueprintTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -59,7 +63,6 @@ final class BlueprintTools
         ),
     )]
     public function blueprintsIndex(
-        ?ClientGateway $client = null,
         bool $withData = false,
         bool $idsOnly = false,
         ?array $fields = null,
@@ -69,7 +72,8 @@ final class BlueprintTools
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -117,7 +121,7 @@ final class BlueprintTools
 
             if ($result->installed === true) {
                 if (!is_array($result->payload)) {
-                    return $result->parseErrorResponse([
+                    return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                         'mode' => 'runtime',
                         'projectRoot' => $projectRoot,
                         'host' => $host,
@@ -125,7 +129,7 @@ final class BlueprintTools
                         'cliMeta' => $result->cliMeta(),
                         'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
                         'cli' => $debug === true ? $result->cli() : null,
-                    ]);
+                    ]));
                 }
 
                 /** @var array<string, mixed> $payload */
@@ -193,7 +197,7 @@ final class BlueprintTools
                     $response['cli'] = $result->cli();
                 }
 
-                return $response;
+                return $this->maybeStructuredResult($context, $response);
             }
 
             $scan = (new BlueprintScanner())->scan($projectRoot, $blueprintsRoot);
@@ -314,9 +318,9 @@ final class BlueprintTools
                 $response['blueprints'] = $blueprints;
             }
 
-            return $response;
+            return $this->maybeStructuredResult($context, $response);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_blueprints_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -352,23 +356,23 @@ final class BlueprintTools
         ),
     )]
     public function blueprintRead(
-        ?ClientGateway $client = null,
         #[CompletionProvider(provider: BlueprintIdCompletionProvider::class)]
         string $id = '',
         bool $withData = true,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $id = trim($id);
             if ($id === '') {
-                return [
+                return $this->maybeStructuredResult($context, [
                     'ok' => false,
                     'error' => [
                         'class' => 'InvalidArgumentException',
                         'message' => 'Blueprint id must not be empty.',
                         'code' => 0,
                     ],
-                ];
+                ]);
             }
 
             $runtime = new KirbyRuntimeContext($this->context);
@@ -389,7 +393,7 @@ final class BlueprintTools
 
             if ($result->installed === true) {
                 if (!is_array($result->payload)) {
-                    return $result->parseErrorResponse([
+                    return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                         'mode' => 'runtime',
                         'projectRoot' => $projectRoot,
                         'host' => $host,
@@ -398,7 +402,7 @@ final class BlueprintTools
                         'cliMeta' => $result->cliMeta(),
                         'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
                         'cli' => $debug === true ? $result->cli() : null,
-                    ]);
+                    ]));
                 }
 
                 /** @var array<string, mixed> $response */
@@ -426,14 +430,14 @@ final class BlueprintTools
                     $response['cli'] = $result->cli();
                 }
 
-                return $response;
+                return $this->maybeStructuredResult($context, $response);
             }
 
             $scan = (new BlueprintScanner())->scan($projectRoot, $blueprintsRoot);
             $file = $scan->blueprints[$id] ?? null;
 
             if ($file === null) {
-                return [
+                return $this->maybeStructuredResult($context, [
                     'ok' => false,
                     'mode' => 'filesystem',
                     'needsRuntimeInstall' => true,
@@ -446,7 +450,7 @@ final class BlueprintTools
                         'message' => 'Blueprint not found in the project blueprints root. Install runtime CLI commands to resolve plugin-provided blueprints.',
                         'code' => 0,
                     ],
-                ];
+                ]);
             }
 
             $dataError = null;
@@ -488,9 +492,9 @@ final class BlueprintTools
                 $response['data'] = $file->data;
             }
 
-            return $response;
+            return $this->maybeStructuredResult($context, $response);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_blueprint_read',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

@@ -10,7 +10,7 @@ use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
 use Bnomei\KirbyMcp\Project\KirbyRootsInspectionResult;
 
-final class KirbyRuntimeContext
+final class KirbyRuntimeContext implements RuntimeContextInterface
 {
     /** @var array<string, KirbyRootsInspectionCacheEntry> */
     private static array $rootsInspectionCache = [];

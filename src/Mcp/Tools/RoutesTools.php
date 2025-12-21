@@ -11,13 +11,17 @@ use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class RoutesTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -51,14 +55,14 @@ final class RoutesTools
         ),
     )]
     public function routesIndex(
-        ?ClientGateway $client = null,
         bool $patternsOnly = false,
         ?string $method = null,
         ?string $patternContains = null,
         int $limit = 0,
         int $cursor = 0,
         bool $debug = false,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -97,18 +101,18 @@ final class RoutesTools
             );
 
             if ($result->installed !== true) {
-                return $result->needsRuntimeInstallResponse();
+                return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
             }
 
             if (!is_array($result->payload)) {
-                return $result->parseErrorResponse([
+                return $this->maybeStructuredResult($context, $result->parseErrorResponse([
                     'mode' => 'runtime',
                     'projectRoot' => $projectRoot,
                     'host' => $host,
                     'cliMeta' => $result->cliMeta(),
                     'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
                     'cli' => $debug === true ? $result->cli() : null,
-                ]);
+                ]));
             }
 
             /** @var array<string, mixed> $payload */
@@ -125,9 +129,9 @@ final class RoutesTools
                 $response['cli'] = $result->cli();
             }
 
-            return $response;
+            return $this->maybeStructuredResult($context, $response);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_routes_index',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

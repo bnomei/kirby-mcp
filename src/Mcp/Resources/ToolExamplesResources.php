@@ -6,6 +6,8 @@ namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Mcp\Capability\Attribute\McpResource;
+use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\Role;
 
 final class ToolExamplesResources
 {
@@ -24,6 +26,10 @@ final class ToolExamplesResources
         name: 'tool-examples',
         description: 'Curated usage examples for Kirby MCP tools with stricter inputs or confirm flows.',
         mimeType: 'application/json',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
     )]
     #[McpToolIndex(
         whenToUse: 'Use to see safe, copy-ready examples for Kirby MCP tools that require confirmations or strict input shapes.',

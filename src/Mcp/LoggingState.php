@@ -5,24 +5,45 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp;
 
 use Mcp\Schema\Enum\LoggingLevel;
+use Mcp\Server\Protocol;
+use Mcp\Server\Session\SessionInterface;
 
 final class LoggingState
 {
-    private static LoggingLevel $level = LoggingLevel::Error;
+    private const LEGACY_SESSION_KEY = 'kirby_mcp.logging.level';
+    private const DEFAULT_LEVEL = LoggingLevel::Error;
 
-    public static function setLevel(LoggingLevel $level): void
+    public static function reset(?SessionInterface $session = null): void
     {
-        self::$level = $level;
+        if ($session === null) {
+            return;
+        }
+
+        $session->forget(Protocol::SESSION_LOGGING_LEVEL);
+        $session->forget(self::LEGACY_SESSION_KEY);
     }
 
-    public static function level(): LoggingLevel
+    public static function setLevel(LoggingLevel $level, SessionInterface $session): void
     {
-        return self::$level;
+        $session->set(Protocol::SESSION_LOGGING_LEVEL, $level->value);
+        $session->set(self::LEGACY_SESSION_KEY, $level->value);
     }
 
-    public static function allows(LoggingLevel $messageLevel): bool
+    public static function level(?SessionInterface $session = null): LoggingLevel
     {
-        return self::severity($messageLevel) >= self::severity(self::$level);
+        if ($session === null) {
+            return self::DEFAULT_LEVEL;
+        }
+
+        $value = $session->get(Protocol::SESSION_LOGGING_LEVEL)
+            ?? $session->get(self::LEGACY_SESSION_KEY);
+
+        return LoggingLevel::tryFrom((string) $value) ?? self::DEFAULT_LEVEL;
+    }
+
+    public static function allows(LoggingLevel $messageLevel, ?SessionInterface $session = null): bool
+    {
+        return self::severity($messageLevel) >= self::severity(self::level($session));
     }
 
     private static function severity(LoggingLevel $level): int

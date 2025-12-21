@@ -10,13 +10,53 @@ use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
 use Bnomei\KirbyMcp\Project\ProjectInfoInspector;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class ProjectTools
 {
+    use StructuredToolResult;
+
+    private const INFO_OUTPUT_SCHEMA = [
+        'type' => 'object',
+        'properties' => [
+            'projectRoot' => ['type' => 'string'],
+            'phpVersion' => ['type' => 'string'],
+            'kirbyVersion' => ['type' => 'string'],
+            'environment' => [
+                'type' => 'object',
+                'properties' => [
+                    'projectRoot' => ['type' => 'string'],
+                    'localRunner' => ['type' => 'string'],
+                    'signals' => [
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'string'],
+                    ],
+                ],
+                'required' => ['projectRoot', 'localRunner', 'signals'],
+                'additionalProperties' => true,
+            ],
+            'composer' => [
+                'type' => 'object',
+                'properties' => [
+                    'projectRoot' => ['type' => 'string'],
+                    'composerJson' => ['type' => 'object'],
+                    'composerLock' => ['type' => ['object', 'null']],
+                    'scripts' => ['type' => 'object'],
+                    'tools' => ['type' => 'object'],
+                ],
+                'required' => ['projectRoot', 'composerJson', 'scripts', 'tools'],
+                'additionalProperties' => true,
+            ],
+        ],
+        'required' => ['projectRoot', 'phpVersion', 'kirbyVersion', 'environment', 'composer'],
+        'additionalProperties' => true,
+    ];
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -67,15 +107,15 @@ final class ProjectTools
             openWorldHint: false,
         ),
     )]
-    public function composerAudit(?ClientGateway $client = null): array
+    public function composerAudit(?RequestContext $context = null): array|CallToolResult
     {
         try {
             $projectRoot = $this->context->projectRoot();
             $audit = (new ComposerInspector())->inspect($projectRoot);
 
-            return $audit->toArray();
+            return $this->maybeStructuredResult($context, $audit->toArray());
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_composer_audit',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -123,20 +163,25 @@ final class ProjectTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
+        meta: [
+            'outputSchema' => self::INFO_OUTPUT_SCHEMA,
+        ],
     )]
-    public function projectInfo(?ClientGateway $client = null): array
+    public function projectInfo(?RequestContext $context = null): array|CallToolResult
     {
         try {
             $projectRoot = $this->context->projectRoot();
-            return (new ProjectInfoInspector())->inspect($projectRoot);
+            $payload = (new ProjectInfoInspector())->inspect($projectRoot);
+
+            return $this->maybeStructuredResult($context, $payload);
         } catch (ToolCallException $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_info',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_info',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -168,7 +213,7 @@ final class ProjectTools
             openWorldHint: false,
         ),
     )]
-    public function kirbyCliVersion(?ClientGateway $client = null): array
+    public function kirbyCliVersion(?RequestContext $context = null): array|CallToolResult
     {
         try {
             $projectRoot = $this->context->projectRoot();
@@ -179,9 +224,9 @@ final class ProjectTools
                 timeoutSeconds: 30,
             );
 
-            return $result->toArray();
+            return $this->maybeStructuredResult($context, $result->toArray());
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_cli_version',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

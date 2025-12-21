@@ -12,13 +12,17 @@ use Bnomei\KirbyMcp\Mcp\Policies\KirbyCliAllowlistPolicy;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class CliTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -45,7 +49,7 @@ final class CliTools
      *   timedOut: bool|null,
      *   mcpJson: array<mixed>|null,
      *   mcpJsonError: string|null
-     * }
+     * }|CallToolResult
      */
     #[McpToolIndex(
         whenToUse: 'Use to execute a Kirby CLI command and capture its raw output (stdout/stderr). Discover commands via `kirby://commands` and inspect flags/usage via `kirby://cli/command/{command}`.',
@@ -76,18 +80,18 @@ final class CliTools
         array $arguments = [],
         bool $allowWrite = false,
         int $timeoutSeconds = 60,
-        ?ClientGateway $client = null,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         $result = $this->runCliInternal(
             command: $command,
             arguments: $arguments,
             allowWrite: $allowWrite,
             timeoutSeconds: $timeoutSeconds,
-            client: $client,
+            context: $context,
         );
 
         if (($result['ok'] ?? false) !== true) {
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'projectRoot' => $result['projectRoot'] ?? $this->context->projectRoot(),
                 'host' => $result['host'] ?? $this->context->kirbyHost(),
@@ -114,7 +118,7 @@ final class CliTools
                 'timedOut' => null,
                 'mcpJson' => null,
                 'mcpJsonError' => null,
-            ];
+            ]);
         }
 
         $cli = $result['cli'] ?? null;
@@ -128,7 +132,7 @@ final class CliTools
             $success = ($exitCode === 0) && ($timedOut === false);
         }
 
-        return [
+        return $this->maybeStructuredResult($context, [
             'ok' => true,
             'projectRoot' => $result['projectRoot'],
             'host' => $result['host'],
@@ -145,7 +149,7 @@ final class CliTools
             'timedOut' => is_bool($timedOut) ? $timedOut : null,
             'mcpJson' => is_array($result['mcpJson'] ?? null) ? $result['mcpJson'] : null,
             'mcpJsonError' => is_string($result['mcpJsonError'] ?? null) ? $result['mcpJsonError'] : null,
-        ];
+        ]);
     }
 
     /**
@@ -170,7 +174,7 @@ final class CliTools
         array $arguments = [],
         bool $allowWrite = false,
         int $timeoutSeconds = 60,
-        ?ClientGateway $client = null,
+        ?RequestContext $context = null,
     ): array {
         try {
             $projectRoot = $this->context->projectRoot();
@@ -321,7 +325,7 @@ final class CliTools
                 'mcpJsonError' => $mcpJsonError,
             ];
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_run_cli_command',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

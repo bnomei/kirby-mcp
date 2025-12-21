@@ -16,15 +16,19 @@ use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Project\KirbyRoots;
 use Bnomei\KirbyMcp\Project\RootsCodeIndexer;
 use Bnomei\KirbyMcp\Support\StaticCache;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 final class IdeTools
 {
+    use StructuredToolResult;
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -88,11 +92,11 @@ final class IdeTools
         ),
     )]
     public function generateIdeHelpers(
-        ?ClientGateway $client = null,
         bool $dryRun = true,
         bool $force = false,
         bool $preferRuntime = true,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -328,7 +332,7 @@ final class IdeTools
                 'After changing blueprints/snippets/config, run kirby_ide_helpers_status to see if helpers are stale (mtime-based).',
             ];
 
-            return [
+            return $this->maybeStructuredResult($context, [
                 'ok' => array_reduce($files, static fn (bool $ok, array $file): bool => $ok && ($file['ok'] ?? false) === true, true),
                 'dryRun' => $dryRun,
                 'projectRoot' => $projectRoot,
@@ -348,9 +352,9 @@ final class IdeTools
                 'stats' => $stats,
                 'notes' => $notes,
                 'errors' => $errors,
-            ];
+            ]);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_generate_ide_helpers',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
@@ -430,10 +434,10 @@ final class IdeTools
         ),
     )]
     public function ideHelpersStatus(
-        ?ClientGateway $client = null,
         bool $withDetails = false,
         int $limit = 50,
-    ): array {
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
         try {
             $runtime = new KirbyRuntimeContext($this->context);
             $projectRoot = $runtime->projectRoot();
@@ -531,7 +535,7 @@ final class IdeTools
                 'This status is filesystem-based; plugin-registered templates/snippets require runtime indexing tools for full coverage.',
             ];
 
-            return [
+            return $this->maybeStructuredResult($context, [
                 'projectRoot' => $projectRoot,
                 'host' => $host,
                 'watchedInputs' => $watchedInputs,
@@ -546,9 +550,9 @@ final class IdeTools
                 'pageModels' => $pageModelsCoverage,
                 'recommendations' => $recommendations,
                 'notes' => $notes,
-            ];
+            ]);
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_ide_helpers_status',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,

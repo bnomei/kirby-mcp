@@ -91,7 +91,11 @@ final class SecretMasker
             }
 
             try {
-                $result = @preg_replace($pattern, $this->mask, $value);
+                if (!$this->isValidPattern($pattern)) {
+                    continue;
+                }
+
+                $result = preg_replace($pattern, $this->mask, $value);
                 if (is_string($result)) {
                     $value = $result;
                 }
@@ -101,6 +105,19 @@ final class SecretMasker
         }
 
         return $value;
+    }
+
+    private function isValidPattern(string $pattern): bool
+    {
+        $previous = set_error_handler(static function (): bool {
+            return true;
+        });
+
+        try {
+            return preg_match($pattern, '') !== false;
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /**

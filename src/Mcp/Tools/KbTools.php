@@ -7,14 +7,18 @@ namespace Bnomei\KirbyMcp\Mcp\Tools;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
+use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Support\FuzzySearch;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
+use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
-use Mcp\Server\ClientGateway;
+use Mcp\Server\RequestContext;
 
 final class KbTools
 {
+    use StructuredToolResult;
+
     /**
      * @return array{
      *   query: string,
@@ -77,8 +81,8 @@ final class KbTools
         int $maxDist = 2,
         int $fetch = 1,
         int $maxChars = 20000,
-        ?ClientGateway $client = null
-    ): array {
+        ?RequestContext $context = null
+    ): array|CallToolResult {
         try {
             $normalizedQuery = self::normalizeQuery($query);
             if ($normalizedQuery === '') {
@@ -196,7 +200,7 @@ final class KbTools
                 }
             }
 
-            return [
+            return $this->maybeStructuredResult($context, [
                 'query' => $query,
                 'normalizedQuery' => $normalizedQuery,
                 'fetch' => $fetch,
@@ -210,15 +214,15 @@ final class KbTools
                 'results' => $results,
                 'documents' => $documents,
                 'document' => $documents[0] ?? null,
-            ];
+            ]);
         } catch (ToolCallException $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_search',
                 'error' => $exception->getMessage(),
             ]);
             throw $exception;
         } catch (\Throwable $exception) {
-            McpLog::error($client, [
+            McpLog::error($context, [
                 'tool' => 'kirby_search',
                 'error' => $exception->getMessage(),
                 'exception' => $exception::class,
