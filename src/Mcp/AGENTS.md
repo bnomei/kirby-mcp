@@ -16,7 +16,7 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 - Command execution is routed through `src/Cli/` and guarded by `src/Mcp/Policies/`.
 - `src/Mcp/ToolIndex.php` may add curated “instance” entries for common resource templates (e.g. `kirby://section/pages`) to improve `kirby_tool_suggest`; keep these aligned with the corresponding docs/index sources.
 - Tool methods should accept `Mcp\Server\RequestContext` when they need session/client access (logging, structured output). Do not type-hint `ClientGateway` directly.
-- `DocsTools` is intentionally extensible so tests can override its HTTP fetches; keep network calls out of unit tests.
+- `DocsTools` and `OnlinePluginsTools` are intentionally extensible so tests can override their HTTP fetches; keep network calls out of unit tests.
 
 ## Workflows
 
