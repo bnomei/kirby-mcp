@@ -109,6 +109,7 @@ final class ComposerInspector
             'mago' => [
                 'packages' => ['carthage-software/mago'],
                 'bins' => ['mago'],
+                'pathBins' => ['mago'],
                 'scripts' => [],
             ],
             'php-cs-fixer' => [
@@ -171,14 +172,18 @@ final class ComposerInspector
 
             if ($present === false) {
                 foreach ($hints['bins'] as $bin) {
-                    if ($this->hasVendorBinary($projectRoot, $bin)) {
+                    $vendorRun = $this->findVendorRunCommand($projectRoot, $bin);
+                    if ($vendorRun !== null) {
                         $present = true;
                         $via = 'bin';
-                        $run = 'vendor/bin/' . $bin;
+                        $run = $vendorRun;
                         break;
                     }
 
-                    if ($this->findBinaryInPath($bin) !== null) {
+                    if (
+                        in_array($bin, $hints['pathBins'] ?? [], true)
+                        && $this->findBinaryInPath($bin) !== null
+                    ) {
                         $present = true;
                         $via = 'bin';
                         $run = $bin;
@@ -188,7 +193,9 @@ final class ComposerInspector
             }
 
             if ($present === true && $run === null && isset($hints['bins'][0])) {
-                $run = 'vendor/bin/' . $hints['bins'][0];
+                $run = $this->findVendorRunCommand($projectRoot, $hints['bins'][0])
+                    ?? ('vendor/bin/' . $hints['bins'][0]);
+
                 if ($via === null) {
                     $via = 'bin';
                 }
@@ -205,25 +212,34 @@ final class ComposerInspector
         return $tools;
     }
 
-    private function hasVendorBinary(string $projectRoot, string $binary): bool
+    private function findVendorRunCommand(string $projectRoot, string $binary): ?string
     {
         $vendorBinDir = $projectRoot . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin';
 
         $candidates = [
-            $vendorBinDir . DIRECTORY_SEPARATOR . $binary,
-            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.phar',
-            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.exe',
-            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.bat',
-            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.cmd',
+            $binary,
+            $binary . '.phar',
+            $binary . '.exe',
+            $binary . '.bat',
+            $binary . '.cmd',
         ];
 
         foreach ($candidates as $candidate) {
-            if (is_file($candidate) && is_readable($candidate)) {
-                return true;
+            $absolute = $vendorBinDir . DIRECTORY_SEPARATOR . $candidate;
+            if (!is_file($absolute) || !is_readable($absolute)) {
+                continue;
             }
+
+            $relative = 'vendor/bin/' . $candidate;
+
+            if (str_ends_with($candidate, '.phar') && !is_executable($absolute)) {
+                return 'php ' . $relative;
+            }
+
+            return $relative;
         }
 
-        return false;
+        return null;
     }
 
     private function findBinaryInPath(string $binary): ?string

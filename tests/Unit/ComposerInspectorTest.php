@@ -102,6 +102,29 @@ it('detects mago when vendor/bin/mago exists even without composer dependency', 
     }
 });
 
+it('suggests php vendor/bin/mago.phar when only a non-executable phar exists', function (): void {
+    $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-composer-mago-phar-' . bin2hex(random_bytes(4));
+    $vendorBin = $root . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin';
+    mkdir($vendorBin, 0777, true);
+
+    file_put_contents($root . DIRECTORY_SEPARATOR . 'composer.json', json_encode(['name' => 'test/project'], JSON_THROW_ON_ERROR));
+
+    $magoPhar = $vendorBin . DIRECTORY_SEPARATOR . 'mago.phar';
+    file_put_contents($magoPhar, 'mago');
+    chmod($magoPhar, 0644);
+
+    try {
+        $audit = (new ComposerInspector())->inspect($root);
+
+        expect($audit->tools)->toHaveKey('mago');
+        expect($audit->tools['mago']['present'])->toBeTrue();
+        expect($audit->tools['mago']['via'])->toBe('bin');
+        expect($audit->tools['mago']['run'])->toBe('php vendor/bin/mago.phar');
+    } finally {
+        removeComposerInspectorFixtureDir($root);
+    }
+});
+
 it('detects mago when mago is available on PATH', function (): void {
     $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-composer-mago-path-' . bin2hex(random_bytes(4));
     mkdir($root, 0777, true);
