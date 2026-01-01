@@ -83,6 +83,7 @@ final class ProjectTools
             'phpstan' => 90,
             'larastan' => 90,
             'psalm' => 90,
+            'mago' => 70,
             'phpcs' => 70,
             'php-cs-fixer' => 70,
             'pint' => 70,
@@ -98,7 +99,7 @@ final class ProjectTools
     )]
     #[McpTool(
         name: 'kirby_composer_audit',
-        description: 'Parse composer.json to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/pint/phpcs/php-cs-fixer). Returns “how to run” commands. Resource: `kirby://composer`.',
+        description: 'Parse composer.json to detect Kirby version, scripts, test runner, and quality tools (phpstan/larastan/psalm/mago/pint/phpcs/php-cs-fixer). Returns “how to run” commands. Resource: `kirby://composer`.',
         annotations: new ToolAnnotations(
             title: 'Composer Audit',
             readOnlyHint: true,

@@ -45,7 +45,7 @@ final class ComposerInspector
             $scripts = $composerJson['scripts'];
         }
 
-        $tools = $this->detectTools($composerJson, $scripts);
+        $tools = $this->detectTools($projectRoot, $composerJson, $scripts);
 
         $audit = new ComposerAudit(
             projectRoot: $projectRoot,
@@ -67,8 +67,10 @@ final class ComposerInspector
      * @param array<string, mixed> $scripts
      * @return array<string, array{tool: string, present: bool, via?: 'require'|'require-dev'|'script'|'bin', run?: string}>
      */
-    private function detectTools(array $composerJson, array $scripts): array
+    private function detectTools(string $projectRoot, array $composerJson, array $scripts): array
     {
+        $projectRoot = rtrim($projectRoot, DIRECTORY_SEPARATOR);
+
         /** @var array<string, string> $require */
         $require = [];
         if (isset($composerJson['require']) && is_array($composerJson['require'])) {
@@ -103,6 +105,11 @@ final class ComposerInspector
                 'packages' => ['vimeo/psalm'],
                 'bins' => ['psalm'],
                 'scripts' => ['psalm'],
+            ],
+            'mago' => [
+                'packages' => ['carthage-software/mago'],
+                'bins' => ['mago'],
+                'scripts' => [],
             ],
             'php-cs-fixer' => [
                 'packages' => ['friendsofphp/php-cs-fixer'],
@@ -162,6 +169,24 @@ final class ComposerInspector
                 }
             }
 
+            if ($present === false) {
+                foreach ($hints['bins'] as $bin) {
+                    if ($this->hasVendorBinary($projectRoot, $bin)) {
+                        $present = true;
+                        $via = 'bin';
+                        $run = 'vendor/bin/' . $bin;
+                        break;
+                    }
+
+                    if ($this->findBinaryInPath($bin) !== null) {
+                        $present = true;
+                        $via = 'bin';
+                        $run = $bin;
+                        break;
+                    }
+                }
+            }
+
             if ($present === true && $run === null && isset($hints['bins'][0])) {
                 $run = 'vendor/bin/' . $hints['bins'][0];
                 if ($via === null) {
@@ -178,5 +203,52 @@ final class ComposerInspector
         }
 
         return $tools;
+    }
+
+    private function hasVendorBinary(string $projectRoot, string $binary): bool
+    {
+        $vendorBinDir = $projectRoot . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin';
+
+        $candidates = [
+            $vendorBinDir . DIRECTORY_SEPARATOR . $binary,
+            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.phar',
+            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.exe',
+            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.bat',
+            $vendorBinDir . DIRECTORY_SEPARATOR . $binary . '.cmd',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate) && is_readable($candidate)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function findBinaryInPath(string $binary): ?string
+    {
+        $path = getenv('PATH');
+        if (!is_string($path) || $path === '') {
+            return null;
+        }
+
+        $extensions = [''];
+
+        $pathExt = getenv('PATHEXT');
+        if (is_string($pathExt) && $pathExt !== '') {
+            $extensions = array_merge($extensions, array_map('strtolower', array_filter(explode(';', $pathExt))));
+        }
+
+        foreach (array_filter(explode(PATH_SEPARATOR, $path)) as $dir) {
+            foreach ($extensions as $ext) {
+                $candidate = rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $binary . $ext;
+                if (is_file($candidate) && is_executable($candidate)) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
     }
 }
