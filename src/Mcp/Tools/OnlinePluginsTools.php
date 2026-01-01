@@ -7,6 +7,7 @@ namespace Bnomei\KirbyMcp\Mcp\Tools;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
+use Mcp\Capability\Attribute\CompletionProvider;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Exception\ToolCallException;
 use Mcp\Schema\Result\CallToolResult;
@@ -22,7 +23,7 @@ class OnlinePluginsTools
      *
      * @return array{
      *   query: string,
-     *   kirbyMajorVersion: int,
+     *   kirbyMajorVersion: string,
      *   pricing: string,
      *   sort: string,
      *   limit: int,
@@ -81,8 +82,11 @@ class OnlinePluginsTools
     )]
     public function search(
         string $query,
-        int $kirbyMajorVersion = 5,
+        #[CompletionProvider(values: ['', 3, 4, 5])]
+        int|string $kirbyMajorVersion = '',
+        #[CompletionProvider(values: ['', 'free', 'paid'])]
         string $pricing = '',
+        #[CompletionProvider(values: ['', 'title', 'popularity', 'price'])]
         string $sort = '',
         int $limit = 10,
         int $fetch = 1,
@@ -95,7 +99,20 @@ class OnlinePluginsTools
                 throw new ToolCallException('Query must not be empty.');
             }
 
-            $kirbyMajorVersion = max(1, min(99, $kirbyMajorVersion));
+            if (is_int($kirbyMajorVersion)) {
+                $kirbyMajorVersion = (string) $kirbyMajorVersion;
+            } else {
+                $kirbyMajorVersion = trim($kirbyMajorVersion);
+            }
+
+            if ($kirbyMajorVersion !== '') {
+                $parsed = filter_var($kirbyMajorVersion, FILTER_VALIDATE_INT);
+                if ($parsed === false) {
+                    $kirbyMajorVersion = '';
+                } else {
+                    $kirbyMajorVersion = (string) max(1, min(99, (int) $parsed));
+                }
+            }
 
             $pricing = trim(mb_strtolower($pricing));
             if (!in_array($pricing, ['', 'free', 'paid'], true)) {
@@ -112,7 +129,7 @@ class OnlinePluginsTools
             $maxChars = max(0, $maxChars);
 
             $url = 'https://plugins.getkirby.com/search?query=' . rawurlencode($query)
-                . '&version=' . rawurlencode((string) $kirbyMajorVersion)
+                . '&version=' . rawurlencode($kirbyMajorVersion)
                 . '&pricing=' . rawurlencode($pricing)
                 . '&sort=' . rawurlencode($sort);
 

@@ -143,7 +143,7 @@ HTML;
     $payload = $tools->search(' Foo ', kirbyMajorVersion: 5, limit: 10, fetch: 1, maxChars: 20000);
 
     expect($payload['query'])->toBe('Foo');
-    expect($payload['kirbyMajorVersion'])->toBe(5);
+    expect($payload['kirbyMajorVersion'])->toBe('5');
     expect($payload['pricing'])->toBe('');
     expect($payload['sort'])->toBe('');
 
@@ -197,7 +197,7 @@ it('clamps inputs and validates params', function (): void {
 
     $payload = $tools->search('Foo', kirbyMajorVersion: 500, pricing: '???', sort: '???', limit: 500, fetch: 99, maxChars: -5);
 
-    expect($payload['kirbyMajorVersion'])->toBe(99);
+    expect($payload['kirbyMajorVersion'])->toBe('99');
     expect($payload['pricing'])->toBe('');
     expect($payload['sort'])->toBe('');
     expect($payload['fetch'])->toBe(10);
