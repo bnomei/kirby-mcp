@@ -108,8 +108,8 @@ final class PageContent extends RuntimeCommand
                 ];
             }
 
-            $beforeUpdateRead = [];
-            $beforeUpdateSeen = [];
+            $beforeUpdateRead = ['kirby://blueprint/page/update-schema'];
+            $beforeUpdateSeen = array_fill_keys($beforeUpdateRead, true);
             $collectSchema = static function (array $schema) use (&$beforeUpdateRead, &$beforeUpdateSeen): void {
                 $schemaRef = $schema['_schemaRef']['updateSchema'] ?? null;
                 if (!is_string($schemaRef) || $schemaRef === '' || isset($beforeUpdateSeen[$schemaRef])) {

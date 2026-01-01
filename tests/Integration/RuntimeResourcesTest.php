@@ -5,7 +5,11 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Resources\BlueprintResources;
+use Bnomei\KirbyMcp\Mcp\Resources\FileResources;
 use Bnomei\KirbyMcp\Mcp\Resources\PageResources;
+use Bnomei\KirbyMcp\Mcp\Resources\SiteResources;
+use Bnomei\KirbyMcp\Mcp\Resources\UserResources;
+use Kirby\Cms\App;
 
 function ensureRuntimeCommandsInstalled(string $projectRoot): void
 {
@@ -64,6 +68,97 @@ it('reads page content via the resource template', function (): void {
         expect($payload['content'])->toBeArray();
         expect($payload['cli'])->toBeArray();
     } finally {
+        if ($originalRoot === false) {
+            putenv(ProjectContext::ENV_PROJECT_ROOT);
+        } else {
+            putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $originalRoot);
+        }
+    }
+});
+
+it('reads site content via the resource', function (): void {
+    $projectRoot = cmsPath();
+    ensureRuntimeCommandsInstalled($projectRoot);
+
+    $originalRoot = getenv(ProjectContext::ENV_PROJECT_ROOT);
+    putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);
+
+    try {
+        $resource = new SiteResources();
+        $payload = $resource->siteContent();
+
+        expect($payload['ok'] ?? null)->toBeTrue();
+        expect($payload['site']['title'] ?? null)->toBeString()->not()->toBe('');
+        expect($payload['content'])->toBeArray();
+        expect($payload['cli'])->toBeArray();
+    } finally {
+        if ($originalRoot === false) {
+            putenv(ProjectContext::ENV_PROJECT_ROOT);
+        } else {
+            putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $originalRoot);
+        }
+    }
+});
+
+it('reads file content via the resource template', function (): void {
+    $projectRoot = cmsPath();
+    ensureRuntimeCommandsInstalled($projectRoot);
+
+    $originalRoot = getenv(ProjectContext::ENV_PROJECT_ROOT);
+    putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);
+
+    try {
+        $resource = new FileResources();
+        $payload = $resource->fileContent(rawurlencode('file://mHEVVr6xtDc3gIip'));
+
+        expect($payload['ok'] ?? null)->toBeTrue();
+        expect($payload['file']['uuid'] ?? null)->toBe('file://mHEVVr6xtDc3gIip');
+        expect($payload['content'])->toBeArray();
+        expect($payload['cli'])->toBeArray();
+    } finally {
+        if ($originalRoot === false) {
+            putenv(ProjectContext::ENV_PROJECT_ROOT);
+        } else {
+            putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $originalRoot);
+        }
+    }
+});
+
+it('reads user content via the resource template', function (): void {
+    $projectRoot = cmsPath();
+    ensureRuntimeCommandsInstalled($projectRoot);
+
+    $previousApp = App::instance(null, true);
+    $previousErrorHandlers = captureErrorHandlers();
+    $previousWhoops = App::$enableWhoops;
+    App::$enableWhoops = false;
+    $app = new App([
+        'roots' => [
+            'index' => $projectRoot,
+        ],
+    ]);
+
+    ensureUser($app, 'mcp-user@example.com', [
+        'city' => 'Paris',
+    ]);
+
+    $originalRoot = getenv(ProjectContext::ENV_PROJECT_ROOT);
+    putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);
+
+    try {
+        $resource = new UserResources();
+        $payload = $resource->userContent(rawurlencode('mcp-user@example.com'));
+
+        expect($payload['ok'] ?? null)->toBeTrue();
+        expect($payload['user']['email'] ?? null)->toBe('mcp-user@example.com');
+        expect($payload['content'])->toBeArray();
+        expect($payload['cli'])->toBeArray();
+    } finally {
+        if ($previousApp instanceof App) {
+            App::instance($previousApp);
+        }
+        App::$enableWhoops = $previousWhoops;
+        restoreErrorHandlers($previousErrorHandlers);
         if ($originalRoot === false) {
             putenv(ProjectContext::ENV_PROJECT_ROOT);
         } else {

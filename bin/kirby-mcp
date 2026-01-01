@@ -35,6 +35,7 @@ use Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources;
 use Bnomei\KirbyMcp\Mcp\Resources\ExtensionReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
 use Bnomei\KirbyMcp\Mcp\Resources\HookReferenceResources;
+use Bnomei\KirbyMcp\Mcp\Resources\KbResources;
 use Bnomei\KirbyMcp\Mcp\Resources\PanelReferenceResources;
 use Bnomei\KirbyMcp\Docs\ExtensionReferenceIndex;
 use Bnomei\KirbyMcp\Docs\HookReferenceIndex;
@@ -54,6 +55,8 @@ use Mcp\Schema\Resource;
 use Mcp\Schema\Enum\Role;
 use Mcp\Schema\ServerCapabilities;
 use Mcp\Server\Transport\StdioTransport;
+use Mcp\Server\Transport\Stdio\RunnerControl;
+use Mcp\Server\Transport\Stdio\RunnerState;
 
 $projectRoot = null;
 $projectFlagProvided = false;
@@ -720,9 +723,28 @@ function registerSizedMarkdownResources(Registry $registry): void
                 mimeType: 'text/markdown',
                 annotations: $defaultAnnotations,
                 size: strlen($contents),
-                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/kirby/glossary/')),
+                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/glossary/')),
             ),
             [GlossaryResources::class, 'glossaryList'],
+            true,
+        );
+    } catch (Throwable) {
+        // Keep resource available via attribute discovery if sizing fails.
+    }
+
+    try {
+        $contents = (new KbResources())->kbList();
+        $registry->registerResource(
+            new Resource(
+                uri: 'kirby://kb',
+                name: 'kb',
+                description: 'List bundled KB documents (links to kirby://kb/{path}).',
+                mimeType: 'text/markdown',
+                annotations: $defaultAnnotations,
+                size: strlen($contents),
+                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/')),
+            ),
+            [KbResources::class, 'kbList'],
             true,
         );
     } catch (Throwable) {
@@ -739,7 +761,7 @@ function registerSizedMarkdownResources(Registry $registry): void
                 mimeType: 'text/markdown',
                 annotations: $importantAnnotations,
                 size: strlen($contents),
-                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/kirby/update-schema/')),
+                meta: resourceMetaFromMtime(resolveKbPrefixMtime('kb/update-schema/')),
             ),
             [UpdateSchemaResources::class, 'contentFieldsList'],
             true,
@@ -864,4 +886,17 @@ $server = $builder
 
 registerSizedMarkdownResources($registry);
 
-exit($server->run(new StdioTransport()));
+$runnerControl = new RunnerControl();
+
+if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal') && defined('SIGINT') && defined('SIGTERM')) {
+    pcntl_async_signals(true);
+
+    $stopHandler = static function (): void {
+        RunnerControl::$state = RunnerState::STOP_AND_END_SESSION;
+    };
+
+    pcntl_signal(SIGINT, $stopHandler);
+    pcntl_signal(SIGTERM, $stopHandler);
+}
+
+exit($server->run(new StdioTransport(STDIN, STDOUT, null, $runnerControl)));

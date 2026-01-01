@@ -102,6 +102,189 @@ final class RuntimeTools
         ],
     ];
 
+    private const READ_SITE_CONTENT_OUTPUT_SCHEMA = [
+        'oneOf' => [
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [true]],
+                    'site' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'title' => ['type' => 'string'],
+                            'url' => ['type' => 'string'],
+                        ],
+                        'required' => ['title', 'url'],
+                        'additionalProperties' => true,
+                    ],
+                    'language' => ['type' => ['string', 'null']],
+                    'keys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'truncatedKeys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'content' => [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ],
+                    'fieldSchemas' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'object'],
+                    ],
+                    'warningBlock' => ['type' => ['object', 'null']],
+                    'BEFORE_UPDATE_READ' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'warning' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok', 'site', 'keys', 'truncatedKeys', 'content', 'fieldSchemas', 'warning'],
+                'additionalProperties' => true,
+            ],
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [false]],
+                    'needsRuntimeInstall' => ['type' => 'boolean'],
+                    'message' => ['type' => 'string'],
+                    'expectedCommandFile' => ['type' => 'string'],
+                    'parseError' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok'],
+                'additionalProperties' => true,
+            ],
+        ],
+    ];
+
+    private const READ_FILE_CONTENT_OUTPUT_SCHEMA = [
+        'oneOf' => [
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [true]],
+                    'file' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'id' => ['type' => 'string'],
+                            'uuid' => ['type' => 'string'],
+                            'filename' => ['type' => 'string'],
+                            'template' => ['type' => ['string', 'null']],
+                            'url' => ['type' => 'string'],
+                            'parent' => ['type' => ['object', 'null']],
+                        ],
+                        'required' => ['id', 'uuid', 'filename', 'url'],
+                        'additionalProperties' => true,
+                    ],
+                    'language' => ['type' => ['string', 'null']],
+                    'keys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'truncatedKeys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'content' => [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ],
+                    'fieldSchemas' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'object'],
+                    ],
+                    'warningBlock' => ['type' => ['object', 'null']],
+                    'BEFORE_UPDATE_READ' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'warning' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok', 'file', 'keys', 'truncatedKeys', 'content', 'fieldSchemas', 'warning'],
+                'additionalProperties' => true,
+            ],
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [false]],
+                    'needsRuntimeInstall' => ['type' => 'boolean'],
+                    'message' => ['type' => 'string'],
+                    'expectedCommandFile' => ['type' => 'string'],
+                    'parseError' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok'],
+                'additionalProperties' => true,
+            ],
+        ],
+    ];
+
+    private const READ_USER_CONTENT_OUTPUT_SCHEMA = [
+        'oneOf' => [
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [true]],
+                    'user' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'id' => ['type' => 'string'],
+                            'email' => ['type' => 'string'],
+                            'name' => ['type' => ['string', 'null']],
+                            'role' => ['type' => 'string'],
+                        ],
+                        'required' => ['id', 'email', 'role'],
+                        'additionalProperties' => true,
+                    ],
+                    'language' => ['type' => ['string', 'null']],
+                    'keys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'truncatedKeys' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'content' => [
+                        'type' => 'object',
+                        'additionalProperties' => true,
+                    ],
+                    'fieldSchemas' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'object'],
+                    ],
+                    'warningBlock' => ['type' => ['object', 'null']],
+                    'BEFORE_UPDATE_READ' => [
+                        'type' => 'array',
+                        'items' => ['type' => 'string'],
+                    ],
+                    'warning' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok', 'user', 'keys', 'truncatedKeys', 'content', 'fieldSchemas', 'warning'],
+                'additionalProperties' => true,
+            ],
+            [
+                'type' => 'object',
+                'properties' => [
+                    'ok' => ['enum' => [false]],
+                    'needsRuntimeInstall' => ['type' => 'boolean'],
+                    'message' => ['type' => 'string'],
+                    'expectedCommandFile' => ['type' => 'string'],
+                    'parseError' => ['type' => 'string'],
+                    'cli' => self::CLI_RESULT_SCHEMA,
+                ],
+                'required' => ['ok'],
+                'additionalProperties' => true,
+            ],
+        ],
+    ];
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -119,7 +302,7 @@ final class RuntimeTools
      * }
      */
     #[McpToolIndex(
-        whenToUse: 'Run once per project to install/update the Kirby MCP runtime CLI commands into the project (site/commands or commands.local). Required for runtime-backed tools like page render/content.',
+        whenToUse: 'Run once per project to install/update the Kirby MCP runtime CLI commands into the project (site/commands or commands.local). Required for runtime-backed tools like render/content for pages, site, files, and users.',
         keywords: [
             'runtime' => 70,
             'install' => 90,
@@ -129,6 +312,12 @@ final class RuntimeTools
             'mcp:render' => 40,
             'mcp:page:update' => 30,
             'mcp:page:content' => 30,
+            'mcp:site:update' => 30,
+            'mcp:site:content' => 30,
+            'mcp:file:update' => 30,
+            'mcp:file:content' => 30,
+            'mcp:user:update' => 30,
+            'mcp:user:content' => 30,
         ],
     )]
     #[McpTool(
@@ -436,7 +625,7 @@ final class RuntimeTools
     )]
     #[McpTool(
         name: 'kirby_update_page_content',
-        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. PREREQUISITE: Read `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        description: 'Update a page’s content by id or uuid via the installed `kirby mcp:page:update` CLI command. PREREQUISITE: Read `kirby://blueprint/page/update-schema` plus `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello","text":"..."}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$page->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
         annotations: new ToolAnnotations(
             title: 'Update Page Content',
             readOnlyHint: false,
@@ -473,8 +662,10 @@ final class RuntimeTools
             return $this->maybeStructuredResult($context, [
                 'ok' => false,
                 'needsSchemaValidation' => true,
-                'message' => 'Before updating, read kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
+                'message' => 'Before updating, read kirby://blueprint/page/update-schema and kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
                 'schemaRefs' => [
+                    'kirby://blueprints/update-schema',
+                    'kirby://blueprint/page/update-schema',
                     'kirby://fields/update-schema',
                     'kirby://field/{type}/update-schema',
                 ],
@@ -538,6 +729,630 @@ final class RuntimeTools
         }
 
         $result = $runner->runMarkedJson(RuntimeCommands::PAGE_UPDATE_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Read the site content via the runtime CLI command `mcp:site:content`.
+     *
+     * @return array<string, mixed>|CallToolResult
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to read the site’s current content via the installed runtime CLI command (safer than reading content files directly).',
+        keywords: [
+            'content' => 100,
+            'read' => 80,
+            'site' => 60,
+            'fields' => 40,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_read_site_content',
+        description: 'Read the site’s content (current version) via the installed `kirby mcp:site:content` CLI command. Requires kirby_runtime_install first. Resource: `kirby://site/content`.',
+        annotations: new ToolAnnotations(
+            title: 'Read Site Content',
+            readOnlyHint: true,
+            openWorldHint: false,
+        ),
+        meta: [
+            'outputSchema' => self::READ_SITE_CONTENT_OUTPUT_SCHEMA,
+        ],
+    )]
+    public function readSiteContent(
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        $args = [
+            RuntimeCommands::SITE_CONTENT,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::SITE_CONTENT_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Read a file's content/metadata via the runtime CLI command `mcp:file:content`.
+     *
+     * @return array<string, mixed>|CallToolResult
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to read a file’s current content/metadata by id or uuid via the installed runtime CLI command.',
+        keywords: [
+            'content' => 90,
+            'read' => 80,
+            'file' => 70,
+            'uuid' => 40,
+            'metadata' => 40,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_read_file_content',
+        description: 'Read a file’s content/metadata by id or uuid via the installed `kirby mcp:file:content` CLI command. Requires kirby_runtime_install first. Resource template: `kirby://file/content/{encodedIdOrUuid}`.',
+        annotations: new ToolAnnotations(
+            title: 'Read File Content',
+            readOnlyHint: true,
+            openWorldHint: false,
+        ),
+        meta: [
+            'outputSchema' => self::READ_FILE_CONTENT_OUTPUT_SCHEMA,
+        ],
+    )]
+    public function readFileContent(
+        string $id,
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $id = trim($id);
+        if ($id === '') {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'id must not be empty.',
+            ]);
+        }
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        $args = [
+            RuntimeCommands::FILE_CONTENT,
+            $id,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::FILE_CONTENT_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Read a user's content via the runtime CLI command `mcp:user:content`.
+     *
+     * @return array<string, mixed>|CallToolResult
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to read a user’s current content by id or email via the installed runtime CLI command.',
+        keywords: [
+            'content' => 90,
+            'read' => 80,
+            'user' => 70,
+            'email' => 40,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_read_user_content',
+        description: 'Read a user’s content by id or email via the installed `kirby mcp:user:content` CLI command. Requires kirby_runtime_install first. Resource template: `kirby://user/content/{encodedIdOrEmail}`.',
+        annotations: new ToolAnnotations(
+            title: 'Read User Content',
+            readOnlyHint: true,
+            openWorldHint: false,
+        ),
+        meta: [
+            'outputSchema' => self::READ_USER_CONTENT_OUTPUT_SCHEMA,
+        ],
+    )]
+    public function readUserContent(
+        string $id,
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $id = trim($id);
+        if ($id === '') {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'id must not be empty.',
+            ]);
+        }
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        $args = [
+            RuntimeCommands::USER_CONTENT,
+            $id,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::USER_CONTENT_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Update the site content via the runtime CLI command `mcp:site:update`.
+     *
+     * @param array<string, mixed>|string $data
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to update site content via Kirby runtime, with explicit confirm=true guard.',
+        keywords: [
+            'update' => 100,
+            'content' => 80,
+            'write' => 70,
+            'save' => 60,
+            'site' => 60,
+            'confirm' => 30,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_update_site_content',
+        description: 'Update the site’s content via the installed `kirby mcp:site:update` CLI command. PREREQUISITE: Read `kirby://blueprint/site/update-schema` plus `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"title":"Hello"}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$site->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        annotations: new ToolAnnotations(
+            title: 'Update Site Content',
+            readOnlyHint: false,
+            destructiveHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function updateSiteContent(
+        #[Schema(
+            type: 'object',
+            description: 'JSON object mapping field keys to values (pass the object directly).',
+            additionalProperties: true,
+        )]
+        array|string $data,
+        bool $payloadValidatedWithFieldSchemas = false,
+        bool $confirm = false,
+        bool $validate = false,
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        if ($payloadValidatedWithFieldSchemas !== true) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'needsSchemaValidation' => true,
+                'message' => 'Before updating, read kirby://blueprint/site/update-schema and kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
+                'schemaRefs' => [
+                    'kirby://blueprints/update-schema',
+                    'kirby://blueprint/site/update-schema',
+                    'kirby://fields/update-schema',
+                    'kirby://field/{type}/update-schema',
+                ],
+            ]);
+        }
+
+        if (is_string($data)) {
+            $raw = trim($data);
+            if ($raw === '') {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'data must be a non-empty JSON object (pass an object or a JSON string containing an object).',
+                ]);
+            }
+
+            try {
+                $data = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'Invalid JSON for data: ' . $exception->getMessage(),
+                ]);
+            }
+        }
+
+        if (!is_array($data)) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'data must be a JSON object mapping field keys to values.',
+            ]);
+        }
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        try {
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'Unable to encode data to JSON: ' . $exception->getMessage(),
+            ]);
+        }
+
+        $args = [
+            RuntimeCommands::SITE_UPDATE,
+            '--data=' . $json,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if ($validate === true) {
+            $args[] = '--validate';
+        }
+
+        if ($confirm === true) {
+            $args[] = '--confirm';
+        }
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::SITE_UPDATE_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Update a file's content/metadata via the runtime CLI command `mcp:file:update`.
+     *
+     * @param array<string, mixed>|string $data
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to update file metadata (by id or uuid) via Kirby runtime, with explicit confirm=true guard.',
+        keywords: [
+            'update' => 100,
+            'content' => 70,
+            'metadata' => 80,
+            'file' => 70,
+            'write' => 60,
+            'confirm' => 30,
+            'uuid' => 20,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_update_file_content',
+        description: 'Update a file’s content/metadata by id or uuid via the installed `kirby mcp:file:update` CLI command. PREREQUISITE: Read `kirby://blueprint/file/update-schema` plus `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"alt":"Hello"}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$file->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        annotations: new ToolAnnotations(
+            title: 'Update File Content',
+            readOnlyHint: false,
+            destructiveHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function updateFileContent(
+        string $id,
+        #[Schema(
+            type: 'object',
+            description: 'JSON object mapping field keys to values (pass the object directly).',
+            additionalProperties: true,
+        )]
+        array|string $data,
+        bool $payloadValidatedWithFieldSchemas = false,
+        bool $confirm = false,
+        bool $validate = false,
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $id = trim($id);
+        if ($id === '') {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'id must not be empty.',
+            ]);
+        }
+
+        if ($payloadValidatedWithFieldSchemas !== true) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'needsSchemaValidation' => true,
+                'message' => 'Before updating, read kirby://blueprint/file/update-schema and kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
+                'schemaRefs' => [
+                    'kirby://blueprints/update-schema',
+                    'kirby://blueprint/file/update-schema',
+                    'kirby://fields/update-schema',
+                    'kirby://field/{type}/update-schema',
+                ],
+            ]);
+        }
+
+        if (is_string($data)) {
+            $raw = trim($data);
+            if ($raw === '') {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'data must be a non-empty JSON object (pass an object or a JSON string containing an object).',
+                ]);
+            }
+
+            try {
+                $data = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'Invalid JSON for data: ' . $exception->getMessage(),
+                ]);
+            }
+        }
+
+        if (!is_array($data)) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'data must be a JSON object mapping field keys to values.',
+            ]);
+        }
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        try {
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'Unable to encode data to JSON: ' . $exception->getMessage(),
+            ]);
+        }
+
+        $args = [
+            RuntimeCommands::FILE_UPDATE,
+            $id,
+            '--data=' . $json,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if ($validate === true) {
+            $args[] = '--validate';
+        }
+
+        if ($confirm === true) {
+            $args[] = '--confirm';
+        }
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::FILE_UPDATE_FILE, $args, timeoutSeconds: 60);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cli' => $result->cli(),
+            ]));
+        }
+
+        $payload = array_merge($result->payload, [
+            'cli' => $result->cli(),
+        ]);
+
+        return $this->maybeStructuredResult($context, $payload);
+    }
+
+    /**
+     * Update a user's content via the runtime CLI command `mcp:user:update`.
+     *
+     * @param array<string, mixed>|string $data
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
+        whenToUse: 'Use to update user content (by id or email) via Kirby runtime, with explicit confirm=true guard.',
+        keywords: [
+            'update' => 100,
+            'content' => 80,
+            'write' => 70,
+            'user' => 70,
+            'email' => 40,
+            'confirm' => 30,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_update_user_content',
+        description: 'Update a user’s content by id or email via the installed `kirby mcp:user:update` CLI command. PREREQUISITE: Read `kirby://blueprint/user/update-schema` plus `kirby://field/{type}/update-schema` for each field type before constructing payloads and set `payloadValidatedWithFieldSchemas=true`. `data` must be a JSON object mapping field keys to values (NOT an array), e.g. `{"city":"Berlin"}`. Pass the object directly (a JSON-encoded string is accepted for compatibility). It uses Kirby’s `$user->update($data, $language, $validate)` semantics. Recommended flow: call once with `confirm=false` to get a preview (`needsConfirm=true`, `updatedKeys`), then call again with `confirm=true` to actually write. Optional: `validate=true` to enforce blueprint rules; `language` to target a language. For field storage/payload guidance, see `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`. See `kirby://tool-examples` for copy-ready inputs. Requires kirby_runtime_install first.',
+        annotations: new ToolAnnotations(
+            title: 'Update User Content',
+            readOnlyHint: false,
+            destructiveHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function updateUserContent(
+        string $id,
+        #[Schema(
+            type: 'object',
+            description: 'JSON object mapping field keys to values (pass the object directly).',
+            additionalProperties: true,
+        )]
+        array|string $data,
+        bool $payloadValidatedWithFieldSchemas = false,
+        bool $confirm = false,
+        bool $validate = false,
+        ?string $language = null,
+        int $maxCharsPerField = 20000,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $id = trim($id);
+        if ($id === '') {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'id must not be empty.',
+            ]);
+        }
+
+        if ($payloadValidatedWithFieldSchemas !== true) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'needsSchemaValidation' => true,
+                'message' => 'Before updating, read kirby://blueprint/user/update-schema and kirby://field/{type}/update-schema for each field type involved, then retry with payloadValidatedWithFieldSchemas=true.',
+                'schemaRefs' => [
+                    'kirby://blueprints/update-schema',
+                    'kirby://blueprint/user/update-schema',
+                    'kirby://fields/update-schema',
+                    'kirby://field/{type}/update-schema',
+                ],
+            ]);
+        }
+
+        if (is_string($data)) {
+            $raw = trim($data);
+            if ($raw === '') {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'data must be a non-empty JSON object (pass an object or a JSON string containing an object).',
+                ]);
+            }
+
+            try {
+                $data = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $exception) {
+                return $this->maybeStructuredResult($context, [
+                    'ok' => false,
+                    'message' => 'Invalid JSON for data: ' . $exception->getMessage(),
+                ]);
+            }
+        }
+
+        if (!is_array($data)) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'data must be a JSON object mapping field keys to values.',
+            ]);
+        }
+
+        $maxCharsPerField = max(0, $maxCharsPerField);
+
+        try {
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'message' => 'Unable to encode data to JSON: ' . $exception->getMessage(),
+            ]);
+        }
+
+        $args = [
+            RuntimeCommands::USER_UPDATE,
+            $id,
+            '--data=' . $json,
+            '--max=' . $maxCharsPerField,
+        ];
+
+        if ($validate === true) {
+            $args[] = '--validate';
+        }
+
+        if ($confirm === true) {
+            $args[] = '--confirm';
+        }
+
+        if (is_string($language) && trim($language) !== '') {
+            $args[] = '--language=' . trim($language);
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::USER_UPDATE_FILE, $args, timeoutSeconds: 60);
 
         if ($result->installed !== true) {
             return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());

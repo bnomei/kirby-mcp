@@ -14,7 +14,7 @@ use Mcp\Schema\Enum\Role;
 
 final class GlossaryResources
 {
-    private const GLOSSARY_PREFIX = 'kb/kirby/glossary/';
+    private const GLOSSARY_PREFIX = 'kb/glossary/';
 
     #[McpResource(
         uri: 'kirby://glossary',
@@ -75,7 +75,7 @@ final class GlossaryResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://glossary/{term}',
         name: 'glossary_term',
-        description: 'Read a bundled Kirby glossary entry from kb/kirby/glossary/{term}.md.',
+        description: 'Read a bundled Kirby glossary entry from kb/glossary/{term}.md.',
         mimeType: 'text/markdown',
     )]
     #[McpToolIndex(

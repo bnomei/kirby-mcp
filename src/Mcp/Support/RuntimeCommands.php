@@ -33,6 +33,24 @@ final class RuntimeCommands
     public const MODELS = 'mcp:models';
     public const MODELS_FILE = 'mcp/models.php';
 
+    public const SITE_CONTENT = 'mcp:site:content';
+    public const SITE_CONTENT_FILE = 'mcp/site/content.php';
+
+    public const SITE_UPDATE = 'mcp:site:update';
+    public const SITE_UPDATE_FILE = 'mcp/site/update.php';
+
+    public const FILE_CONTENT = 'mcp:file:content';
+    public const FILE_CONTENT_FILE = 'mcp/file/content.php';
+
+    public const FILE_UPDATE = 'mcp:file:update';
+    public const FILE_UPDATE_FILE = 'mcp/file/update.php';
+
+    public const USER_CONTENT = 'mcp:user:content';
+    public const USER_CONTENT_FILE = 'mcp/user/content.php';
+
+    public const USER_UPDATE = 'mcp:user:update';
+    public const USER_UPDATE_FILE = 'mcp/user/update.php';
+
     public const PAGE_CONTENT = 'mcp:page:content';
     public const PAGE_CONTENT_FILE = 'mcp/page/content.php';
 

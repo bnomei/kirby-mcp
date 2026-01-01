@@ -101,8 +101,8 @@ Runtime commands:
 - Some tools/resources require project-local Kirby MCP runtime CLI commands. If a response indicates `needsRuntimeInstall`, call `kirby_runtime_install` first.
 
 ## Before Updates
-- Always read current content with `kirby_read_page_content`.
-- Before constructing `kirby_update_page_content` payloads, read `kirby://field/{type}/update-schema` for each field type involved and set `payloadValidatedWithFieldSchemas=true`.
+- Always read current content with `kirby_read_page_content`, `kirby_read_site_content`, `kirby_read_file_content`, or `kirby_read_user_content`.
+- Before constructing update payloads, read `kirby://blueprint/{type}/update-schema` and `kirby://field/{type}/update-schema` for each field type involved, then set `payloadValidatedWithFieldSchemas=true`.
 
 Debugging with `mcp_dump()` (render → inspect → fix):
 - Add temporary `mcp_dump()` calls in routes/controllers/templates/snippets to capture intermediate values during runtime execution (example: `mcp_dump($page)->label('home')->caller();`).
@@ -121,6 +121,7 @@ Quality tooling:
 KB-first guidance:
 - For quick “what to do next” MCP guidance and Kirby terminology, prefer the bundled knowledge base + glossary first:
   - `kirby_search` (bundled markdown under `kb/`)
+  - KB resources: `kirby://kb` and `kirby://kb/{path}`
   - Glossary resources: `kirby://glossary` and `kirby://glossary/{term}`
 - Use `kirby_online` (official Kirby docs) and `kirby_online_plugins` (plugin directory) only when the KB/glossary didn’t provide enough context.
 TEXT;

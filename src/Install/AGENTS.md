@@ -15,6 +15,7 @@ Install/update Kirby runtime command wrappers into a host project without surpri
 - When adding/removing a runtime command, update both:
   - `src/Mcp/Commands/<Command>.php`
   - `commands/mcp/...` template path (maps to the `mcp:*` CLI command name)
+- Content commands now include `mcp:site:*`, `mcp:file:*`, and `mcp:user:*`; keep install/update tests in sync when adding new ones.
 - Verify install/update behavior with integration tests (install + command availability).
 
 ## Guardrails

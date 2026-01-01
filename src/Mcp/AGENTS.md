@@ -11,7 +11,9 @@ Maintain a stable and secure MCP surface: tools, resources, prompts, and complet
 - Prompts live in `src/Mcp/Prompts/` as public methods annotated with `#[McpPrompt]`.
   `src/Mcp/PromptIndex.php` discovers them via reflection and exposes a fallback via `kirby://prompts` and `kirby://prompt/{name}`.
 - Resources live in `src/Mcp/Resources/` and expose `kirby://...` URIs.
-- Content field guides live in `kb/kirby/update-schema/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
+- Content field guides live in `kb/update-schema/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
+- Blueprint update guides live in `kb/update-schema/blueprint-*.md` and are exposed via `kirby://blueprints/update-schema` and `kirby://blueprint/{type}/update-schema`.
+- KB document list/read resources: `kirby://kb` and `kirby://kb/{path}` (path relative to `kb/`, no `.md`).
 - Blueprint/page content outputs may include `fieldSchemas` maps with `_schemaRef` pointers to both panel refs and update schemas.
 - Command execution is routed through `src/Cli/` and guarded by `src/Mcp/Policies/`.
 - `src/Mcp/ToolIndex.php` may add curated “instance” entries for common resource templates (e.g. `kirby://section/pages`) to improve `kirby_tool_suggest`; keep these aligned with the corresponding docs/index sources.

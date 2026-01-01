@@ -8,6 +8,7 @@ Provide Kirby CLI command definition templates that are copied into host project
 
 - Each file in `commands/mcp/**/*.php` returns a `::definition()` array from `src/Mcp/Commands/*`.
 - Directory structure maps to Kirby CLI command names (e.g. `commands/mcp/page/update.php` → `mcp:page:update`).
+- Content wrappers include `mcp:site:*`, `mcp:file:*`, and `mcp:user:*` alongside page commands.
 
 ## Workflows
 

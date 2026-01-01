@@ -10,6 +10,8 @@ use Bnomei\KirbyMcp\Mcp\Commands\Collections;
 use Bnomei\KirbyMcp\Mcp\Commands\ConfigGet;
 use Bnomei\KirbyMcp\Mcp\Commands\Controllers;
 use Bnomei\KirbyMcp\Mcp\Commands\EvalPhp;
+use Bnomei\KirbyMcp\Mcp\Commands\FileContent;
+use Bnomei\KirbyMcp\Mcp\Commands\FileUpdate;
 use Bnomei\KirbyMcp\Mcp\Commands\Install;
 use Bnomei\KirbyMcp\Mcp\Commands\Models;
 use Bnomei\KirbyMcp\Mcp\Commands\PageContent;
@@ -17,9 +19,13 @@ use Bnomei\KirbyMcp\Mcp\Commands\PageUpdate;
 use Bnomei\KirbyMcp\Mcp\Commands\Plugins;
 use Bnomei\KirbyMcp\Mcp\Commands\Render;
 use Bnomei\KirbyMcp\Mcp\Commands\Routes;
+use Bnomei\KirbyMcp\Mcp\Commands\SiteContent;
+use Bnomei\KirbyMcp\Mcp\Commands\SiteUpdate;
 use Bnomei\KirbyMcp\Mcp\Commands\Snippets;
 use Bnomei\KirbyMcp\Mcp\Commands\Templates;
 use Bnomei\KirbyMcp\Mcp\Commands\Update;
+use Bnomei\KirbyMcp\Mcp\Commands\UserContent;
+use Bnomei\KirbyMcp\Mcp\Commands\UserUpdate;
 use Kirby\CLI\CLI;
 use Kirby\Cms\App;
 use League\CLImate\CLImate;
@@ -988,6 +994,68 @@ it('reads page content via the page:content command', function (): void {
     }
 });
 
+it('reads site content via the site:content command', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([], $app);
+
+            SiteContent::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['site'])->toBeArray();
+        expect($payload['content'])->toBeArray();
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('reads file content via the file:content command', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'file://mHEVVr6xtDc3gIip',
+            ], $app);
+
+            FileContent::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['file']['uuid'] ?? null)->toBe('file://mHEVVr6xtDc3gIip');
+        expect($payload['content'])->toBeArray();
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('reads user content via the user:content command', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    ensureUser($app, 'mcp-command@example.com', [
+        'city' => 'Oslo',
+    ]);
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'mcp-command@example.com',
+            ], $app);
+
+            UserContent::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['user']['email'] ?? null)->toBe('mcp-command@example.com');
+        expect($payload['content'])->toBeArray();
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
 it('renders a page via the render command', function (): void {
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
 
@@ -1150,6 +1218,124 @@ it('updates page content when confirm=true and restores fixture', function (): v
             file_put_contents($homeContentFile, $original);
         }
 
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('updates site content with preview and confirm', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $projectRoot = cmsPath();
+    $siteContentFile = $projectRoot . '/content/site.txt';
+    $original = file_get_contents($siteContentFile);
+
+    try {
+        $preview = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'data' => json_encode(['title' => 'Preview Site Title']),
+            ], $app);
+
+            SiteUpdate::run($cli);
+        });
+
+        expect($preview['ok'])->toBeFalse();
+        expect($preview['needsConfirm'])->toBeTrue();
+        expect($preview['updatedKeys'])->toContain('title');
+
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'data' => json_encode(['title' => 'Command Site Update']),
+                'confirm' => true,
+            ], $app);
+
+            SiteUpdate::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['content']['title'] ?? null)->toBe('Command Site Update');
+    } finally {
+        if (is_string($original)) {
+            file_put_contents($siteContentFile, $original);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('updates file content with preview and confirm', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $projectRoot = cmsPath();
+    $fileContentFile = $projectRoot . '/content/3_about/writing.jpg.txt';
+    $original = file_get_contents($fileContentFile);
+
+    try {
+        $preview = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'file://mHEVVr6xtDc3gIip',
+                'data' => json_encode(['alt' => 'Preview Alt']),
+            ], $app);
+
+            FileUpdate::run($cli);
+        });
+
+        expect($preview['ok'])->toBeFalse();
+        expect($preview['needsConfirm'])->toBeTrue();
+        expect($preview['updatedKeys'])->toContain('alt');
+
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'file://mHEVVr6xtDc3gIip',
+                'data' => json_encode(['alt' => 'Command Alt']),
+                'confirm' => true,
+            ], $app);
+
+            FileUpdate::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['content']['alt'] ?? null)->toBe('Command Alt');
+    } finally {
+        if (is_string($original)) {
+            file_put_contents($fileContentFile, $original);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('updates user content with preview and confirm', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    ensureUser($app, 'mcp-update@example.com', [
+        'city' => 'Paris',
+    ]);
+
+    try {
+        $preview = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'mcp-update@example.com',
+                'data' => json_encode(['city' => 'Preview City']),
+            ], $app);
+
+            UserUpdate::run($cli);
+        });
+
+        expect($preview['ok'])->toBeFalse();
+        expect($preview['needsConfirm'])->toBeTrue();
+        expect($preview['updatedKeys'])->toContain('city');
+
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'id' => 'mcp-update@example.com',
+                'data' => json_encode(['city' => 'Command City']),
+                'confirm' => true,
+            ], $app);
+
+            UserUpdate::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['content']['city'] ?? null)->toBe('Command City');
+    } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
     }
 });

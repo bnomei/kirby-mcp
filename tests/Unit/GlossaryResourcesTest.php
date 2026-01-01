@@ -20,7 +20,7 @@ it('reads a bundled glossary entry by term', function (): void {
     $resource = new GlossaryResources();
     $markdown = $resource->term('api');
 
-    $expected = file_get_contents(dirname(__DIR__, 2) . '/kb/kirby/glossary/api.md');
+    $expected = file_get_contents(dirname(__DIR__, 2) . '/kb/glossary/api.md');
     expect($expected)->toBeString()->not()->toBe('');
 
     expect($markdown)->toBe($expected);

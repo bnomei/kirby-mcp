@@ -8,6 +8,7 @@ Provide safe, testable Kirby CLI execution and output parsing for MCP tools and 
 
 - `KirbyCliRunner` executes Kirby CLI commands via Symfony Process and returns `KirbyCliResult` (stdout/stderr/exit code).
 - `KirbyCliHelpParser` normalizes `kirby help` output; `McpMarkedJsonExtractor` extracts MCP-marked JSON blocks.
+- The `bin/kirby-mcp` entrypoint runs the MCP stdio transport; use `RunnerControl` and SIGINT/SIGTERM handlers for graceful shutdown when adjusting the run loop.
 - `kirby-cli-prepend.php` exists to avoid global helper collisions when bootstrapping Kirby in CLI contexts.
 
 ## Workflows

@@ -150,7 +150,7 @@ final class PageUpdate extends RuntimeCommand
 
             $updatedKeys = array_keys($data);
             $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($page->blueprint()->fields());
-            $schemaCheckReminder = [];
+            $schemaCheckReminder = ['kirby://blueprint/page/update-schema'];
             foreach ($updatedKeys as $fieldKey) {
                 $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
                 if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {

@@ -16,7 +16,7 @@ it('searches the local Kirby knowledge base with fuzzy matching', function (): v
 
     $config = null;
     foreach ($data['results'] as $result) {
-        if (($result['file'] ?? null) === 'kb/kirby/scenarios/33-use-placeholders-str-template.md') {
+        if (($result['file'] ?? null) === 'kb/scenarios/33-use-placeholders-str-template.md') {
             $config = $result;
             break;
         }
@@ -36,7 +36,7 @@ it('searches the local Kirby knowledge base with fuzzy matching', function (): v
 
     $typo = $tools->search('placeholers templte', limit: 50);
     $files = array_map(static fn (array $row): string => (string) ($row['file'] ?? ''), $typo['results'] ?? []);
-    expect($files)->toContain('kb/kirby/scenarios/33-use-placeholders-str-template.md');
+    expect($files)->toContain('kb/scenarios/33-use-placeholders-str-template.md');
 });
 
 it('excludes PLAN.md files from kb search', function (): void {
@@ -45,7 +45,7 @@ it('excludes PLAN.md files from kb search', function (): void {
     $data = $tools->search('playbooks', limit: 50, fetch: 0);
 
     $files = array_map(static fn (array $row): string => (string) ($row['file'] ?? ''), $data['results'] ?? []);
-    expect($files)->not()->toContain('kb/kirby/scenarios/PLAN.md');
-    expect($files)->not()->toContain('kb/kirby/glossary/PLAN.md');
+    expect($files)->not()->toContain('kb/scenarios/PLAN.md');
+    expect($files)->not()->toContain('kb/glossary/PLAN.md');
     expect($data['matchCount'] ?? null)->toBe(0);
 });

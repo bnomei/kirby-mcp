@@ -103,6 +103,39 @@ final class ToolExamplesResources
                 ],
                 'notes' => 'Prefer kirby://commands and kirby://cli/command/{command} for discovery and usage details.',
             ],
+            [
+                'tool' => 'kirby_update_file_content',
+                'description' => 'Two-step update flow for file metadata.',
+                'examples' => [
+                    [
+                        'summary' => 'Preview updates (confirm=false).',
+                        'args' => [
+                            'id' => 'about/cover.jpg',
+                            'data' => [
+                                'alt' => 'Cover image',
+                                'photographer' => 'Jane Doe',
+                            ],
+                            'payloadValidatedWithFieldSchemas' => true,
+                            'confirm' => false,
+                            'validate' => true,
+                        ],
+                    ],
+                    [
+                        'summary' => 'Apply updates (confirm=true).',
+                        'args' => [
+                            'id' => 'about/cover.jpg',
+                            'data' => [
+                                'alt' => 'Cover image',
+                                'photographer' => 'Jane Doe',
+                            ],
+                            'payloadValidatedWithFieldSchemas' => true,
+                            'confirm' => true,
+                            'validate' => true,
+                        ],
+                    ],
+                ],
+                'notes' => 'Read kirby://blueprint/file/update-schema and kirby://field/{type}/update-schema first, then set payloadValidatedWithFieldSchemas=true.',
+            ],
         ];
     }
 }

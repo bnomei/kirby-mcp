@@ -187,6 +187,8 @@ My home page renders incorrectly. Help me debug it with mcp_dump() to return the
 
 At initialization, the server tells the agent which tools/resources to use. The knowledge base cross-references them so the agent can find the next step.
 
+Current inventory: 36 tools, 14 resources, 17 resource templates, 216 KB articles.
+
 <details>
 <summary>🛠️ Tools</summary>
 
@@ -209,7 +211,10 @@ At initialization, the server tells the agent which tools/resources to use. The 
 - `kirby_search` — search the bundled local Kirby knowledge base markdown files (preferred)
 - `kirby_models_index` — index registered page models with class and file path info
 - `kirby_plugins_index` — index loaded plugins, prefers runtime truth when installed
+- `kirby_read_file_content` — read file content/metadata by id or uuid
 - `kirby_read_page_content` — read page content by id or uuid
+- `kirby_read_site_content` — read site content
+- `kirby_read_user_content` — read user content by id or email
 - `kirby_render_page` — render a page by id or uuid and return HTML plus errors
 - `kirby_roots` — resolved Kirby roots via `kirby roots`
 - `kirby_routes_index` — list registered routes with best-effort source location (config/plugin)
@@ -219,7 +224,10 @@ At initialization, the server tells the agent which tools/resources to use. The 
 - `kirby_snippets_index` — index snippets, includes plugin-registered ones when runtime is installed
 - `kirby_templates_index` — index templates, includes plugin-registered ones when runtime is installed
 - `kirby_tool_suggest` — suggest the best next Kirby MCP tool/resource for a task
-- `kirby_update_page_content` — update page content, plus confirm (see `kirby://field/{type}/update-schema` for payload shapes)
+- `kirby_update_file_content` — update file metadata/content, plus confirm (see `kirby://blueprint/file/update-schema` + `kirby://field/{type}/update-schema` for payload shapes)
+- `kirby_update_page_content` — update page content, plus confirm (see `kirby://blueprint/page/update-schema` + `kirby://field/{type}/update-schema` for payload shapes)
+- `kirby_update_site_content` — update site content, plus confirm (see `kirby://blueprint/site/update-schema` + `kirby://field/{type}/update-schema` for payload shapes)
+- `kirby_update_user_content` — update user content, plus confirm (see `kirby://blueprint/user/update-schema` + `kirby://field/{type}/update-schema` for payload shapes)
 
 </details>
 
@@ -237,7 +245,9 @@ Resources (read-only):
 - `kirby://extensions` — Kirby plugin extensions list (links to `kirby://extension/{name}`)
 - `kirby://fields` — Kirby Panel field types list (links to `kirby://field/{type}`)
 - `kirby://fields/update-schema` — Kirby content field guides list (links to `kirby://field/{type}/update-schema`)
+- `kirby://blueprints/update-schema` — Kirby blueprint update guides list (links to `kirby://blueprint/{type}/update-schema`)
 - `kirby://glossary` — Kirby glossary terms list (links to `kirby://glossary/{term}`)
+- `kirby://kb` — bundled KB index (links to `kirby://kb/{path}`)
 - `kirby://hooks` — Kirby hook names list (links to `kirby://hook/{name}`)
 - `kirby://info` — project runtime info, composer audit and local environment detection
 - `kirby://prompts` — MCP prompts with args/meta (fallback for clients without prompt support)
@@ -252,13 +262,18 @@ Resource templates (dynamic):
 - `kirby://config/{option}` — read a Kirby config option by dot path
 - `kirby://extension/{name}` — Kirby extension reference markdown from getkirby.com, e.g. `commands` or `darkroom-drivers`
 - `kirby://field/{type}` — Kirby Panel field reference markdown from getkirby.com, e.g. `blocks` or `email`
-- `kirby://field/{type}/update-schema` — bundled content field guide from `kb/kirby/update-schema/{type}.md`
+- `kirby://field/{type}/update-schema` — bundled content field guide from `kb/update-schema/{type}.md`
+- `kirby://blueprint/{type}/update-schema` — bundled blueprint update guide from `kb/update-schema/blueprint-{type}.md`
 - `kirby://glossary/{term}` — read a bundled Kirby glossary entry by term, e.g. `api` or `kql`
+- `kirby://kb/{path}` — read a bundled KB document by path (relative to `kb/`, no `.md`)
 - `kirby://hook/{name}` — Kirby hook reference markdown from getkirby.com, e.g. `file.changeName:after` or `file-changename-after`
+- `kirby://file/content/{encodedIdOrUuid}` — read file content/metadata by URL-encoded id or uuid
 - `kirby://page/content/{encodedIdOrUuid}` — read page content by URL-encoded id or uuid
 - `kirby://prompt/{name}` — prompt details + rendered default messages (fallback for clients without prompt support)
 - `kirby://section/{type}` — Kirby Panel section reference markdown from getkirby.com, e.g. `fields` or `files`
+- `kirby://site/content` — read site content
 - `kirby://susie/{phase}/{step}` — easter egg resource template
+- `kirby://user/content/{encodedIdOrEmail}` — read user content by URL-encoded id or email
 
 </details>
 

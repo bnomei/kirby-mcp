@@ -26,7 +26,12 @@ final class ComposerInspector
         $composerJsonMtime = is_file($composerJsonPath) ? filemtime($composerJsonPath) : false;
         $composerJsonMtime = is_int($composerJsonMtime) ? $composerJsonMtime : null;
 
-        $cacheKey = rtrim($projectRoot, DIRECTORY_SEPARATOR);
+        $path = getenv('PATH');
+        $path = is_string($path) ? $path : '';
+        $pathExt = getenv('PATHEXT');
+        $pathExt = is_string($pathExt) ? $pathExt : '';
+        $envFingerprint = sha1($path . '|' . $pathExt);
+        $cacheKey = rtrim($projectRoot, DIRECTORY_SEPARATOR) . '|' . $envFingerprint;
         $cached = self::$cache[$cacheKey] ?? null;
         if (
             is_array($cached)

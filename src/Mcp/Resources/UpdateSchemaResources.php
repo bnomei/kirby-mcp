@@ -16,7 +16,8 @@ use Mcp\Schema\Enum\Role;
 
 final class UpdateSchemaResources
 {
-    private const UPDATE_SCHEMA_PREFIX = 'kb/kirby/update-schema/';
+    private const UPDATE_SCHEMA_PREFIX = 'kb/update-schema/';
+    private const BLUEPRINT_PREFIX = 'blueprint-';
 
     #[McpResource(
         uri: 'kirby://fields/update-schema',
@@ -52,7 +53,7 @@ final class UpdateSchemaResources
             }
 
             $type = basename($relativePath, '.md');
-            if ($type === '') {
+            if ($type === '' || str_starts_with($type, self::BLUEPRINT_PREFIX)) {
                 continue;
             }
 
@@ -79,7 +80,7 @@ final class UpdateSchemaResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://field/{type}/update-schema',
         name: 'update_schema_field',
-        description: 'Read a bundled content field update schema from kb/kirby/update-schema/{type}.md.',
+        description: 'Read a bundled content field update schema from kb/update-schema/{type}.md.',
         mimeType: 'text/markdown',
     )]
     #[McpToolIndex(
@@ -100,6 +101,9 @@ final class UpdateSchemaResources
         string $type,
     ): string {
         $type = $this->normalizeSlug($type, 'Field type');
+        if (str_starts_with($type, self::BLUEPRINT_PREFIX)) {
+            throw new ResourceReadException('Blueprint update schemas use kirby://blueprint/{type}/update-schema.');
+        }
 
         $path = self::UPDATE_SCHEMA_PREFIX . $type . '.md';
         $documents = KbDocuments::all();
@@ -107,6 +111,103 @@ final class UpdateSchemaResources
         $markdown = $documents[$path] ?? null;
         if (!is_string($markdown) || $markdown === '') {
             throw new ResourceReadException('Update schema guide not found: ' . $type);
+        }
+
+        return $markdown;
+    }
+
+    #[McpResource(
+        uri: 'kirby://blueprints/update-schema',
+        name: 'update_schema_blueprints',
+        description: 'List bundled blueprint update schemas (links to kirby://blueprint/{type}/update-schema).',
+        mimeType: 'text/markdown',
+        annotations: new Annotations(
+            audience: [Role::Assistant],
+            priority: 0.5,
+        ),
+    )]
+    #[McpToolIndex(
+        whenToUse: 'Use to browse bundled blueprint update schemas; open a guide via kirby://blueprint/{type}/update-schema.',
+        keywords: [
+            'blueprint' => 100,
+            'update' => 60,
+            'schema' => 60,
+            'kb' => 40,
+            'site' => 40,
+            'page' => 40,
+            'file' => 40,
+            'user' => 40,
+        ],
+    )]
+    public function blueprintUpdateSchemasList(): string
+    {
+        $documents = KbDocuments::all();
+
+        $types = [];
+        foreach (array_keys($documents) as $relativePath) {
+            if (!str_starts_with($relativePath, self::UPDATE_SCHEMA_PREFIX) || !str_ends_with($relativePath, '.md')) {
+                continue;
+            }
+
+            $type = basename($relativePath, '.md');
+            if ($type === '' || !str_starts_with($type, self::BLUEPRINT_PREFIX)) {
+                continue;
+            }
+
+            $types[] = substr($type, strlen(self::BLUEPRINT_PREFIX));
+        }
+
+        $types = array_values(array_unique($types));
+        sort($types, SORT_STRING);
+
+        $lines = [
+            '# Kirby blueprint update schemas',
+            '',
+        ];
+
+        foreach ($types as $type) {
+            if ($type === '') {
+                continue;
+            }
+
+            $lines[] = '- kirby://blueprint/' . rawurlencode($type) . '/update-schema';
+        }
+
+        $lines[] = '';
+
+        return implode("\n", $lines);
+    }
+
+    #[McpResourceTemplate(
+        uriTemplate: 'kirby://blueprint/{type}/update-schema',
+        name: 'update_schema_blueprint',
+        description: 'Read a bundled blueprint update schema from kb/update-schema/blueprint-{type}.md.',
+        mimeType: 'text/markdown',
+    )]
+    #[McpToolIndex(
+        whenToUse: 'Use to read a single bundled blueprint update schema for page/site/file/user content.',
+        keywords: [
+            'blueprint' => 100,
+            'update' => 70,
+            'schema' => 70,
+            'payload' => 60,
+            'kb' => 40,
+            'site' => 40,
+            'page' => 40,
+            'file' => 40,
+            'user' => 40,
+        ],
+    )]
+    public function blueprintUpdateSchema(string $type): string
+    {
+        $type = $this->normalizeSlug($type, 'Blueprint type');
+
+        $path = self::UPDATE_SCHEMA_PREFIX . self::BLUEPRINT_PREFIX . $type . '.md';
+        $documents = KbDocuments::all();
+
+        $markdown = $documents[$path] ?? null;
+        if (!is_string($markdown) || $markdown === '') {
+            throw new ResourceReadException('Blueprint update schema guide not found: ' . $type);
         }
 
         return $markdown;
