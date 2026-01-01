@@ -87,7 +87,7 @@ Tool/resource-first guidance:
 - Interact with the project through Kirby MCP tools. Do not ask the user to run `vendor/bin/kirby` directly.
 - Prefer MCP resources for read-only context (project info/roots/composer, tool index, blueprints, page content) when your client supports them.
 - IMPORTANT: Immediately after `kirby_init`, discover available MCP resources and resource templates by calling `list_mcp_resources` and `list_mcp_resource_templates` next.
-- Use `kirby://...` resources and resource templates first; only fall back to `kirby_search`, `kirby_online` or the open web when a relevant MCP resource/template is missing.
+- Use `kirby://...` resources and resource templates first; only fall back to `kirby_search`, `kirby_online`, `kirby_online_plugins` or the open web when a relevant MCP resource/template is missing.
 - Use `kirby://tool-examples` for safe, copy-ready inputs when a tool requires strict data shapes or confirm flows.
 - Panel reference resources (fields/sections): `kirby://fields`, `kirby://field/{type}`, `kirby://sections`, `kirby://section/{type}` (example: `kirby://field/text`).
 - Content field storage guides: `kirby://fields/update-schema` and `kirby://field/{type}/update-schema` (example: `kirby://field/blocks/update-schema`).
@@ -122,7 +122,7 @@ KB-first guidance:
 - For quick “what to do next” MCP guidance and Kirby terminology, prefer the bundled knowledge base + glossary first:
   - `kirby_search` (bundled markdown under `kb/`)
   - Glossary resources: `kirby://glossary` and `kirby://glossary/{term}`
-- Use `kirby_online` (official Kirby docs) only when the KB/glossary didn’t provide enough context.
+- Use `kirby_online` (official Kirby docs) and `kirby_online_plugins` (plugin directory) only when the KB/glossary didn’t provide enough context.
 TEXT;
 
             $kirbyVersionError = null;

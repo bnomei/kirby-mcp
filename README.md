@@ -126,6 +126,17 @@ kirby search online for panel permissions
 ---
 
 > [!TIP]
+> When you need to discover third-party plugins, you can also search the official Kirby plugin directory and fetch details from each plugin page.
+
+```text
+kirby search plugins online for e-commerce cart
+```
+
+`kirby_online_plugins`
+
+---
+
+> [!TIP]
 > Your agent will use the next tool under the hood itself, but you can use it as well to quickly check what the MCP server knows about a given topic.
 
 ```text
@@ -188,6 +199,7 @@ At initialization, the server tells the agent which tools/resources to use. The 
 - `kirby_collections_index` — index named collections, includes plugin-registered ones when runtime is installed
 - `kirby_controllers_index` — index controllers, includes plugin-registered ones when runtime is installed
 - `kirby_online` — search official Kirby docs (online fallback) and optionally fetch markdown pages
+- `kirby_online_plugins` — search the official Kirby plugins directory (online fallback) and optionally fetch plugin details
 - `kirby_dump_log_tail` — tail `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`
 - `kirby_eval` — execute PHP in Kirby runtime for quick inspection, requires enable plus confirm
 - `kirby_generate_ide_helpers` — generate regeneratable IDE helper files into `.kirby-mcp/`
