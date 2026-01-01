@@ -5,6 +5,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+- Added `kirby_online_plugins` tool to search the official Kirby plugin directory (plugins.getkirby.com) and optionally fetch plugin details as markdown.
+
 ## [1.0.2] - 2025-12-21
 
 - Remove composer.lock from composer audit outputs to reduce payload size for init/info tools/resources. thanks @medienbaecker
