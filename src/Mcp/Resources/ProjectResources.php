@@ -78,7 +78,7 @@ final class ProjectResources
     #[McpResource(
         uri: 'kirby://composer',
         name: 'composer',
-        description: 'Composer audit (composer.json): detects test runner and quality tools; returns “how to run” commands.',
+        description: 'Composer audit (composer.json): detects test runner and quality tools (phpstan/larastan/psalm/mago/pint/phpcs/php-cs-fixer); returns “how to run” commands.',
         mimeType: 'application/json',
         annotations: new Annotations(
             audience: [Role::Assistant],
@@ -92,6 +92,7 @@ final class ProjectResources
             'scripts' => 40,
             'test' => 30,
             'phpstan' => 20,
+            'mago' => 20,
             'pint' => 20,
             'tools' => 20,
             'audit' => 60,
