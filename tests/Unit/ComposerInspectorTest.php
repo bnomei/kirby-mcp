@@ -40,18 +40,29 @@ it('inspects composer.json for the cms fixture', function (): void {
 });
 
 it('detects common tooling as absent in the cms fixture', function (): void {
-    $audit = (new ComposerInspector())->inspect(cmsPath());
+    $originalPath = getenv('PATH');
+    putenv('PATH=');
 
-    expect($audit->tools)
-        ->toHaveKey('pest')
-        ->toHaveKey('phpunit')
-        ->toHaveKey('phpstan')
-        ->toHaveKey('mago');
+    try {
+        $audit = (new ComposerInspector())->inspect(cmsPath());
 
-    expect($audit->tools['pest']['present'])->toBeFalse();
-    expect($audit->tools['phpunit']['present'])->toBeFalse();
-    expect($audit->tools['phpstan']['present'])->toBeFalse();
-    expect($audit->tools['mago']['present'])->toBeFalse();
+        expect($audit->tools)
+            ->toHaveKey('pest')
+            ->toHaveKey('phpunit')
+            ->toHaveKey('phpstan')
+            ->toHaveKey('mago');
+
+        expect($audit->tools['pest']['present'])->toBeFalse();
+        expect($audit->tools['phpunit']['present'])->toBeFalse();
+        expect($audit->tools['phpstan']['present'])->toBeFalse();
+        expect($audit->tools['mago']['present'])->toBeFalse();
+    } finally {
+        if ($originalPath !== false) {
+            putenv('PATH=' . $originalPath);
+        } else {
+            putenv('PATH');
+        }
+    }
 });
 
 it('detects mago when installed via composer require-dev', function (): void {
