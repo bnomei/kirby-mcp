@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - field with API-backed embed preview
+# Panel pattern - field with API-backed embed preview
 
 ## Goal
 
@@ -44,7 +44,7 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-embed-field/src/components/EmbedField.vue
+// site/plugins/example-embed-field/src/components/EmbedField.vue
 import { computed, ref, useApi } from 'kirbyuse';
 
 const EmbedField = {
@@ -93,7 +93,7 @@ const EmbedField = {
   },
 };
 
-panel.plugin('acme/embed-field', {
+panel.plugin('example/embed-field', {
   fields: {
     embed: EmbedField,
   },

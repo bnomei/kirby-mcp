@@ -9,7 +9,7 @@
 [![Discord](https://flat.badgen.net/badge/discord/bnomei?color=7289da&icon=discord&label)](https://discordapp.com/users/bnomei)
 [![Buymecoffee](https://flat.badgen.net/badge/icon/donate?icon=buymeacoffee&color=FF813F&label)](https://www.buymeacoffee.com/bnomei)
 
-CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks.
+CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
 
 > [!WARNING]
 > Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
@@ -24,16 +24,18 @@ vendor/bin/kirby-mcp install
 vendor/bin/kirby-mcp
 ```
 
-Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples in **Client setup**.
+Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples in **Client setup** and copy the bundled Skills as described below.
 
-## Copy-paste prompt examples
+See **Client setup → Claude Code** and **Client setup → Codex CLI** for per-agent install and Skill sync steps.
+
+## Copy-paste request examples
 
 Use these once your MCP client is connected to the server.
 
 ### Planning & content
 
 > [!TIP]
-> "Use the Kirby MCP to make a plan to..." is a reliable way to get your agent to use the tools and resources this MCP server provides. If you prompt it to take action, it tends to edit files directly based on its training and skills.
+> "Use the Kirby MCP to make a plan to..." is a reliable way to get your agent to use the tools and resources this MCP server provides. If you ask it to take action, it tends to edit files directly based on its training and skills.
 
 ```text
 Use the Kirby MCP to make a plan to... build a contact form page.
@@ -85,7 +87,7 @@ Append " with AI" to the title of the home page with Kirby MCP.
 ### Resource shortcuts
 
 > [!TIP]
-> Either on its own or with a prompt, the resources can be used to quickly bring knowledge and runtime information into the current context of your agent.
+> Either on its own or with a request, the resources can be used to quickly bring knowledge and runtime information into the current context of your agent.
 
 ```text
 kirby://glossary/collection
@@ -115,7 +117,7 @@ kirby search for collection filtering
 ---
 
 > [!TIP]
-> But sometimes you or your agent needs to dig deeper. That is why the MCP server also provides a fallback to the official Kirby search and docs (not including the forum). You can trigger it by mentioning `search online` in your prompt.
+> But sometimes you or your agent needs to dig deeper. That is why the MCP server also provides a fallback to the official Kirby search and docs (not including the forum). You can trigger it by mentioning `search online` in your request.
 
 ```text
 kirby search online for panel permissions
@@ -187,7 +189,7 @@ My home page renders incorrectly. Help me debug it with mcp_dump() to return the
 
 At initialization, the server tells the agent which tools/resources to use. The knowledge base cross-references them so the agent can find the next step.
 
-Current inventory: 36 tools, 14 resources, 17 resource templates, 216 KB articles.
+Current inventory: 36 tools, 15 resources, 15 resource templates, 216 KB articles.
 
 <details>
 <summary>🛠️ Tools</summary>
@@ -250,7 +252,6 @@ Resources (read-only):
 - `kirby://kb` — bundled KB index (links to `kirby://kb/{path}`)
 - `kirby://hooks` — Kirby hook names list (links to `kirby://hook/{name}`)
 - `kirby://info` — project runtime info, composer audit and local environment detection
-- `kirby://prompts` — MCP prompts with args/meta (fallback for clients without prompt support)
 - `kirby://roots` — Kirby roots discovered via CLI, respects configured host
 - `kirby://sections` — Kirby Panel section types list (links to `kirby://section/{type}`)
 - `kirby://tools` — weighted keyword index for Kirby MCP tools/resources/templates
@@ -269,7 +270,6 @@ Resource templates (dynamic):
 - `kirby://hook/{name}` — Kirby hook reference markdown from getkirby.com, e.g. `file.changeName:after` or `file-changename-after`
 - `kirby://file/content/{encodedIdOrUuid}` — read file content/metadata by URL-encoded id or uuid
 - `kirby://page/content/{encodedIdOrUuid}` — read page content by URL-encoded id or uuid
-- `kirby://prompt/{name}` — prompt details + rendered default messages (fallback for clients without prompt support)
 - `kirby://section/{type}` — Kirby Panel section reference markdown from getkirby.com, e.g. `fields` or `files`
 - `kirby://site/content` — read site content
 - `kirby://susie/{phase}/{step}` — easter egg resource template
@@ -277,26 +277,30 @@ Resource templates (dynamic):
 
 </details>
 
+## Skills
+
+Bundled Skills live in `vendor/bnomei/kirby-mcp/skills` after installation. Copy them into your agent’s local skills folder using the **Client setup** instructions below.
+
+- `kirby-project-tour` — Project inventory and orientation (roots, blueprints, plugins) with next-step recommendations.
+- `kirby-content-migration` — Safe content migrations with runtime read/update tools and update schemas.
+- `kirby-scaffold-page-type` — Scaffold a page type (blueprint + template + optional controller/model) using project conventions.
+- `kirby-routing-and-representations` — Custom routes, redirects, and content representations (.json/.xml/.rss).
+- `kirby-collections-and-navigation` — Listings, pagination, search, filtering/sorting/grouping, and navigation menus.
+- `kirby-panel-and-blueprints` — Blueprint design, Panel UX, `extends`, and custom areas/fields/sections.
+- `kirby-plugin-development` — Reusable plugins with hooks/extensions, KirbyTags, blocks, and shared controllers/templates.
+- `kirby-headless-api` — Headless API setup with Kirby API, KQL, and JSON representations.
+- `kirby-i18n-workflows` — Language config, translation keys, localized labels, and import/export workflows.
+- `kirby-security-and-auth` — Login/roles/permissions, access restriction, and protected downloads.
+- `kirby-performance-and-media` — Cache tuning, CDN/media routing, responsive images, and lazy loading.
+- `kirby-debugging-and-tracing` — Render reproduction, runtime tracing with `mcp_dump`, and code-path discovery.
+- `kirby-ide-support` — IDE helper status plus minimal PHPDoc/type-hint improvements.
+- `kirby-upgrade-and-maintenance` — Safe Kirby upgrades with composer audit, plugin checks, and verification.
+- `kirby-forms-and-frontend-actions` — Contact forms, uploads, emails, and frontend page creation with validation/CSRF.
+
 <details>
-<summary>💬 Prompts & completions</summary>
+<summary>💬 Completions</summary>
 
-Prompts:
-
-- `kirby_project_tour` — map the project (roots + inventory) and suggest next steps
-- `kirby_debug_render_trace` — debug via `kirby_render_page` + `mcp_dump` traces (`kirby_dump_log_tail`)
-- `kirby_scaffold_page_type` — scaffold a new page type (blueprint + template + optional controller/model)
-- `kirby_content_migration_assistant` — plan/apply safe content migrations (read/update page content)
-- `kirby_ide_support_boost` — improve IDE support + optional helper generation (`.kirby-mcp/`)
-- `kirby_upgrade_kirby` — upgrade Kirby safely (docs + composer + verification)
-- `kirby_performance_audit` — guide an agent through a Kirby performance audit, cache and query pitfalls
-
-Prompt fallback resources (for clients without MCP prompt support):
-
-- `kirby://prompts` and `kirby://prompt/{name}`
-
-Completions:
-
-- Prompts and resource templates provide parameter completions (e.g. blueprint ids + config hosts).
+- Resource templates provide parameter completions (e.g. blueprint ids + config hosts).
 
 </details>
 
@@ -337,6 +341,15 @@ Or explicitly:
 claude mcp add kirby -- vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project
 ```
 
+Copy bundled Skills (personal scope):
+
+```bash
+mkdir -p ~/.claude/skills
+rsync -a vendor/bnomei/kirby-mcp/skills/ ~/.claude/skills/
+```
+
+Restart Claude Code after copying (use `.claude/skills/` instead for repo-scoped skills).
+
 ### Codex CLI
 
 From the Kirby project directory:
@@ -345,7 +358,20 @@ From the Kirby project directory:
 codex mcp add kirby -- vendor/bin/kirby-mcp
 ```
 
-Or configure in `config.toml` under `[mcp_servers.kirby]` (see Codex CLI docs).
+Or explicitly:
+
+```bash
+codex mcp add kirby -- vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project
+```
+
+Copy bundled Skills (user scope):
+
+```bash
+mkdir -p ~/.codex/skills
+rsync -a vendor/bnomei/kirby-mcp/skills/ ~/.codex/skills/
+```
+
+Restart Codex CLI after copying.
 
 ### Manual
 

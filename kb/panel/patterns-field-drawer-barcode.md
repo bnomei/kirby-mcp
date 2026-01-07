@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - field with drawer editing and live preview
+# Panel pattern - field with drawer editing and live preview
 
 ## Goal
 
@@ -43,7 +43,7 @@ Build a custom field that opens a drawer for editing, validates input, and rende
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-barcode-field/src/components/BarcodeField.vue
+// site/plugins/example-barcode-field/src/components/BarcodeField.vue
 import { computed, ref, usePanel, watch } from 'kirbyuse';
 
 const BarcodeField = {
@@ -113,7 +113,7 @@ const BarcodeField = {
   `,
 };
 
-panel.plugin('acme/barcode-field', {
+panel.plugin('example/barcode-field', {
   fields: {
     barcode: BarcodeField,
   },

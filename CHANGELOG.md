@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [1.2.0] - 2026-01-07
+
+- Dropped prompt-driven setup guidance in favor of Skills.
+- Added bundled Codex/Claude Skills and documented how to copy them into the client.
+
 ## [1.1.1] - 2026-01-01
 
 - Tiny improvement to the `kb/update-schema/blueprint-file.md` guide.

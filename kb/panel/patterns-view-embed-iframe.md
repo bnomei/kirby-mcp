@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - simple view that embeds an iframe
+# Panel pattern - simple view that embeds an iframe
 
 ## Goal
 
@@ -41,10 +41,10 @@ Add a lightweight Panel view that embeds an external dashboard in an iframe and 
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-analytics/index.js
+// site/plugins/example-analytics/index.js
 import { ref, useApi } from 'kirbyuse';
 
-panel.plugin('acme/analytics', {
+panel.plugin('example/analytics', {
   views: {
     analytics: {
       label: 'Analytics',

@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - section with formatter API
+# Panel pattern - section with formatter API
 
 ## Goal
 
@@ -44,7 +44,7 @@ Create a Panel section that loads server-side props, derives preview output in t
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-serp-section/src/panel/SectionPreview.vue
+// site/plugins/example-serp-section/src/panel/SectionPreview.vue
 import { ref, toRefs, watch, useApi } from 'kirbyuse';
 
 const SectionPreview = {
@@ -82,7 +82,7 @@ const SectionPreview = {
   },
 };
 
-panel.plugin('acme/serp-section', {
+panel.plugin('example/serp-section', {
   sections: {
     'serp-preview': SectionPreview,
   },

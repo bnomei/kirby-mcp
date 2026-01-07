@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - area buttons with dialog actions
+# Panel pattern - area buttons with dialog actions
 
 ## Goal
 
@@ -43,7 +43,7 @@ Add custom buttons to a Panel area (for example the site area) that open dialogs
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-area-tools/src/index.js
+// site/plugins/example-area-tools/src/index.js
 import { computed, ref, usePanel } from 'kirbyuse';
 
 const ActionMenuButton = {
@@ -104,7 +104,7 @@ const ActionMenuButton = {
   `,
 };
 
-panel.plugin('acme/area-tools', {
+panel.plugin('example/area-tools', {
   components: {
     'k-action-menu-button': ActionMenuButton,
   },

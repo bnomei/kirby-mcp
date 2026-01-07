@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Mcp\Resources\PromptResources;
 use Mcp\Exception\ResourceReadException;
 
-it('lists MCP prompts as a resource', function (): void {
+it('lists MCP prompts via the internal catalog', function (): void {
     $resource = new PromptResources();
     $prompts = $resource->prompts();
 

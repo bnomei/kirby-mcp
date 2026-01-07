@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - area view backed by API operations
+# Panel pattern - area view backed by API operations
 
 ## Goal
 
@@ -44,7 +44,7 @@ Build a Panel area with a dedicated view that lists items, triggers actions, and
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-api-ops/src/components/ApiOpsView.vue
+// site/plugins/example-api-ops/src/components/ApiOpsView.vue
 import { ref, onMounted, useApi, usePanel } from 'kirbyuse';
 
 const ApiOpsView = {
@@ -87,9 +87,9 @@ const ApiOpsView = {
   },
 };
 
-panel.plugin('acme/api-ops', {
+panel.plugin('example/api-ops', {
   components: {
-    'acme-api-ops-view': ApiOpsView,
+    'example-api-ops-view': ApiOpsView,
   },
 });
 ```

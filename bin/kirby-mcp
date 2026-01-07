@@ -872,13 +872,13 @@ $builder = Server::builder()
     ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
 
 $server = $builder
-    ->setDiscovery(dirname(__DIR__), ['src'])
+    ->setDiscovery(dirname(__DIR__), ['src/Mcp/Tools', 'src/Mcp/Resources'])
     ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
     ->addRequestHandler(new SetLogLevelHandler())
     ->setCapabilities(new ServerCapabilities(
         tools: true,
         resources: true,
-        prompts: true,
+        prompts: false,
         logging: true,
         completions: true,
     ))

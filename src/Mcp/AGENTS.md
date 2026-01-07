@@ -2,14 +2,13 @@
 
 ## Mission
 
-Maintain a stable and secure MCP surface: tools, resources, prompts, and completions for Kirby projects.
+Maintain a stable and secure MCP surface: tools, resources, and completions for Kirby projects.
 
 ## System
 
 - Tools live in `src/Mcp/Tools/` as public methods annotated with `#[McpTool]` and `#[McpToolIndex]`.
   `src/Mcp/ToolIndex.php` discovers them via reflection.
-- Prompts live in `src/Mcp/Prompts/` as public methods annotated with `#[McpPrompt]`.
-  `src/Mcp/PromptIndex.php` discovers them via reflection and exposes a fallback via `kirby://prompts` and `kirby://prompt/{name}`.
+- Prompt generators remain in `src/Mcp/Prompts/` (annotated with `#[McpPrompt]`) but are not registered with the MCP server.
 - Resources live in `src/Mcp/Resources/` and expose `kirby://...` URIs.
 - Content field guides live in `kb/update-schema/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
 - Blueprint update guides live in `kb/update-schema/blueprint-*.md` and are exposed via `kirby://blueprints/update-schema` and `kirby://blueprint/{type}/update-schema`.

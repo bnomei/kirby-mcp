@@ -26,8 +26,5 @@ it('initializes and returns guidance for a composer-based Kirby project', functi
     expect($output)->toContain('## Environment');
     expect($output)->toContain('## Composer Audit');
     expect($output)->toContain('## Project Info');
-    expect($output)->toContain('kirby://prompts');
-    expect($output)->toContain('kirby://prompt/{name}');
-    expect($output)->toContain('kirby_project_tour');
     expect(SessionState::initCalled($session))->toBeTrue();
 });

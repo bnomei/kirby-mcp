@@ -111,10 +111,6 @@ Debugging with `mcp_dump()` (render → inspect → fix):
 - If reproducing via a real request/route instead of `kirby_render_page`, filter by `path` (example: `kirby_dump_log_tail(path='/about')`).
 - Remove temporary `mcp_dump()` instrumentation after verification.
 
-Prompts:
-- Use MCP prompts (e.g. `kirby_project_tour`, `kirby_performance_audit`) when you want a structured, repeatable workflow.
-- If your client doesn't support MCP prompts yet, use the fallback resources: `kirby://prompts` and `kirby://prompt/{name}` (e.g. `kirby://prompt/kirby_project_tour`).
-
 Quality tooling:
 - Before generating non-trivial changes, run the project’s test/static-analysis/formatting commands discovered by `kirby_composer_audit`.
 

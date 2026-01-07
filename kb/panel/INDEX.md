@@ -29,15 +29,15 @@ Version tags used in docs:
 - `kirby://kb/panel/patterns-section-load`
 - `kirby://kb/panel/patterns-dialog-flow`
 - `kirby://kb/panel/patterns-component-reuse`
-- `kirby://kb/panel/patterns-area-button-dialog` - DRAFT: area buttons with dialog actions
-- `kirby://kb/panel/patterns-field-svg-options` - DRAFT: field options with SVG previews
-- `kirby://kb/panel/patterns-field-map-geocode` - DRAFT: map field with geocoding
-- `kirby://kb/panel/patterns-field-api-embed` - DRAFT: API-backed embed field
-- `kirby://kb/panel/patterns-area-api-ops` - DRAFT: area view backed by API ops
-- `kirby://kb/panel/patterns-section-format-api` - DRAFT: section formatter API
-- `kirby://kb/panel/patterns-view-embed-iframe` - DRAFT: iframe embed view
-- `kirby://kb/panel/patterns-field-drawer-barcode` - DRAFT: drawer editing with preview
-- `kirby://kb/panel/patterns-area-multiview-auth` - DRAFT: multi-view area with auth
+- `kirby://kb/panel/patterns-area-button-dialog` - area buttons with dialog actions
+- `kirby://kb/panel/patterns-field-svg-options` - field options with SVG previews
+- `kirby://kb/panel/patterns-field-map-geocode` - map field with geocoding
+- `kirby://kb/panel/patterns-field-api-embed` - API-backed embed field
+- `kirby://kb/panel/patterns-area-api-ops` - area view backed by API ops
+- `kirby://kb/panel/patterns-section-format-api` - section formatter API
+- `kirby://kb/panel/patterns-view-embed-iframe` - iframe embed view
+- `kirby://kb/panel/patterns-field-drawer-barcode` - drawer editing with preview
+- `kirby://kb/panel/patterns-area-multiview-auth` - multi-view area with auth
 
 ## Compatibility
 

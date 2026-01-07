@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - multi-view area with auth flow
+# Panel pattern - multi-view area with auth flow
 
 ## Goal
 
@@ -46,7 +46,7 @@ Create a Panel area that switches between multiple views (config, list, detail) 
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-app/src/index.js
+// site/plugins/example-app/src/index.js
 import { onMounted, ref, useApi, usePanel } from 'kirbyuse';
 
 const ConfigView = {
@@ -119,7 +119,7 @@ const ListView = {
   `,
 };
 
-panel.plugin('acme/app', {
+panel.plugin('example/app', {
   components: {
     'k-app-config-view': ConfigView,
     'k-app-list-view': ListView,

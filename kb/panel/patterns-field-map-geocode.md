@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - map field with geocoding
+# Panel pattern - map field with geocoding
 
 ## Goal
 
@@ -43,7 +43,7 @@ Create a map-based field that lets editors search for locations, drop a marker, 
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-map-field/src/components/MapField.vue (K5/Vue 2)
+// site/plugins/example-map-field/src/components/MapField.vue (K5/Vue 2)
 const MapField = {
   props: {
     value: Object,
@@ -103,7 +103,7 @@ const MapField = {
   },
 };
 
-panel.plugin('acme/map-field', {
+panel.plugin('example/map-field', {
   fields: {
     map: MapField,
   },

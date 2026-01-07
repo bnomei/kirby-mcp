@@ -1,4 +1,4 @@
-# DRAFT: Panel pattern - field options with SVG previews
+# Panel pattern - field options with SVG previews
 
 ## Goal
 
@@ -43,7 +43,7 @@ Build a custom field that renders selectable options with SVG previews (icons or
 ## Panel JS (K5)
 
 ```js
-// site/plugins/acme-icon-field/src/index.js
+// site/plugins/example-icon-field/src/index.js
 const IconField = {
   extends: 'k-multiselect-field',
   computed: {
@@ -98,7 +98,7 @@ const IconField = {
   `,
 };
 
-panel.plugin('acme/icon-field', {
+panel.plugin('example/icon-field', {
   fields: {
     icon: IconField,
   },
