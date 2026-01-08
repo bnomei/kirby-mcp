@@ -35,6 +35,7 @@ With `store: id`, values are filenames or paths. Cross-page file references may 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/files`.
+- If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `file://`.
 
 ## Glossary quick refs
 

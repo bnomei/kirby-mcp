@@ -37,6 +37,7 @@ With `store: id`, values are page ids like `notes/my-first-note`. Keep `multiple
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/pages`.
+- If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `page://`.
 
 ## Glossary quick refs
 

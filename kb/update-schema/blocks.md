@@ -51,6 +51,7 @@ Each block needs a stable `id`. The `content` shape depends on the block bluepri
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/blocks`.
+- Generate new block `id` values via `kirby://uuid/new` when creating blocks.
 
 ## Glossary quick refs
 

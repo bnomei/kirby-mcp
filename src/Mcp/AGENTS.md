@@ -10,6 +10,7 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
   `src/Mcp/ToolIndex.php` discovers them via reflection.
 - Prompt generators remain in `src/Mcp/Prompts/` (annotated with `#[McpPrompt]`) but are not registered with the MCP server.
 - Resources live in `src/Mcp/Resources/` and expose `kirby://...` URIs.
+- UUIDs for new content/blocks are generated via `kirby://uuid/new` using Kirby's UUID generator (no project-level uniqueness check).
 - Content field guides live in `kb/update-schema/` and are exposed via `kirby://fields/update-schema` and `kirby://field/{type}/update-schema`.
 - Blueprint update guides live in `kb/update-schema/blueprint-*.md` and are exposed via `kirby://blueprints/update-schema` and `kirby://blueprint/{type}/update-schema`.
 - KB document list/read resources: `kirby://kb` and `kirby://kb/{path}` (path relative to `kb/`, no `.md`).

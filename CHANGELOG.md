@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [1.2.1] - 2026-01-08
+
+- Added `kirby://uuid/new` resource to generate Kirby UUID strings.
+- Linked `kirby://uuid/new` in update-schema guides for pages, files, blocks, and layouts.
+- Added unit coverage for UUID resource output.
+
 ## [1.2.0] - 2026-01-07
 
 - Dropped prompt-driven setup guidance in favor of Skills.

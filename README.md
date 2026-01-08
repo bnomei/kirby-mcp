@@ -255,6 +255,7 @@ Resources (read-only):
 - `kirby://roots` — Kirby roots discovered via CLI, respects configured host
 - `kirby://sections` — Kirby Panel section types list (links to `kirby://section/{type}`)
 - `kirby://tools` — weighted keyword index for Kirby MCP tools/resources/templates
+- `kirby://uuid/new` — generate a new Kirby UUID string (respects `content.uuid` format)
 
 Resource templates (dynamic):
 

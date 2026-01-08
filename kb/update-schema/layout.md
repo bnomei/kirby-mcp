@@ -52,6 +52,7 @@ Row `attrs` stores layout settings (class/id/background). Keep `id` values stabl
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/layout`.
+- Generate row/column/block `id` values via `kirby://uuid/new` when creating layouts.
 
 ## Glossary quick refs
 
