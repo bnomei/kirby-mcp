@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
-## [1.2.2] - 2026-01-10
+## [1.3.0] - 2026-01-10
 
 - Added `kirby_query_dot` tool and `mcp:query:dot` runtime command to evaluate Kirby query language strings.
 - Minor improvements to 107 KB documents.
