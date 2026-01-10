@@ -299,7 +299,7 @@ final class CodeIndexTools
         keywords: [
             'collection' => 100,
             'collections' => 100,
-            'named collection' => 80,
+            'named' => 80,
             'query' => 20,
             'reuse' => 20,
             'index' => 20,
@@ -572,8 +572,6 @@ final class CodeIndexTools
         keywords: [
             'model' => 100,
             'models' => 100,
-            'page model' => 80,
-            'page models' => 80,
             'page' => 20,
             'index' => 20,
         ],

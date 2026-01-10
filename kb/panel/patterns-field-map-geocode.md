@@ -17,7 +17,7 @@ Create a map-based field that lets editors search for locations, drop a marker, 
 - kirby_plugins_index
 - kirby_blueprints_index
 - kirby_blueprint_read
-- kirby://extension/panel-fields
+- kirby://extension/fields
 
 ## Files to touch
 
@@ -30,7 +30,7 @@ Create a map-based field that lets editors search for locations, drop a marker, 
 
 1. Define field props for tokens, providers, and display options; decode stored YAML into an object.
 2. Embed a map library in the field component and initialize with center and zoom props.
-3. On search input, call external geocoding endpoints and map the response into the stored value shape.
+3. On search input, call external geocoding endpoints (or proxy via Kirby API if tokens must stay secret).
 4. Keep UI state for collapse, marker drag, and zoom persistence.
 5. Prefer kirbyup for bundling the map library; if prebundled, isolate map logic in the field component.
 
@@ -116,9 +116,14 @@ panel.plugin('example/map-field', {
 - Search results update the marker and stored value.
 - Value storage matches the expected object shape in content files.
 
+## Gotchas
+
+- Public map tokens are OK; secret tokens should be proxied server-side (custom API endpoint).
+- Rate limits are common; add debouncing to search inputs.
+
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/panel-fields
+- https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
 ## Version notes (K5/K6)

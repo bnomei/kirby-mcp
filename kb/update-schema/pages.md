@@ -2,7 +2,7 @@
 
 ## Field summary
 
-Page picker stored as page references (uuid by default, id when configured).
+Page picker stored as page references (UUID by default; use `store` to switch to ids).
 
 ## Storage format
 
@@ -12,11 +12,16 @@ related: page://aBc123XyZ
 related:
   - page://aBc123XyZ
   - page://dEf456UvW
+
+# store: id
+related:
+  - notes/my-first-note
+  - notes/another-note
 ```
 
 ## Runtime value
 
-Use `$page->related()->toPage()` for single or `->toPages()` for multiple.
+Use `$page->related()->toPage()` for single or `->toPages()` for multiple. These methods resolve UUIDs or ids.
 
 ## Update payload (kirby_update_page_content)
 
@@ -30,13 +35,14 @@ Read existing references, merge unique values, then write back using the same st
 
 ## Edge cases
 
-With `store: id`, values are page ids like `notes/my-first-note`. Keep `multiple` in sync with payload shape.
+With `store: id`, values are page ids like `notes/my-first-note`. Keep `multiple` in sync with payload shape. If UUIDs look missing or unexpected, check `content.uuid` config (UUID generation only affects newly created models).
 
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/pages`.
+- Check UUID generation settings via `kirby://config/content.uuid`.
 - If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `page://`.
 
 ## Glossary quick refs
@@ -49,3 +55,4 @@ With `store: id`, values are page ids like `notes/my-first-note`. Keep `multiple
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/pages
+- https://getkirby.com/docs/guide/uuids

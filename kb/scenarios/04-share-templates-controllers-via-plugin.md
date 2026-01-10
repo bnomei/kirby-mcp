@@ -28,6 +28,7 @@ Typical use case:
    - map multiple template names to the same `__DIR__` file
    - controllers are registered by `require`-ing a PHP file that returns a callable
 3. Optional: register `pageModels` the same way
+   - map multiple model names to a single base class (values are class names or `require`d files)
 4. Remember: project-level templates/controllers override plugin ones automatically:
    - if `site/templates/jobs.php` exists, it wins over the plugin’s `jobs` template mapping
 

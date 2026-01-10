@@ -34,6 +34,7 @@ Kirby is file-based, so batch changes usually require scripted loops.
 2. Keep the loop defensive:
    - check field existence before reading/writing
    - handle missing pages/files gracefully
+   - for multi-language sites, read/write with an explicit language code
 3. For big sites, chunk processing and store the list of page IDs in a log file so `site()->index()` runs only once.
 4. Remove the route/logfile when done.
 

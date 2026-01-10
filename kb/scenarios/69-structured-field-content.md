@@ -12,6 +12,7 @@ Render and manipulate data from:
 - Field type (`structure`, textarea-as-yaml, etc.)
 - Desired output (list, table, grouped)
 - Whether items need validation/sorting/filtering
+- Whether structure fields are nested (structure-in-structure)
 
 ## Internal tools/resources to use
 
@@ -23,6 +24,7 @@ Render and manipulate data from:
 
 1. For `structure` fields:
    - use `$page->field()->toStructure()` and iterate items
+   - if a nested field is also structured, call `toStructure()` on it as well
 2. For YAML stored in plain fields:
    - use `$page->field()->yaml()` (array) when you don’t need structure object helpers
 3. Escape output (as always).
@@ -62,6 +64,7 @@ $addresses = $page->addresses()->yaml();
 
 - Render the template and confirm each structure entry is output as expected.
 - Confirm empty/invalid YAML doesn’t throw errors (add guards if needed).
+- For temporary inspection, add `mcp_dump()` calls, render via `kirby_render_page`, then read with `kirby_dump_log_tail(traceId=...)`.
 
 ## Glossary quick refs
 

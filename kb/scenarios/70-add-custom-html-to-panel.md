@@ -9,6 +9,7 @@ Show custom HTML in the Panel UI using the `info` field in a blueprint (e.g. onb
 - Where to show it (site blueprint, page blueprint, user blueprint)
 - Whether the HTML should be static or dynamic (KQL placeholders like `{{ user.name }}`)
 - Security/maintenance constraints (avoid risky embeds)
+- Whether Markdown/KirbyText is sufficient (simpler) vs raw HTML
 
 ## Internal tools/resources to use
 
@@ -18,8 +19,9 @@ Show custom HTML in the Panel UI using the `info` field in a blueprint (e.g. onb
 ## Implementation steps
 
 1. Add an `info` field to the relevant blueprint.
-2. Set `theme: none` and `label: ""` for a clean canvas.
+2. If you need raw HTML, set `theme: none` and `label: ""` for a clean canvas.
 3. Add HTML to the `text:` option (use YAML `|` multi-line strings).
+4. Prefer Markdown/KirbyText if you don’t need custom HTML (more consistent with Panel styling).
 
 ## Examples (quicktip)
 
@@ -36,6 +38,7 @@ info:
 
 - Open the relevant blueprint in the Panel and confirm the info box renders.
 - Confirm the HTML is safe/maintainable and doesn’t break Panel layout.
+- Verify any `{{ ... }}` placeholders resolve as expected.
 
 ## Glossary quick refs
 

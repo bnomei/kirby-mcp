@@ -23,6 +23,7 @@ Allow editors to write placeholders in text fields (e.g. `{{ email }}`) and repl
    - config option like `option('placeholders')`
    - site content (`$site->placeholders()`), etc.
 2. Replace placeholders at output time with `Str::template(...)`.
+   - Use `['start' => '[[', 'end' => ']]']` if you want custom delimiters.
 3. Optional: wrap replacement into a custom field method or hook so templates stay clean.
 
 ## Examples (cookbook patterns)
@@ -83,4 +84,4 @@ return [
 ## Links
 
 - Cookbook: Use placeholders: https://getkirby.com/docs/cookbook/content-structure/use-placeholders
-- Reference: `Str::template()`: https://getkirby.com/docs/reference/toolkit/str/template
+- Reference: `Str::template()`: https://getkirby.com/docs/reference/tools/str/template

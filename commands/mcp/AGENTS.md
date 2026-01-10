@@ -16,6 +16,7 @@ Provide Kirby CLI command definition templates that are copied into host project
   1. Create/modify `src/Mcp/Commands/<Name>.php` (`public static function definition(): array`).
   2. Add the matching template file here that returns `<Name>::definition()`.
   3. Add/adjust integration tests that assert the command exists after runtime install.
+  4. If the command uses a sub-scope (e.g. `mcp:query:dot`), mirror it in the folder path (`commands/mcp/query/dot.php`).
 
 ## Guardrails
 

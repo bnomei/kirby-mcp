@@ -13,6 +13,7 @@ Batch-update file metadata (e.g. assign a file template) across:
 - Which files to target (by parent, type, extension, query)
 - Which metadata to set (`template`, custom fields, captions)
 - Whether it’s a multi-language site (update all languages or only default)
+- Whether to validate against blueprint rules (`$file->update(..., validate: true)`)
 
 ## Internal tools/resources to use
 
@@ -31,6 +32,7 @@ Batch-update file metadata (e.g. assign a file template) across:
 3. For batch updates, loop through the target files and call `$file->update([...])`.
 4. In multi-language setups, pass the language code as second parameter.
 5. Capture errors per file to avoid partial silent failure.
+6. Remember `$file->update()` returns a new File object (immutability).
 
 ## Examples (quicktip; abridged)
 

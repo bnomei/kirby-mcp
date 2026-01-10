@@ -27,6 +27,7 @@ Sort collections in a predictable way for:
 1. Start from an explicit base collection (don’t chain too much in templates).
 2. Use `sortBy()` with a direction:
    - `sortBy('date', 'desc')`
+   - pass a sort flag as the third arg for numeric/locale sorts (e.g. `SORT_NUMERIC`)
 3. For descending order you can also `flip()` the collection.
 4. For complex sorting:
    - use multiple sort keys in `sortBy()`

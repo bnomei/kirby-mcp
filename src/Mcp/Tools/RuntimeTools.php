@@ -29,6 +29,7 @@ final class RuntimeTools
 {
     use StructuredToolResult;
     public const ENV_ENABLE_EVAL = 'KIRBY_MCP_ENABLE_EVAL';
+    public const ENV_ENABLE_QUERY = 'KIRBY_MCP_ENABLE_QUERY';
 
     private const CLI_RESULT_SCHEMA = [
         'type' => ['object', 'null'],
@@ -309,7 +310,22 @@ final class RuntimeTools
             'update' => 40,
             'commands' => 60,
             'mcp' => 30,
+            'mcp:install' => 40,
+            'mcp:update' => 40,
             'mcp:render' => 40,
+            'mcp:blueprint' => 30,
+            'mcp:blueprints' => 30,
+            'mcp:cli:commands' => 30,
+            'mcp:config:get' => 30,
+            'mcp:collections' => 30,
+            'mcp:controllers' => 30,
+            'mcp:eval' => 30,
+            'mcp:query:dot' => 30,
+            'mcp:models' => 30,
+            'mcp:plugins' => 30,
+            'mcp:routes' => 30,
+            'mcp:snippets' => 30,
+            'mcp:templates' => 30,
             'mcp:page:update' => 30,
             'mcp:page:content' => 30,
             'mcp:site:update' => 30,
@@ -1381,7 +1397,8 @@ final class RuntimeTools
         keywords: [
             'eval' => 100,
             'tinker' => 80,
-            'php -r' => 70,
+            'php' => 30,
+            '-r' => 70,
             'execute' => 60,
             'inspect' => 50,
             'debug' => 40,
@@ -1462,6 +1479,96 @@ final class RuntimeTools
                 $response['blueprints'][$index] = $entry;
             }
         }
+        $response['cliMeta'] = $result->cliMeta();
+
+        if ($debug === true) {
+            $response['cli'] = $result->cli();
+        }
+
+        return $this->maybeStructuredResult($context, $response);
+    }
+
+    /**
+     * Evaluate a Kirby query language (dot-notation) string in Kirby runtime.
+     *
+     * @return array<string, mixed>
+     */
+    #[McpToolIndex(
+        whenToUse: 'Evaluate Kirby query language (dot-notation) strings to verify blueprint queries against runtime data. Enabled by default; requires confirm and can be disabled via config.',
+        keywords: [
+            'query' => 100,
+            'dot' => 80,
+            'dot-notation' => 60,
+            'query-language' => 70,
+            'blueprint' => 60,
+            'options' => 40,
+            'fetch' => 40,
+            'evaluate' => 60,
+            'runner' => 30,
+            'ast' => 30,
+        ],
+    )]
+    #[McpTool(
+        name: 'kirby_query_dot',
+        description: 'Evaluate Kirby query language (dot-notation) strings in Kirby runtime via the installed `kirby mcp:query:dot` CLI command and return structured JSON. Enabled by default; disable via `.kirby-mcp/mcp.json` (`{\"query\":{\"enabled\":false}}`) and still requires confirm=true. Use `model` to set context (page id or UUID like `page://...`, `file://...`, `user://...`, user email, file path with extension, or `site`). See `kirby://glossary/query-language`. Requires kirby_runtime_install first.',
+        annotations: new ToolAnnotations(
+            title: 'Query (Dot Notation)',
+            readOnlyHint: false,
+            destructiveHint: true,
+            openWorldHint: false,
+        ),
+    )]
+    public function queryDot(
+        string $query,
+        ?string $model = null,
+        bool $confirm = false,
+        int $timeoutSeconds = 60,
+        bool $debug = false,
+        ?RequestContext $context = null,
+    ): array|CallToolResult {
+        $projectRoot = $this->context->projectRoot();
+        $runner = new RuntimeCommandRunner(new KirbyRuntimeContext($this->context));
+
+        $enabled = $this->isQueryEnabled($projectRoot);
+        if ($enabled !== true) {
+            return $this->maybeStructuredResult($context, [
+                'ok' => false,
+                'enabled' => false,
+                'needsEnable' => true,
+                'message' => 'Query evaluation is disabled. Enable via env ' . self::ENV_ENABLE_QUERY . '=1 or via .kirby-mcp/mcp.json: {"query":{"enabled":true}}.',
+            ]);
+        }
+
+        $args = [RuntimeCommands::QUERY_DOT, $query];
+
+        if (is_string($model) && trim($model) !== '') {
+            $args[] = '--model=' . trim($model);
+        }
+
+        if ($confirm === true) {
+            $args[] = '--confirm';
+        }
+
+        if ($debug === true) {
+            $args[] = '--debug';
+        }
+
+        $result = $runner->runMarkedJson(RuntimeCommands::QUERY_DOT_FILE, $args, timeoutSeconds: $timeoutSeconds);
+
+        if ($result->installed !== true) {
+            return $this->maybeStructuredResult($context, $result->needsRuntimeInstallResponse());
+        }
+
+        if (!is_array($result->payload)) {
+            return $this->maybeStructuredResult($context, $result->parseErrorResponse([
+                'cliMeta' => $result->cliMeta(),
+                'message' => $debug === true ? null : RuntimeCommandResult::DEBUG_RETRY_MESSAGE,
+                'cli' => $debug === true ? $result->cli() : null,
+            ]));
+        }
+
+        /** @var array<string, mixed> $response */
+        $response = $result->payload;
         $response['cliMeta'] = $result->cliMeta();
 
         if ($debug === true) {
@@ -1617,5 +1724,18 @@ final class RuntimeTools
         }
 
         return KirbyMcpConfig::load($projectRoot)->evalEnabled();
+    }
+
+    private function isQueryEnabled(string $projectRoot): bool
+    {
+        $raw = getenv(self::ENV_ENABLE_QUERY);
+        if (is_string($raw) && $raw !== '') {
+            $normalized = strtolower(trim($raw));
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return true;
+            }
+        }
+
+        return KirbyMcpConfig::load($projectRoot)->queryEnabled();
     }
 }

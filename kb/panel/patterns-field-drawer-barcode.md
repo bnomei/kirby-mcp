@@ -17,7 +17,7 @@ Build a custom field that opens a drawer for editing, validates input, and rende
 - kirby_plugins_index
 - kirby_blueprints_index
 - kirby_blueprint_read
-- kirby://extension/panel-fields
+- kirby://extension/fields
 
 ## Files to touch
 
@@ -28,11 +28,12 @@ Build a custom field that opens a drawer for editing, validates input, and rende
 
 ## Implementation steps
 
-1. Extend `k-field` and render a preview area in the field body.
-2. Use `usePanel().drawer.open()` with a `k-form-drawer` for focused editing.
-3. Validate input on submit and emit `input` and `change` events.
-4. Render a preview using a client-side library, updating on value changes.
-5. If the plugin ships prebuilt JS, keep the drawer logic and preview rendering isolated.
+1. Define field `props` in PHP for validation/display options; set defaults for missing blueprint values.
+2. Extend `k-field` and render a preview area in the field body.
+3. Use `usePanel().drawer.open()` with a `k-form-drawer` for focused editing.
+4. Validate input on submit and emit `input` and `change` events.
+5. Render a preview using a client-side library, updating on value changes.
+6. If the plugin ships prebuilt JS, keep the drawer logic and preview rendering isolated.
 
 ## Examples
 
@@ -126,9 +127,14 @@ panel.plugin('example/barcode-field', {
 - Validation rejects invalid input and preserves the old value.
 - Preview updates when the value changes.
 
+## Gotchas
+
+- Don't mutate `props.value` directly; always `$emit('input', next)` to update the stored value.
+- If the preview library touches the DOM, re-render after refs exist (`onMounted`/`nextTick`).
+
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/panel-fields
+- https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
 ## Version notes (K5/K6)

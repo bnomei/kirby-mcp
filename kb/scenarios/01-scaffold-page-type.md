@@ -33,12 +33,14 @@ Add a new Kirby “page type” with:
    - make sure the new template/blueprint/controller/model names don’t already exist
 3. Create the blueprint:
    - `site/blueprints/pages/<template>.yml`
+   - use valid field names (alphanumeric/underscore; avoid method name collisions; don’t redefine top-level `title`)
 4. Create the template:
    - `site/templates/<template>.php`
 5. Add an optional controller for template variables:
    - `site/controllers/<template>.php`
 6. Add an optional page model for reusable page methods:
-   - `site/models/<Template>Page.php`
+   - file path: `site/models/<template>.php`
+   - class name: `<Template>Page` (strip dashes/underscores in the class name)
 7. Keep logic out of templates where possible:
    - extract repeated markup into snippets (`site/snippets/...`)
 

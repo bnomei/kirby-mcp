@@ -12,7 +12,7 @@ Read blueprint metadata at runtime to:
 
 - Which model’s blueprint to read (page/file/user/site)
 - Which blueprint parts are needed (fields, sections, options)
-- Whether the blueprint contains custom options you rely on
+- Whether the blueprint contains custom options you rely on (and if they are prefixed)
 
 ## Internal tools/resources to use
 
@@ -23,9 +23,10 @@ Read blueprint metadata at runtime to:
 
 ## Implementation steps
 
-1. Access blueprint via `$page->blueprint()`.
-2. Read `name()`, `title()`, `fields()`, `field('...')`, `section('...')`, `options()`.
-3. Use values carefully; always fall back if keys are missing.
+1. Access the blueprint via `$page->blueprint()` (also available on site, file, and user models).
+2. Read `name()`, `title()`, `fields()`, `field('...')`, `section('...')`, `options()`, and `model()` as needed.
+3. Treat `section('...')` as a `Section` object; guard for `null` when the key is missing.
+4. For custom options, use `options()['yourKey'] ?? <fallback>` and avoid clashing with built-in blueprint keys (prefix custom options if possible).
 
 ## Examples (cookbook snippets)
 
@@ -34,12 +35,14 @@ $blueprint = $page->blueprint();
 $name = $blueprint->name();
 $fields = $blueprint->fields();
 $field = $blueprint->field('text');
+$autoPublish = $blueprint->options()['autoPublish'] ?? false;
 ```
 
 ## Verification
 
 - Dump/inspect blueprint name/fields during development and confirm they match expected blueprint files.
 - Add safe fallbacks when expected fields/options are missing.
+- If in doubt, compare runtime data to `kirby_blueprint_read` for the same id.
 
 ## Glossary quick refs
 
@@ -52,3 +55,4 @@ $field = $blueprint->field('text');
 
 - Cookbook: Blueprints in frontend: https://getkirby.com/docs/cookbook/unclassified/blueprints-in-frontend
 - Reference: `$page->blueprint()`: https://getkirby.com/docs/reference/objects/cms/page/blueprint
+- Reference: `Blueprint` object: https://getkirby.com/docs/reference/objects/cms/blueprint

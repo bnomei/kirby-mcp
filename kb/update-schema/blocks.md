@@ -2,7 +2,7 @@
 
 ## Field summary
 
-Blocks field stores structured content blocks as a JSON array.
+Blocks field stores structured content blocks as a JSON array. Each block’s `content` shape is defined by its block blueprint (default or custom).
 
 ## Storage format
 
@@ -44,11 +44,12 @@ Prefer full replace. For partial edits, read existing blocks, modify by block `i
 
 ## Edge cases
 
-Each block needs a stable `id`. The `content` shape depends on the block blueprint.
+Each block needs a stable `id`. The `content` shape depends on the block blueprint; always inspect the block definition before constructing payloads.
 
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
+- Inspect block blueprints (`blocks/<type>`) with `kirby_blueprints_index` and `kirby_blueprint_read`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/blocks`.
 - Generate new block `id` values via `kirby://uuid/new` when creating blocks.
@@ -63,3 +64,5 @@ Each block needs a stable `id`. The `content` shape depends on the block bluepri
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/blocks
+- https://getkirby.com/docs/reference/panel/blocks
+- https://getkirby.com/docs/reference/panel/blueprints/block

@@ -31,6 +31,7 @@ Typical use cases:
 3. Implement `buildPageTree()` (typically in a plugin file) that:
    - reads `$page->blueprint()->subpage_builder()`
    - creates children with `$page->createChild([...])`
+   - skips creation if a child with the same `uid` already exists
    - optionally publishes and sorts them
    - recurses for nested trees
 

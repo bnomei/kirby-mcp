@@ -26,6 +26,7 @@ Render a “one page” website where:
 2. Render each section via `snippet($section->uid(), ['data' => $section])`.
 3. Add `site/snippets/<section>.php` per section.
 4. Add a redirecting `default.php` template (or a route) so section URLs don’t render standalone.
+   - Redirect to the home URL with the section anchor (e.g. `/#about`)
 
 ## Examples (cookbook pattern)
 
@@ -57,7 +58,7 @@ Render a “one page” website where:
  * @var Kirby\Cms\Page $page
  */
 
-go();
+go(url('/') . '#' . $page->uid());
 ```
 
 ## Verification

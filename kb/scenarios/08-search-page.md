@@ -11,6 +11,7 @@ Add a dedicated search page with a query parameter (`?q=...`), display results, 
   - a section only (`page('blog')->search`)
 - Which fields to search (e.g. `title|text`)
 - Results per page and desired UI
+- Minimum query length (default `minlength` is 2)
 
 ## Internal tools/resources to use
 
@@ -23,6 +24,7 @@ Add a dedicated search page with a query parameter (`?q=...`), display results, 
 1. Create a `search` content page (Panel or content folder).
 2. Add `site/templates/search.php` with the search form and results list.
 3. Add `site/controllers/search.php` to compute `$query`, `$results`, `$pagination`.
+   - guard empty/short queries to avoid accidental full-site searches
 
 ## Examples
 

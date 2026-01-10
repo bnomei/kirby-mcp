@@ -11,6 +11,8 @@ Generate a preview image for uploaded PDFs, e.g.:
 
 - Where PDFs are uploaded (which page types/sections)
 - Whether ImageMagick is available on the server (required by the cookbook approach)
+- Whether PHP `exec()` is allowed (required for ImageMagick `convert`)
+- Whether `thumbs.driver` is set to `im` and `thumbs.bin` needs an explicit path
 - Which output format/size/quality is desired
 - Whether previews are generated eagerly (on upload) or lazily (on demand)
 
@@ -25,6 +27,7 @@ Generate a preview image for uploaded PDFs, e.g.:
 1. Create a plugin that adds:
    - a PDF preview generator class (wrapping ImageMagick)
    - either a hook (`file.create:after`) or a file method to generate previews
+   - ImageMagick settings in `config.php` if needed (`thumbs.driver`, `thumbs.bin`)
 2. Ensure previews are stored in a safe location (e.g. under `media/`).
 3. In templates/snippets, render the preview image if present.
 

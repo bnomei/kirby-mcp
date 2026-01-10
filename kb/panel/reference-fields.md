@@ -2,7 +2,7 @@
 
 ## What it is
 
-Fields are editable inputs defined in blueprints. A custom field plugin has PHP (API/props), a Vue component, and optional CSS.
+Fields are editable inputs defined in blueprints. The Panel uses Vue and a REST API, so a custom field plugin bridges PHP (API/props) to a Vue component, plus optional CSS. Field plugins typically ship `index.php`, `index.js`, and optional `index.css`.
 
 ## PHP registration
 
@@ -30,6 +30,18 @@ Kirby::plugin('vendor/hello', [
           ],
         ];
       },
+    ],
+  ],
+]);
+```
+
+To extend a core field in PHP:
+
+```php
+Kirby::plugin('vendor/hello', [
+  'fields' => [
+    'hello' => [
+      'extends' => 'text',
     ],
   ],
 ]);
@@ -75,8 +87,10 @@ panel.plugin('vendor/hello', {
 
 - Declare all PHP props and computed values in the Vue component.
 - Use default values in PHP props to avoid missing keys.
+- Use `I18n::translate()` in prop setters if you expect translation arrays.
 - `index.css` is auto-loaded; reuse Panel UI styles when possible.
 - Backend `extends` inherits core field logic; frontend `extends` inherits the Vue component.
+- Frontend `extends` uses the UI component name (for example `k-text-field`), not the field type (`text`).
 
 ## MCP: Inspect/verify
 

@@ -13,6 +13,8 @@ Prevent direct access to sensitive files in `content/` and only allow downloads 
 - Which files need protection (all files vs a subset)
 - Authorization rules (roles, ownership, time-limited tokens)
 - Whether URLs should be stable or signed/expiring
+- Whether protected files are tagged via a file template (e.g. `protected`)
+- Whether the server blocks direct access to `/content` (rewrite rules)
 
 ## Internal tools/resources to use
 
@@ -23,11 +25,11 @@ Prevent direct access to sensitive files in `content/` and only allow downloads 
 
 ## Implementation steps
 
-1. Add a plugin that overrides file URL generation (`file::url`, `file::version`) so protected files link to a route.
-2. Add a route that:
-   - checks authorization
-   - returns the file response (or 403)
-3. Ensure protected files aren’t publicly reachable under predictable paths.
+1. Tag protected files (e.g. files section with `template: protected`).
+2. Add a plugin that overrides `file::url` so protected files link to a route.
+3. Add a route that checks authorization and returns `$file->download()` (or error page).
+4. Override `file::version` so Panel thumbs don’t leak protected images to `media/`.
+5. Ensure protected files aren’t reachable via direct `/content` paths (server rewrite rules).
 
 ## Examples
 
@@ -35,10 +37,17 @@ Prevent direct access to sensitive files in `content/` and only allow downloads 
 return [
   'routes' => [
     [
-      'pattern' => 'download/(:all)',
-      'action'  => function ($path) {
-        if (!kirby()->user()) return false;
-        return kirby()->file($path);
+      'pattern' => 'downloads/(:any)',
+      'action'  => function ($filename) {
+        if (!kirby()->user()) {
+          return site()->errorPage();
+        }
+
+        if (($page = page('downloads')) && $file = $page->files()->findBy('filename', $filename)) {
+          return $file->download();
+        }
+
+        return site()->errorPage();
       }
     ]
   ]

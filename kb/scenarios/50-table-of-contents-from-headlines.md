@@ -12,6 +12,7 @@ Generate a table of contents based on headings in:
 - Which heading levels to include (`h2`, `h3`, …)
 - Whether editors should insert a `(toc)` placeholder or templates always render a ToC
 - Whether content is KirbyText, Blocks, or both
+- Whether content uses the Editor field (KirbyText hooks won't apply)
 
 ## Internal tools/resources to use
 
@@ -24,6 +25,7 @@ Generate a table of contents based on headings in:
 1. Create a plugin that:
    - anchors headlines in output (hook or field method)
    - generates a headline collection for the ToC
+   - for Blocks: add `id` to heading block snippet and collect headings via `toBlocks()`
 2. Add a `toc` snippet that renders the headline collection.
 3. Optionally support a `(toc)` placeholder via `kirbytext:after`.
 

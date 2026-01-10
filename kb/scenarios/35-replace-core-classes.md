@@ -21,9 +21,9 @@ Replace Kirby core classes when you need deeper control than hooks/extensions al
 
 ## Implementation steps
 
-1. Create a plugin that contains your custom class(es).
+1. Create a plugin that contains your custom class(es) and registers them in `index.php`.
 2. Update `index.php` to instantiate your custom `App` class (if replacing `App`).
-3. Register replacement classes via plugin setup (if replacing `Site`).
+3. If replacing `Site`, override `site()`/`setSite()` in your custom `App` to return your `CustomSite`.
 4. Keep replacements minimal; prefer composition and small overrides.
 
 ## Examples (from the cookbook recipe; simplified)
@@ -34,6 +34,8 @@ Replace Kirby core classes when you need deeper control than hooks/extensions al
 
 ```php
 <?php
+
+namespace cookbook\core;
 
 use Kirby\Cms\App;
 
@@ -48,6 +50,9 @@ class CustomKirby extends App
 <?php
 
 require __DIR__ . '/kirby/bootstrap.php';
+require __DIR__ . '/site/plugins/extend-core-classes/classes/CustomKirby.php';
+
+use cookbook\core\CustomKirby;
 
 echo (new CustomKirby)->render();
 ```
@@ -55,7 +60,7 @@ echo (new CustomKirby)->render();
 ## Verification
 
 - Load the site and confirm it boots correctly.
-- Add a temporary `dump()` to confirm the custom class is active, then remove it.
+- Add a temporary `mcp_dump()` in the custom class, render with `kirby_render_page`, then inspect via `kirby_dump_log_tail(traceId=...)` and remove the dump.
 
 ## Glossary quick refs
 

@@ -10,6 +10,7 @@ Integrate Tailwind CSS with a Kirby project using a simple CLI build that output
 - Input CSS entry file location (e.g. `src/tailwind.css`)
 - Output CSS path (e.g. `assets/css/styles.css`)
 - Whether minification is required in production builds
+- Whether KirbyText/Writer output needs Tailwind typography styling
 
 ## Internal tools/resources to use
 
@@ -22,6 +23,7 @@ Integrate Tailwind CSS with a Kirby project using a simple CLI build that output
 2. Create `src/tailwind.css` entry file.
 3. Install Tailwind CLI dependency.
 4. Include the generated CSS in your templates via `css('assets/css/styles.css')`.
+5. If KirbyText/Writer output looks unstyled, add Tailwind Typography or a small fallback stylesheet.
 
 ## Examples (cookbook snippets)
 
@@ -40,6 +42,7 @@ Integrate Tailwind CSS with a Kirby project using a simple CLI build that output
 
 - Run `npm run watch` locally and confirm `assets/css/styles.css` updates.
 - Load a page and confirm `css('assets/css/styles.css')` includes the generated Tailwind output.
+- Check rich text output (Writer/Markdown) for missing base styles.
 
 ## Glossary quick refs
 

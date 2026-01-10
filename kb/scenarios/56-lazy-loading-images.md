@@ -7,8 +7,9 @@ Improve perceived performance by lazy-loading below-the-fold images (and optiona
 ## Inputs to ask for
 
 - Which templates/components render large image lists (blog, gallery, search results)
+- Which images must stay eager (hero/LCP) vs lazy (below-the-fold)
 - Whether you need a placeholder (blur-up/LQIP) or just native lazy loading
-- Whether the project already uses responsive images (`srcset`)
+- Whether the project already uses responsive images (`srcset`) and/or JS lazy-loading
 
 ## Internal tools/resources to use
 
@@ -20,8 +21,10 @@ Improve perceived performance by lazy-loading below-the-fold images (and optiona
 1. Add native lazy-loading attributes:
    - `loading="lazy"` on `<img>`
    - `decoding="async"` as a complement
-2. Ensure image sizes are constrained (responsive images help).
-3. Optionally generate thumbnails via `thumb()`/`srcset()` to avoid huge originals.
+2. Keep above-the-fold images eager (`loading="eager"` or omit `loading`).
+3. Ensure image sizes are constrained (responsive images help).
+4. Include width/height (or CSS `aspect-ratio`) to prevent layout shift.
+5. Optionally generate thumbnails via `thumb()`/`srcset()` to avoid huge originals.
 
 ## Examples
 
@@ -35,13 +38,16 @@ Improve perceived performance by lazy-loading below-the-fold images (and optiona
 ?>
 
 <?php if ($image = $page->image()): ?>
+  <?php $thumb = $image->resize(600) ?>
   <img
-    src="<?= $image->resize(600)->url() ?>"
+    src="<?= $thumb->url() ?>"
     srcset="<?= $image->srcset([300, 600, 900, 1200]) ?>"
     sizes="(max-width: 600px) 100vw, 600px"
+    width="<?= $thumb->width() ?>"
+    height="<?= $thumb->height() ?>"
     loading="lazy"
     decoding="async"
-    alt=""
+    alt="<?= $image->alt() ?>"
   >
 <?php endif ?>
 ```

@@ -21,13 +21,14 @@ Add tag-based filtering for a listing (typical: blog), controlled via URL params
 ## Implementation steps
 
 1. Add a `tags` field to the relevant page blueprint(s) so editors can set tags in the Panel.
+   - if you set a custom `separator`, reuse it consistently in `pluck()`/`filterBy()`
 2. Implement filtering logic in the listing controller:
    - fetch all tags for a tag cloud with `pluck(...)`
    - apply `filterBy('tags', $tag, ',')` only when a tag param exists
    - paginate filtered results
 3. Render:
    - listing items
-   - tag cloud links with `url(..., ['params' => ['tag' => $tag]])`
+   - tag cloud links with `url(..., ['params' => ['tag' => $tag]])` (handles Windows separator)
 
 ## Examples
 
@@ -94,5 +95,4 @@ return function ($page) {
 ## Links
 
 - Cookbook: Filtering with tags: https://getkirby.com/docs/cookbook/collections/filtering-with-tags
-- Quicktip: Tags: https://getkirby.com/docs/quicktips/tags
 - Reference: Tags field: https://getkirby.com/docs/reference/panel/fields/tags

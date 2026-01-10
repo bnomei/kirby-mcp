@@ -17,6 +17,7 @@ use Bnomei\KirbyMcp\Mcp\Commands\Models;
 use Bnomei\KirbyMcp\Mcp\Commands\PageContent;
 use Bnomei\KirbyMcp\Mcp\Commands\PageUpdate;
 use Bnomei\KirbyMcp\Mcp\Commands\Plugins;
+use Bnomei\KirbyMcp\Mcp\Commands\QueryDot;
 use Bnomei\KirbyMcp\Mcp\Commands\Render;
 use Bnomei\KirbyMcp\Mcp\Commands\Routes;
 use Bnomei\KirbyMcp\Mcp\Commands\SiteContent;
@@ -1424,6 +1425,91 @@ it('executes eval code when enabled and confirm=true', function (): void {
             putenv(EvalPhp::ENV_ENABLE_EVAL);
         } else {
             putenv(EvalPhp::ENV_ENABLE_EVAL . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('reports query eval as enabled by default', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([], $app);
+
+            QueryDot::run($cli);
+        });
+
+        expect($payload['ok'])->toBeFalse();
+        expect($payload['enabled'])->toBeTrue();
+        expect($payload['needsConfirm'])->toBeTrue();
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('returns a dry-run response when query eval is enabled without confirm', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(QueryDot::ENV_ENABLE_QUERY);
+    putenv(QueryDot::ENV_ENABLE_QUERY . '=1');
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([], $app);
+
+            QueryDot::run($cli);
+        });
+
+        expect($payload['ok'])->toBeFalse();
+        expect($payload['enabled'])->toBeTrue();
+        expect($payload['needsConfirm'])->toBeTrue();
+    } finally {
+        if ($previousEnv === false) {
+            putenv(QueryDot::ENV_ENABLE_QUERY);
+        } else {
+            putenv(QueryDot::ENV_ENABLE_QUERY . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('executes query strings when enabled and confirm=true', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(QueryDot::ENV_ENABLE_QUERY);
+    putenv(QueryDot::ENV_ENABLE_QUERY . '=1');
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'query' => 'page.title.value',
+            ], $app);
+
+            QueryDot::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['result']['type'] ?? null)->toBe('string');
+        expect($payload['result']['value'] ?? null)->toBe('Home');
+
+        $missing = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'query' => '   ',
+            ], $app);
+
+            QueryDot::run($cli);
+        });
+
+        expect($missing['ok'])->toBeFalse();
+        expect($missing['error']['message'] ?? null)->toBe('Missing query string.');
+    } finally {
+        if ($previousEnv === false) {
+            putenv(QueryDot::ENV_ENABLE_QUERY);
+        } else {
+            putenv(QueryDot::ENV_ENABLE_QUERY . '=' . $previousEnv);
         }
 
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);

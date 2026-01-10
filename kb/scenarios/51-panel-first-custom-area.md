@@ -25,6 +25,7 @@ Add a custom Panel “area” (new sidebar menu entry) that renders a custom vie
 1. Create plugin folder:
    - `site/plugins/<plugin>/`
 2. Add `index.php` with `Kirby::plugin(..., ['areas' => ...])`.
+   - Panel `pattern` values must not start with `panel/`
 3. Create `src/index.js` that registers the Vue component used by the view.
 4. Add the Vue component (e.g. `src/components/<View>.vue`).
 5. Build Panel assets into `site/plugins/<plugin>/index.js` (via kirbyup or your bundler).

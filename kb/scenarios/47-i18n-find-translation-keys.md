@@ -10,7 +10,7 @@ Extract and audit translation keys used with `t('key', 'fallback')` so you can:
 ## Inputs to ask for
 
 - Which folders to scan (`site/templates`, `site/snippets`, `site/controllers`, plugins)
-- Which translation helpers are used (`t()`, `I18n::translate()`, etc.)
+- Which translation helpers are used (`t()`, `I18n::translate()`, `I18n::template()`, etc.)
 - Desired output format (list of keys, PHP array skeleton, CSV, …)
 
 ## Internal tools/resources to use
@@ -20,7 +20,7 @@ Extract and audit translation keys used with `t('key', 'fallback')` so you can:
 
 ## Implementation steps
 
-1. Search for `t(` usage across templates/snippets/controllers.
+1. Search for `t(` usage across templates/snippets/controllers (and `I18n::template()` if used).
 2. Extract keys and compare against language files in `site/languages/*.php`.
 3. Add missing keys with sensible defaults.
 
@@ -28,6 +28,7 @@ Extract and audit translation keys used with `t('key', 'fallback')` so you can:
 
 ```sh
 rg -n \"\\bt\\(\" site/templates site/snippets site/controllers site/plugins
+rg -n \"I18n::template\\(\" site/templates site/snippets site/controllers site/plugins
 ```
 
 ## Verification

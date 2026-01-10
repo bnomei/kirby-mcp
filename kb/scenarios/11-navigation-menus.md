@@ -52,6 +52,8 @@ Create reusable navigation snippets for common menu patterns:
 
 ### Submenu (children of current menu item)
 
+Assumes `$item` is the open menu item (e.g. from a parent loop or `$pages->findOpen()`).
+
 ```php
 <?php
 /**
@@ -84,7 +86,7 @@ Create reusable navigation snippets for common menu patterns:
 <nav aria-label="breadcrumb">
   <ol>
     <?php foreach ($site->breadcrumb() as $crumb): ?>
-      <li<?= $crumb->isActive() ? ' aria-current="location"' : '' ?>>
+      <li<?= $crumb->isActive() ? ' aria-current="page"' : '' ?>>
         <a href="<?= $crumb->url() ?>"><?= $crumb->title()->html() ?></a>
       </li>
     <?php endforeach ?>

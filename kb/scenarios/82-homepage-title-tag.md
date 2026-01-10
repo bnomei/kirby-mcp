@@ -9,6 +9,7 @@ Set the HTML `<title>` tag so the homepage title reads well (often the default â
 - Desired title format (e.g. `Site â€” Page`, `Page | Site`)
 - Separator and ordering rules for homepage vs other pages
 - Where the `<title>` tag is rendered (usually a head snippet)
+- Whether the homepage should use a custom string or the site title
 
 ## Internal tools/resources to use
 
@@ -56,3 +57,4 @@ Set the HTML `<title>` tag so the homepage title reads well (often the default â
 ## Links
 
 - Quicktip: Homepage title: https://getkirby.com/docs/quicktips/homepage-title
+- Reference: `$page->isHomePage()`: https://getkirby.com/docs/reference/objects/cms/page/is-home-page

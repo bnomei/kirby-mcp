@@ -19,6 +19,7 @@ Maintain the bundled Markdown knowledge base shipped with Kirby MCP (used by too
 - Add a glossary term: `kb/glossary/<term>.md` with a clear H1 + concise body.
 - Add a scenario: `kb/scenarios/NN-title.md` (avoid renames once published).
 - Add a content field guide: `kb/update-schema/<field>.md` with storage and update details.
+- Keep tool references in KB aligned with new MCP capabilities (e.g. query-language helpers).
 - Format Markdown: `npm run format` (Prettier).
 
 ## Guardrails

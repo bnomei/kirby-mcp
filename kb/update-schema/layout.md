@@ -2,7 +2,7 @@
 
 ## Field summary
 
-Layout field stores rows, columns, and nested blocks as a JSON array.
+Layout field stores rows, columns, and nested blocks as a JSON array. Block content is defined by block blueprints; layout settings map to `attrs`.
 
 ## Storage format
 
@@ -45,11 +45,12 @@ Prefer full replace. For partial edits, read existing layouts, modify by layout/
 
 ## Edge cases
 
-Row `attrs` stores layout settings (class/id/background). Keep `id` values stable.
+Row `attrs` stores layout settings (keys reflect your blueprint `settings`). Keep `id` values stable.
 
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
+- Inspect block blueprints (`blocks/<type>`) with `kirby_blueprints_index` and `kirby_blueprint_read`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/layout`.
 - Generate row/column/block `id` values via `kirby://uuid/new` when creating layouts.
@@ -64,3 +65,5 @@ Row `attrs` stores layout settings (class/id/background). Keep `id` values stabl
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/layout
+- https://getkirby.com/docs/reference/panel/blocks
+- https://getkirby.com/docs/reference/panel/blueprints/block

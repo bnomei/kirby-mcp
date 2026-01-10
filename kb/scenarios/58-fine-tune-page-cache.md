@@ -12,6 +12,7 @@ Control Kirby page caching dynamically by excluding pages from the cache based o
 - Whether page cache is enabled and for which pages
 - Whether exclusions should be developer-only (blueprint option) or editor-controlled (field)
 - Which pages should never be cached (forms, personalization)
+- Whether the page relies on cookies/session/auth or non-GET requests (Kirby won’t cache those)
 
 ## Internal tools/resources to use
 
@@ -26,6 +27,7 @@ Control Kirby page caching dynamically by excluding pages from the cache based o
    - `options.cache: false` in a blueprint (page-type level), or
    - a `cache` toggle field (per-page)
 3. Set `cache.pages.ignore` to a callback that reads the option/field.
+4. For complex rules, override `$page->isCacheable()` in a page model (after `parent::isCacheable()`).
 
 ## Examples (quicktip patterns)
 
@@ -57,6 +59,7 @@ Control Kirby page caching dynamically by excluding pages from the cache based o
 ## Verification
 
 - Confirm excluded pages are not served from cache after multiple requests.
+- Check `/site/cache` to see which pages get cached.
 
 ## Glossary quick refs
 
@@ -69,3 +72,4 @@ Control Kirby page caching dynamically by excluding pages from the cache based o
 
 - Quicktip: Fine tuning the cache: https://getkirby.com/docs/quicktips/fine-tuning-the-cache
 - Guide: Cache: https://getkirby.com/docs/guide/cache
+- Reference: `$page->isCacheable()`: https://getkirby.com/docs/reference/objects/cms/page/is-cacheable

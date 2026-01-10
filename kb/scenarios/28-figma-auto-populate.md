@@ -13,6 +13,7 @@ This is still a normal Kirby content representation:
 
 - Which page serves as the endpoint (e.g. `blog`)
 - Which fields should be exported (title, date, image URL, excerpt, …)
+- Which JSON keys the design layers will use (must match in Figma)
 - Count/limit and sorting requirements
 - Whether output needs HTML decoding/sanitization for the target consumer
 
@@ -26,7 +27,7 @@ This is still a normal Kirby content representation:
 
 1. Add a JSON representation template:
    - `site/templates/<template>.json.php` (e.g. `blog.json.php`)
-2. Build the collection and map fields into a plain array.
+2. Build the collection and map fields into a plain array with keys that match the Figma layer names.
 3. Encode as JSON with `json_encode()`.
 4. If needed, normalize/strip HTML (`Html::decode()`, `excerpt()`, etc.).
 

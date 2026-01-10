@@ -10,6 +10,7 @@ Add custom buttons to a Panel area (for example the site area) that open dialogs
 - Button label, icon, theme, and placement
 - Dialog fields, validation rules, and submit behavior
 - Any external services or credentials needed by the action
+- Which dialog component fits the UI (`k-form-dialog`, `k-text-dialog`, `k-remove-dialog`, `k-error-dialog`)
 
 ## MCP tools/resources to use
 
@@ -31,6 +32,8 @@ Add custom buttons to a Panel area (for example the site area) that open dialogs
 1. Register an area extension and add a custom button definition with icon, text, theme, and dialog target.
 2. Define a dialog with a load action that returns the dialog component and field schema.
 3. Add a submit action that validates input and runs the server-side operation.
+   - `load` creates a GET route at `/panel/dialogs/{pattern}`; `submit` creates a POST route.
+   - Return `true` to close, or an `event` payload array; throw exceptions to show error dialogs.
 4. If the button needs a custom dropdown UI, register a small Panel component that wraps a core button and dropdown.
 5. Prefer kirbyup and kirbyuse for new work; if shipping prebuilt JS, keep the component minimal and focused on the button UX.
 

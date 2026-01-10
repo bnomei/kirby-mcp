@@ -12,6 +12,7 @@ Customize the Panel appearance (branding) for clients by:
 - Branding assets (logo/icon, font)
 - Whether branding should differ per environment (dev/staging/prod)
 - Whether custom CSS can be maintained long-term (Panel UI can change)
+- Whether fonts should be bundled locally or loaded remotely
 
 ## Internal tools/resources to use
 
@@ -22,7 +23,9 @@ Customize the Panel appearance (branding) for clients by:
 
 1. Add Panel branding options in `site/config/config.php`.
 2. Add a CSS file and load it via Panel config options.
-3. Keep CSS minimal and use Panel variables where possible.
+3. Use CSS variables (`:root`) for colors and panel selectors for logo placement (e.g. `.k-header::before`).
+4. Keep CSS minimal and use Panel variables where possible.
+5. If branding is environment-specific, override via domain-specific config files.
 
 ## Examples
 

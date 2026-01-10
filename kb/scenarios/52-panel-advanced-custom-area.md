@@ -5,7 +5,7 @@
 Build a more advanced custom Panel area that:
 
 - has multiple views/routes inside the area
-- loads data from a custom API endpoint (Panel ↔ Kirby backend)
+- loads data from view actions (and optional dialogs/dropdowns/searches)
 - uses a richer Vue UI
 
 ## Inputs to ask for
@@ -25,8 +25,8 @@ Build a more advanced custom Panel area that:
 ## Implementation steps
 
 1. Extend the area definition to multiple view patterns.
-2. Provide a backend endpoint (route or API) that returns JSON for the Panel.
-3. Consume the endpoint from Vue components.
+2. Provide backend data via view actions (and optional dialogs/dropdowns/searches).
+3. Consume the props/data from Vue components.
 4. Keep the boundary clear: Panel UI uses HTTP; backend enforces permissions.
 
 ## Examples

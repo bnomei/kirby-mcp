@@ -10,6 +10,7 @@ Reduce CSS payload by purging unused selectors from a large framework CSS file b
 - Which files should be scanned for class usage (`site/**/*.php`, plugin UIs)
 - Output directory/file strategy
 - Safelist needs (classes generated dynamically)
+- Whether to use CLI only (recommended) or a GUI tool (e.g. Prepros)
 
 ## Internal tools/resources to use
 
@@ -22,6 +23,7 @@ Reduce CSS payload by purging unused selectors from a large framework CSS file b
 2. Add a `package.json` build script that scans `site/**/*.php`.
 3. Optionally add `purgecss.config.js` for advanced configuration/safelisting.
 4. Replace your CSS include with the purged output.
+5. Create a `purge/` output directory if your script writes there.
 
 ## Examples (cookbook snippet)
 

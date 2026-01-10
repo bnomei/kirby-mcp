@@ -27,7 +27,7 @@ Implement a simple contact form with:
 2. Create the controller:
    - on POST: read inputs with `get()`
    - validate via `invalid($data, $rules, $messages)`
-   - send email via `$kirby->email([...])`
+   - send email via `$kirby->email([...])` inside `try/catch` to surface delivery errors
 3. Add email templates:
    - `site/templates/emails/email.php`
    - `site/templates/emails/email.html.php`
@@ -62,23 +62,37 @@ return function ($kirby, $pages, $page) {
       'text'  => ['required', 'minLength' => 3, 'maxLength' => 3000],
     ];
 
-    if ($invalid = invalid($data, $rules)) {
+    $messages = [
+      'name'  => 'Please enter a valid name',
+      'email' => 'Please enter a valid email address',
+      'text'  => 'Please enter a text between 3 and 3000 characters',
+    ];
+
+    if ($invalid = invalid($data, $rules, $messages)) {
       $alert = $invalid;
     } else {
-      $kirby->email([
-        'template' => 'email',
-        'from'     => 'yourcontactform@yourcompany.com',
-        'replyTo'  => $data['email'],
-        'to'       => 'you@yourcompany.com',
-        'subject'  => esc($data['name']) . ' sent you a message',
-        'data'     => [
-          'text'   => esc($data['text']),
-          'sender' => esc($data['name']),
-        ],
-      ]);
+      try {
+        $kirby->email([
+          'template' => 'email',
+          'from'     => 'yourcontactform@yourcompany.com',
+          'replyTo'  => $data['email'],
+          'to'       => 'you@yourcompany.com',
+          'subject'  => esc($data['name']) . ' sent you a message',
+          'data'     => [
+            'text'   => esc($data['text']),
+            'sender' => esc($data['name']),
+          ],
+        ]);
+      } catch (Exception $error) {
+        $alert['error'] = option('debug')
+          ? 'The form could not be sent: <strong>' . $error->getMessage() . '</strong>'
+          : 'The form could not be sent!';
+      }
 
-      $success = 'Your message has been sent, thank you.';
-      $data = [];
+      if (empty($alert) === true) {
+        $success = 'Your message has been sent, thank you.';
+        $data = [];
+      }
     }
   }
 

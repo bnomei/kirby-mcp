@@ -13,6 +13,7 @@ Modify a `blocks` field in code, e.g.:
 - Which block types are involved (`heading`, `text`, `quote`, custom)
 - Whether updates should preserve existing blocks
 - Whether updates happen in a migration or via user-triggered actions
+- Whether `pretty: true` should be enabled for readable JSON storage
 
 ## Internal tools/resources to use
 
@@ -28,6 +29,7 @@ Modify a `blocks` field in code, e.g.:
 3. Append via `$blocks->add(new Blocks([...]))`.
 4. Authenticate/impersonate before updating.
 5. Update field with `json_encode($blocks->toArray())`.
+6. If you want readable JSON on disk, set `pretty: true` in the blocks field blueprint.
 
 ## Examples (quicktip; abridged)
 
@@ -50,6 +52,7 @@ $page->update([
 ## Verification
 
 - Confirm the `blocks` JSON stays valid and renders in the frontend and Panel.
+- If `pretty` is enabled, confirm the content file is pretty-printed JSON.
 
 ## Glossary quick refs
 

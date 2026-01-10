@@ -14,6 +14,7 @@ Expose Kirby content as JSON for a headless frontend by using:
 - Auth requirements (Basic Auth vs session, dedicated API user)
 - Which data needs to be exposed (pages, files, users; public vs private)
 - Performance/security constraints (rate limiting, caching, query scope)
+- Whether HTTPS is available (Basic Auth requires HTTPS unless `allowInsecure` is set)
 
 ## Internal tools/resources to use
 
@@ -25,8 +26,10 @@ Expose Kirby content as JSON for a headless frontend by using:
 
 1. Install the KQL plugin (project dependency).
 2. Enable Basic Auth for the API in `site/config/config.php`.
+   - Use HTTPS (or `allowInsecure` for local testing only)
 3. Create a dedicated API user account (avoid breaking integrations when changing your own password).
-4. Query `/api/query` via POST with Basic Auth.
+4. Consider a KQL allowlist/blocked methods config to reduce exposure.
+5. Query `/api/query` via POST with Basic Auth.
 
 ## Examples (from the cookbook recipe)
 
@@ -48,6 +51,12 @@ Use `page('notes').children` to fetch note subpages:
 
 ```
 page('notes').children
+```
+
+POST JSON body:
+
+```json
+{ "query": "page('notes').children" }
 ```
 
 ## Verification

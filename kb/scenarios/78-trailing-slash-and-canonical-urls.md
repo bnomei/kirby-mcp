@@ -20,7 +20,7 @@ Prevent duplicate content by redirecting to a single canonical URL format:
 
 ## Implementation steps
 
-1. Update `.htaccess` rewrite rules (Apache) to enforce desired format.
+1. Update `.htaccess` rewrite rules (Apache) to enforce desired format (place after the core Kirby rewrite rules).
 2. Exclude `/panel`, `/api`, and `/media` from rewrite rules to avoid breakage.
 3. If migrating from a trailing-slash CMS, expect double requests unless you also rewrite internal link generation (not recommended).
 

@@ -2,7 +2,7 @@
 
 ## What it is
 
-Sections are layout blocks in blueprints for listing, navigation, or informational UI. Use sections for display and actions, fields for storing content.
+Sections are layout blocks in blueprints for listing, navigation, or informational UI. Use sections for display and actions, fields for storing content. Section plugins typically ship `index.php`, `index.js`, and optional `index.css`.
 
 ## PHP registration
 
@@ -71,6 +71,7 @@ panel.plugin('vendor/modified', {
 - Blueprint options map to PHP `props` setters and become JSON in the Panel response.
 - Sections load asynchronously. Use `useSection().load()` to fetch the data from the backend.
 - Populate reactive refs with the response from `load()`.
+- `useSection().load()` needs `parent` and `name`; use the `section` helper from `kirbyuse/props` when using Composition API.
 - Custom API endpoints are namespaced under `/pages/<id>/sections/<section>/...` and accessed via `useApi()`.
 
 ## Common UI components
@@ -83,6 +84,8 @@ panel.plugin('vendor/modified', {
 - Sections do not receive props directly; define `data()` and set values after `load()`.
 - Use sections for UI that does not write content; use fields when you need stored values.
 - Keep `data()` keys in sync with PHP props and computed values.
+- Use `I18n::translate()` in prop setters if you expect translation arrays.
+- `index.css` is auto-loaded; reuse Panel UI styles when possible.
 
 ## MCP: Inspect/verify
 

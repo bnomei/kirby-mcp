@@ -12,6 +12,7 @@ Serve different variants (A/B) based on a stable visitor group, e.g. to:
 - Which variants exist and where they apply (template branch vs snippets)
 - Grouping strategy (IP-based, cookie/session-based, user id-based)
 - Whether the experiment must be deterministic over time
+- Whether IP-based grouping is acceptable behind proxies/CDNs
 
 ## Internal tools/resources to use
 
@@ -21,10 +22,21 @@ Serve different variants (A/B) based on a stable visitor group, e.g. to:
 ## Implementation steps
 
 1. Implement a visitor grouping function (often as a small plugin helper).
-2. Branch rendering based on `visitorgroup('a')`/`visitorgroup('b')`.
-3. Keep experiments isolated and removable.
+2. Use `$kirby->visitor()->ip()` + `ip2long()` to deterministically assign group A/B.
+3. Branch rendering based on `visitorgroup('a')`/`visitorgroup('b')`.
+4. Keep experiments isolated and removable.
 
 ## Examples (cookbook idea)
+
+```php
+function visitorgroup(string $which = null)
+{
+  $ip = kirby()->visitor()->ip();
+  $group = (ip2long($ip) % 2) ? 'a' : 'b';
+
+  return $which === null ? $group : $group === $which;
+}
+```
 
 ```php
 <?php

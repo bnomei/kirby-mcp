@@ -2,12 +2,13 @@
 
 ## Goal
 
-Automate translation workflows by exporting/importing language strings so translators can work outside the repo.
+Automate translation workflows by exporting/importing **content translations** (page/file content per language) so translators can work outside the repo.
 
 ## Inputs to ask for
 
 - Which format translators need (JSON, CSV, PHP array)
 - Which languages are involved
+- Which models to include (pages, files)
 - Whether scripts can be committed to the repo (usually yes)
 
 ## Internal tools/resources to use
@@ -18,9 +19,10 @@ Automate translation workflows by exporting/importing language strings so transl
 ## Implementation steps
 
 1. Add scripts (CLI PHP) to export/import translations.
-2. Export translations from `site/languages/*.php` into a transport format (often JSON).
-3. Import updated translations back into language files.
-4. Run scripts with care and commit changes.
+2. Export translated content from pages/files (`$model->content($language)->toArray()`) into a transport format (often JSON).
+3. Import updated translations back into content files with `$model->update($content, $language)` (impersonate `kirby`).
+4. Backup before import; the import overwrites language content.
+5. Run scripts with care and commit changes.
 
 ## Examples
 

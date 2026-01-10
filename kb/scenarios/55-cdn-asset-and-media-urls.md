@@ -8,6 +8,7 @@ Route URLs for assets and/or media files through a CDN without manually rewritin
 
 - CDN base URL (zone URL) and which paths should be CDN-backed (`assets/`, `media/`, both)
 - Whether only images should be routed through CDN (common) or all files
+- Whether CDN should handle image transformations (use `file::version`) or keep Kirby thumbs local
 - Cache-busting strategy (query string, versioned paths, etc.)
 
 ## Internal tools/resources to use
@@ -19,10 +20,9 @@ Route URLs for assets and/or media files through a CDN without manually rewritin
 ## Implementation steps
 
 1. Configure CDN base URL in config (or env).
-2. Create a plugin that overrides relevant components:
-   - `url` component for static assets
-   - `file::url` and/or `file::version` for media
-3. Keep an escape hatch: only route specific paths/types.
+2. Create a plugin that overrides the `url` component for static assets and calls the native component for non-CDN paths.
+3. Override `file::url` (affects file + thumb URLs) and optionally `file::version` if the CDN should process image variations.
+4. Keep an escape hatch: only route specific paths/types and allow a config toggle.
 
 ## Examples
 
@@ -43,10 +43,24 @@ Kirby::plugin('acme/cdn', [
 ]);
 ```
 
+```php
+'file::url' => function (Kirby\Cms\Kirby $kirby, Kirby\Cms\File $file): string {
+  $original = $kirby->nativeComponent('file::url');
+
+  if ($file->type() !== 'image') {
+    return $original($kirby, $file);
+  }
+
+  $path = Kirby\Http\Url::path($file->mediaUrl());
+  return rtrim(option('cdn.url'), '/') . '/' . $path;
+},
+```
+
 ## Verification
 
 - Render a page and confirm `assets/...` URLs point to the CDN base URL.
-- Confirm Panel, API, and media URLs still work as expected.
+- Confirm `file()->url()` and `thumb()` URLs resolve correctly.
+- Confirm Panel, API, and non-CDN URLs still work as expected.
 
 ## Glossary quick refs
 

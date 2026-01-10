@@ -11,6 +11,7 @@ Set up a productive plugin development workflow that supports:
 ## Inputs to ask for
 
 - Where the plugin lives (inside a Kirby project vs separate repo)
+- Whether to use a shared Kirby test site with plugins as submodules
 - Whether tests exist (phpunit/pest)
 - Whether Panel assets need building
 
@@ -22,13 +23,27 @@ Set up a productive plugin development workflow that supports:
 ## Implementation steps
 
 1. Ensure the plugin can boot in a minimal Kirby instance (test bootstrap).
-2. Keep fixtures small and deterministic.
-3. Automate with composer scripts where possible.
+2. Point test roots to plugin fixtures (e.g. `tests/kirby/content`, `tests/kirby/blueprints`).
+3. Keep fixtures small and deterministic.
+4. Automate with composer scripts where possible.
 
 ## Examples
 
 - Keep a `tests/bootstrap.php` that boots Kirby with minimal roots/fixtures.
 - Run tests via `composer test` (prefer repo-local scripts).
+- Bootstrap snippet:
+
+```php
+<?php
+require_once __DIR__ . '/../../../../kirby/bootstrap.php';
+
+new Kirby([
+  'roots' => [
+    'content'    => __DIR__ . '/kirby/content',
+    'blueprints' => __DIR__ . '/kirby/blueprints',
+  ],
+]);
+```
 
 ## Verification
 

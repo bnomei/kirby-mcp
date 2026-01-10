@@ -27,6 +27,9 @@ final class RuntimeCommands
     public const EVAL = 'mcp:eval';
     public const EVAL_FILE = 'mcp/eval.php';
 
+    public const QUERY_DOT = 'mcp:query:dot';
+    public const QUERY_DOT_FILE = 'mcp/query/dot.php';
+
     public const INSTALL = 'mcp:install';
     public const INSTALL_FILE = 'mcp/install.php';
 

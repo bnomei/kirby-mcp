@@ -18,7 +18,8 @@ Create a Panel section that loads server-side props, derives preview output in t
 - kirby_routes_index
 - kirby_blueprints_index
 - kirby_blueprint_read
-- kirby://extension/panel-sections
+- kirby://extension/api
+- kirby://extension/sections
 
 ## Files to touch
 
@@ -30,14 +31,15 @@ Create a Panel section that loads server-side props, derives preview output in t
 ## Implementation steps
 
 1. Register a custom section and expose props via `load()` to resolve KQL or defaults.
-2. Add an API endpoint that formats or sanitizes text for the preview.
+2. Add an API endpoint via the `api` extension to format or sanitize text (served under `/api`).
+   - If the formatter is specific to the section, define a section `api` endpoint (auto-prefixed with `/sections/<sectionName>`).
 3. In the section component, refresh props when language changes and re-run formatting.
 4. Throttle formatter calls to avoid excessive requests.
 5. Prefer kirbyuse for composables if you already use it, but keep the section logic Vue 2 compatible for K5.
 
 ## Examples
 
-- `POST /__my-section__/format/title` returns `{ text: "..." }`.
+- `POST /api/__my-section__/format/title` returns `{ text: "..." }`.
 - Section props resolve `{{ site.title }}` or page fields via KQL.
 - Preview uses computed values with a fallback to the Panel view title.
 
@@ -97,7 +99,7 @@ panel.plugin('example/serp-section', {
 
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/panel-sections
+- https://getkirby.com/docs/reference/plugins/extensions/sections
 - https://github.com/johannschopplich/kirbyuse
 
 ## Version notes (K5/K6)

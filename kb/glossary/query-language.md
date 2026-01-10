@@ -33,6 +33,9 @@ fields:
 
 - Inspect the exact blueprint config via `kirby_blueprint_read` (or `kirby://blueprint/{encodedId}`) to see the query that is actually applied (incl. `extends`).
 - Use `kirby_online` for query syntax and examples (“blueprint query language”, “options query fetch text value”).
+- Use `kirby_query_dot` to evaluate dot-notation query strings against runtime context; pass `model` to set `$page/$file/$user` (page id or UUID like `page://...`, `file://...`, `user://...`, user email, file path with extension, or `site`).
+- Example (page context): evaluate `page.siblings.count` with `model=notes`.
+- `kirby_query_dot` context includes `kirby`, `site`, `model`, and `page`/`file`/`user` aliases plus `currentUser` when logged in.
 - For debugging the underlying PHP API logic, replicate the query in `kirby_eval` with real objects (site/page/pages).
 
 ## Related terms

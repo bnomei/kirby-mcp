@@ -12,6 +12,7 @@ Load third-party JS/CSS libraries only where needed to:
 - Which templates/pages need the library
 - Whether to load from local assets or CDN
 - Whether library initialization needs page-specific data
+- Any policy constraints on external CDNs (privacy/perf)
 
 ## Internal tools/resources to use
 
@@ -22,8 +23,10 @@ Load third-party JS/CSS libraries only where needed to:
 
 1. Add conditional asset tags in `header.php`/`footer.php` snippets:
    - check template name via `$page->intendedTemplate()->name()`
-2. Keep per-template CSS in dedicated files (optional).
-3. Initialize JS in the footer (after the DOM exists) for the target template only.
+2. Use `css()`/`js()` helpers so paths are consistent with Kirby asset URLs.
+3. Keep per-template CSS in dedicated files (optional).
+4. Initialize JS in the footer (after the DOM exists) for the target template only.
+5. Prefer local assets over CDNs unless there’s a strong reason to use a CDN.
 
 ## Examples (cookbook idea)
 
@@ -59,6 +62,7 @@ Load third-party JS/CSS libraries only where needed to:
 
 - Confirm the library assets are only included on the intended templates.
 - Confirm pages without the library do not include unused JS/CSS.
+- Check that initialization only runs on pages that include the library.
 
 ## Glossary quick refs
 

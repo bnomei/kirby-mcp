@@ -16,6 +16,7 @@ Add a lightweight Panel view that embeds an external dashboard in an iframe and 
 - kirby://roots
 - kirby_plugins_index
 - kirby_routes_index
+- kirby://extension/api
 - kirby://extension/panel-areas
 
 ## Files to touch
@@ -26,15 +27,16 @@ Add a lightweight Panel view that embeds an external dashboard in an iframe and 
 
 ## Implementation steps
 
-1. Register a view with an inline template or small component.
-2. Add an API endpoint that returns the final iframe URL.
+1. Register a view in the area definition (PHP) and point it to a component name.
+   - Register that component in JS via `panel.plugin({ components: { ... }})`.
+2. Add an API endpoint (via the `api` extension) that returns the final iframe URL.
 3. In the view component, call `useApi().get()` during setup and bind the URL to the iframe.
 4. Show a fallback message when the URL is missing or invalid.
 5. Use kirbyup if you need a real component; inline templates can be shipped as plain JS.
 
 ## Examples
 
-- `GET /analytics` returns a share URL with query params appended.
+- `GET /api/analytics` returns a share URL with query params appended.
 - The view renders an iframe only after the URL is loaded.
 - Missing config shows a bold warning in the view.
 
@@ -45,35 +47,31 @@ Add a lightweight Panel view that embeds an external dashboard in an iframe and 
 import { ref, useApi } from 'kirbyuse';
 
 panel.plugin('example/analytics', {
-  views: {
-    analytics: {
-      label: 'Analytics',
-      icon: 'chart',
-      component: {
-        setup() {
-          const api = useApi();
-          const embedUrl = ref('');
+  components: {
+    'k-analytics-view': {
+      setup() {
+        const api = useApi();
+        const embedUrl = ref('');
 
-          api.get('analytics').then((url) => {
-            embedUrl.value = url;
-          });
+        api.get('analytics').then((url) => {
+          embedUrl.value = url;
+        });
 
-          return { embedUrl };
-        },
-        template: `
-          <k-view>
-            <k-header>Analytics</k-header>
-            <strong v-if="!embedUrl">Missing embed URL</strong>
-            <iframe
-              v-else
-              :src="embedUrl"
-              style="width: 1px; min-width: 100%; height: 1200px;"
-              frameborder="0"
-              scrolling="no"
-            ></iframe>
-          </k-view>
-        `,
+        return { embedUrl };
       },
+      template: `
+        <k-view>
+          <k-header>Analytics</k-header>
+          <strong v-if="!embedUrl">Missing embed URL</strong>
+          <iframe
+            v-else
+            :src="embedUrl"
+            style="width: 1px; min-width: 100%; height: 1200px;"
+            frameborder="0"
+            scrolling="no"
+          ></iframe>
+        </k-view>
+      `,
     },
   },
 });

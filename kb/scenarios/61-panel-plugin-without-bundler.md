@@ -14,6 +14,7 @@ This can reduce build tooling overhead for small plugins.
 - Which Panel component you’re building (field/section/block/area)
 - Whether the UI is simple enough to maintain as template strings
 - Whether styles can be shipped as plain CSS
+- Whether the plugin will grow beyond a single component (consider bundler if so)
 
 ## Internal tools/resources to use
 
@@ -25,9 +26,20 @@ This can reduce build tooling overhead for small plugins.
 
 1. Move `<script>` logic into your plugin `index.js` as a normal Vue component object.
 2. Move `<template>` into a `template: \`...\`` string.
-3. Move styles into a dedicated CSS file and register it for the Panel.
+3. Move styles into a dedicated CSS file.
+4. Register `index.js` and `index.css` in your plugin `index.php` under the `panel` key.
+5. If the UI grows beyond a single component, switch to a bundler workflow (kirbyup).
 
 ## Examples
+
+```php
+Kirby::plugin('acme/myblock', [
+  'panel' => [
+    'js' => 'index.js',
+    'css' => 'index.css',
+  ],
+]);
+```
 
 ```js
 panel.plugin('acme/myblock', {

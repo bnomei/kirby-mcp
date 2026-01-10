@@ -2,7 +2,7 @@
 
 ## Field summary
 
-File picker stored as file references (uuid by default, filename or path when configured).
+File picker stored as file references (UUID by default; use `store` for filenames/paths).
 
 ## Storage format
 
@@ -10,11 +10,16 @@ File picker stored as file references (uuid by default, filename or path when co
 gallery:
   - file://8RxIAFzJekgWfpFn
   - file://mHEVVr6xtDc3gIip
+
+# store: id (filename or path)
+gallery:
+  - image-1.jpg
+  - photography/albums/trees/tree.jpg
 ```
 
 ## Runtime value
 
-Use `$page->gallery()->toFiles()` for multiple or `->toFile()` for single.
+Use `$page->gallery()->toFiles()` for multiple or `->toFile()` for single. These methods resolve UUIDs or ids.
 
 ## Update payload (kirby_update_page_content)
 
@@ -28,13 +33,14 @@ Read existing references, merge unique values, then write back using the same st
 
 ## Edge cases
 
-With `store: id`, values are filenames or paths. Cross-page file references may use `parent/filename`.
+With `store: id`, values are filenames or paths. Cross-page file references may use `parent/filename`. If UUIDs look missing or unexpected, check `content.uuid` config (UUID generation only affects newly created models).
 
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/files`.
+- Check UUID generation settings via `kirby://config/content.uuid`.
 - If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `file://`.
 
 ## Glossary quick refs
@@ -47,3 +53,4 @@ With `store: id`, values are filenames or paths. Cross-page file references may 
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/files
+- https://getkirby.com/docs/guide/uuids

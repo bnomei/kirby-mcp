@@ -25,6 +25,7 @@ This pattern is useful but often involves server/filesystem setup (symlinks, vho
 
 1. Follow the cookbook structure (filesystem layout + symlinked `kirby/`).
 2. Adjust `index.php` to point Kirby to the correct roots per site.
+   - Common pattern: map `Url::host()` to a root folder and pass `roots`/`urls` to `new Kirby([...])`
 3. Ensure each site has its own license and configuration.
 
 ## Examples (conceptual, see cookbook for full layout)
@@ -48,4 +49,4 @@ echo (new Kirby)->render();
 ## Links
 
 - Cookbook: Multisite variant: https://getkirby.com/docs/cookbook/development-deployment/multisite-variant
-- Guide: Installation: https://getkirby.com/docs/guide/installation
+- Guide: Multisite configuration: https://getkirby.com/docs/guide/configuration/multisite-setup

@@ -13,6 +13,7 @@ Restrict parts of the site to logged-in users (or specific roles), including:
 - Which pages should be protected (whole site vs sections)
 - Which roles are allowed
 - Where login lives and where to redirect after login/logout
+- Whether protected assets/files need their own access controls
 
 ## Internal tools/resources to use
 
@@ -22,15 +23,18 @@ Restrict parts of the site to logged-in users (or specific roles), including:
 
 ## Implementation steps
 
-1. Create a user blueprint for the role (e.g. `users/client.yml`).
+1. Create a user blueprint for the role (e.g. `users/client.yml`) with `permissions.access.panel: false`.
 2. Create a login page:
    - `content/login/login.txt`
    - `site/templates/login.php`
    - `site/controllers/login.php`
-3. Protect pages:
+3. Add a logout route in `config.php` that calls `$user->logout()` and redirects.
+4. Protect pages:
    - template-level gate (`if (!$kirby->user()) go('/')`)
+   - role gate (`$user->role()->id() === 'client'`)
    - or route-level restriction (more global)
-4. Adjust navigation/snippets to show login/logout links appropriately.
+5. Disable page cache for protected pages (avoid leaking cached content).
+6. Adjust navigation/snippets to show login/logout links appropriately.
 
 ## Examples
 
@@ -48,10 +52,27 @@ Restrict parts of the site to logged-in users (or specific roles), including:
 <?php endif ?>
 ```
 
+```php
+return [
+  'routes' => [
+    [
+      'pattern' => 'logout',
+      'action' => function () {
+        if ($user = kirby()->user()) {
+          $user->logout();
+        }
+        return go('login');
+      }
+    ],
+  ],
+];
+```
+
 ## Verification
 
 - As a guest, confirm protected pages redirect to login (or show 403).
 - As an authorized user, confirm protected pages render normally.
+- Confirm protected pages are not cached.
 
 ## Glossary quick refs
 

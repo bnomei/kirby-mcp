@@ -9,6 +9,7 @@ Serve a subpage (e.g. `blog`) directly on a separate domain/subdomain while keep
 - Which domain/subdomain should map to which page id
 - Whether only the root (`/`) should be mapped or all subpaths too
 - Whether links should point to the main domain or the subdomain
+- Whether canonical URLs should stay on the main domain
 
 ## Internal tools/resources to use
 
@@ -19,7 +20,8 @@ Serve a subpage (e.g. `blog`) directly on a separate domain/subdomain while keep
 
 1. Add conditional rendering logic in the root `index.php`.
 2. Set `'url'` in `site/config/config.php` if you want links to point to the main domain.
-3. Consider page models for correct canonical URLs/navigation output.
+3. If you need subpaths, expand the condition to allow `REQUEST_URI` beyond `/`.
+4. Consider page models for correct canonical URLs/navigation output.
 
 ## Examples (quicktip)
 

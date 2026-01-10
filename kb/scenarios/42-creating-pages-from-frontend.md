@@ -28,7 +28,7 @@ Allow visitors to submit a form that creates content pages, e.g.:
    - validate request (`POST`), honeypot/CSRF
    - validate data via `invalid()`
    - authenticate/impersonate for write operations (`$kirby->impersonate('kirby')`)
-   - create page via `$parent->createChild([...])`
+   - create page via `$parent->createChild([...])` inside `try/catch`
 3. Redirect to a success page or show an inline success message.
 4. Prefer creating drafts first and publishing later (moderation).
 

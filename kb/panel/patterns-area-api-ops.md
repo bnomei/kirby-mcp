@@ -16,6 +16,7 @@ Build a Panel area with a dedicated view that lists items, triggers actions, and
 - kirby://roots
 - kirby_plugins_index
 - kirby_routes_index
+- kirby://extension/api
 - kirby://extension/panel-areas
 - kirby://extension/panel-dialogs
 
@@ -29,7 +30,9 @@ Build a Panel area with a dedicated view that lists items, triggers actions, and
 ## Implementation steps
 
 1. Register an area with a view action that returns a component and initial props.
-2. Add API routes for list, create, and status checks using a plugin namespace.
+   - View patterns must not start with `panel/` (the Panel slug is auto-prefixed).
+2. Add API routes via the `api` extension so endpoints live under `/api` (and respect custom API slugs).
+   - Use a `routes` callback if you need `$kirby` injected.
 3. In the view component, call `useApi().get()` and `useApi().post()` for operations and update local state.
 4. Use `k-collection`, `k-button-group`, and dialogs for status and settings.
 5. If downloads need a direct link, add a non-API route with a guarded key.
@@ -37,9 +40,9 @@ Build a Panel area with a dedicated view that lists items, triggers actions, and
 
 ## Examples
 
-- `GET /my-feature/items` returns a list and summary stats.
-- `POST /my-feature/create` triggers a job and returns a status message.
-- `GET /my-feature/settings-status` powers warning banners in the view.
+- `GET /api/my-feature/items` returns a list and summary stats.
+- `POST /api/my-feature/create` triggers a job and returns a status message.
+- `GET /api/my-feature/settings-status` powers warning banners in the view.
 
 ## Panel JS (K5)
 

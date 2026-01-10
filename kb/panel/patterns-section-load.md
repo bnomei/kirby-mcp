@@ -12,8 +12,9 @@ Load section data asynchronously with `load()`.
 ## Pattern
 
 1. Define section `props` and `computed` in PHP.
-2. Create a section component with `data()` keys matching the response.
-3. Call `useSection().load()` and populate reactive refs.
+2. Create a section component with `data()` keys matching props/computed returned by `load()`.
+3. Call `useSection().load()` in `created()`/`onMounted()` and populate reactive refs.
+4. When using Composition API, pass `parent` and `name` props (use `kirbyuse/props` `section` helper).
 
 ## Example
 
@@ -45,6 +46,11 @@ panel.plugin('vendor/modified', {
 - Section reference: `kirby://extension/sections`
 - KB reference: `kirby://kb/panel/reference-sections`
 - Blueprint usage: `kirby_blueprints_index` + `kirby_blueprint_read`
+
+## Gotchas
+
+- Sections are async: render placeholders until `load()` resolves.
+- Response keys must exist in `data()`/refs before load to avoid undefined access.
 
 ## Links
 

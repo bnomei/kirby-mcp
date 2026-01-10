@@ -25,6 +25,7 @@ Create custom KirbyTags that reuse the implementation of existing tags (e.g. `im
 1. Create a plugin (or add to an existing one).
 2. Read the original tag definition from `Kirby\\Text\\KirbyTag::$types[...]`.
 3. Register a new tag under `tags` using the original `attr` and/or `html` callables.
+   - avoid extra whitespace/newlines inside returned HTML; Parsedown may escape it
 
 ## Examples
 

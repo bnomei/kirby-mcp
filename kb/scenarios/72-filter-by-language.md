@@ -15,6 +15,11 @@ In multi-language setups, prevent fallback-to-default-language pages from showin
 - Confirm language setup: `kirby://config/languages`
 - Validate output: `kirby_render_page`
 
+## Implementation steps
+
+1. Ensure multi-language is enabled and a current language is set.
+2. Filter collections with `translation(<langCode>)->exists()` to avoid fallback content.
+
 ## Examples (quicktip)
 
 ```php

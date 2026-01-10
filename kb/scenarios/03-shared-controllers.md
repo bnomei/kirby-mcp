@@ -27,6 +27,8 @@ Reduce duplication across controllers by:
    - create a “base” controller (e.g. `post.php`)
    - in variant controllers, call the base controller via `$kirby->controller(...)`
    - merge arrays (Kirby Toolkit `A::merge`) and return the combined data
+   - pass shared data as the first merge argument so variant values overwrite defaults
+3. In templates, use the controller variables you returned; avoid re-running the same queries
 
 ## Examples
 

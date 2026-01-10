@@ -26,7 +26,7 @@ Replace the full HTML string. For partial edits, parse the HTML and rebuild befo
 
 ## Edge cases
 
-Writer outputs HTML, not KirbyText. Avoid `->kt()` on this field.
+Writer outputs HTML, not KirbyText. Avoid `->kt()` on this field. If tags/attributes disappear, the HTML sanitizer may be stripping them; check custom Writer marks/nodes or allowed tags.
 
 ## MCP: Inspect/verify
 
@@ -42,3 +42,4 @@ Writer outputs HTML, not KirbyText. Avoid `->kt()` on this field.
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/writer
+- https://getkirby.com/docs/reference/plugins/extensions/writer-marks-nodes

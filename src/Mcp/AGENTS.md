@@ -8,6 +8,7 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 
 - Tools live in `src/Mcp/Tools/` as public methods annotated with `#[McpTool]` and `#[McpToolIndex]`.
   `src/Mcp/ToolIndex.php` discovers them via reflection.
+- `McpToolIndex` keyword matching is token-based; avoid multi-word keywords and add single-token synonyms for tool suggestion queries (e.g. matrix/ratings/score).
 - Prompt generators remain in `src/Mcp/Prompts/` (annotated with `#[McpPrompt]`) but are not registered with the MCP server.
 - Resources live in `src/Mcp/Resources/` and expose `kirby://...` URIs.
 - UUIDs for new content/blocks are generated via `kirby://uuid/new` using Kirby's UUID generator (no project-level uniqueness check).
@@ -36,6 +37,7 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - Any write-capable tool/command must be explicitly gated (allowlist + confirmation) and reviewed for abuse paths.
 - Keep `kirby_run_cli_command` defaults minimal; prefer dedicated tools/resources over broad allowlist patterns (especially for `mcp:*` runtime wrappers).
 - Return structured data; avoid `echo`/side effects from tools/resources.
+- Treat query evaluation tools (e.g. `kirby_query_dot`) as sensitive; keep confirm gating and document default enablement/disable switches.
 - All tool calls (except `kirby_init`) are init-guarded by `RequireInitForToolsHandler` and must prompt the client to call `kirby_init` first.
 - Init gating is session-scoped via `SessionInterface`; use `RequestContext` to access per-session state from tools when needed.
 - Logging level is session-scoped; read and set it via `LoggingState` using the active `SessionInterface` (`Protocol::SESSION_LOGGING_LEVEL`).

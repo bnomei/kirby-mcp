@@ -9,6 +9,7 @@ Add `rel="me"` links so IndieAuth/RelMeAuth services can verify identity across 
 - Which profiles should be linked (Mastodon, GitHub, Bluesky, etc.)
 - Whether links should be `<a rel="me">` in the body or `<link rel="me">` in the head (both work)
 - Where the links should be managed (hardcoded snippet vs site fields)
+- Whether the social profiles can link back to the site (required for verification)
 
 ## Internal tools/resources to use
 
@@ -21,14 +22,17 @@ Add `rel="me"` links so IndieAuth/RelMeAuth services can verify identity across 
    - in a header snippet (`site/snippets/header.php`)
    - in a dedicated snippet (e.g. `site/snippets/rel-me.php`)
    - or as Panel-managed fields on the site object
-2. Render links with `rel="me"` attributes.
+2. Render links with `rel="me"` attributes (absolute URLs).
+3. Ensure each social profile links back to your site for IndieAuth verification.
 
 ## Examples
 
 ### Head links
 
 ```html
-<link rel="me" href="https://mastodon.social/@example" /> <link rel="me" href="https://github.com/example" />
+<link rel="me" href="https://mastodon.social/@example" />
+<link rel="me" href="https://bsky.app/profile/example.com" />
+<link rel="me" href="https://github.com/example" />
 ```
 
 ### Body links
@@ -40,6 +44,8 @@ Add `rel="me"` links so IndieAuth/RelMeAuth services can verify identity across 
 ## Verification
 
 - View page source and confirm the `rel="me"` links are present.
+- Confirm each social profile links back to the site.
+- Optional: use https://indieauth.com “Try It!” with the domain.
 
 ## Glossary quick refs
 

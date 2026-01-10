@@ -24,6 +24,7 @@ Provide a `sitemap.xml` endpoint for search engines without maintaining a static
    - builds a pages index
    - renders the snippet as a string
    - returns an XML response
+   - in multi-language sites, set route language scope (`'*'`) and/or generate per-language URLs
 3. Add an optional redirect route from `/sitemap` → `/sitemap.xml`.
 4. Add a config option like `sitemap.ignore` for exclusions.
 

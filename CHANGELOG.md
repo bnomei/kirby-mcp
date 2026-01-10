@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
 
+## [1.2.2] - 2026-01-10
+
+- Added `kirby_query_dot` tool and `mcp:query:dot` runtime command to evaluate Kirby query language strings.
+- Minor improvements to 107 KB documents.
+- Aligned Skills to Claude agent skills best practices with major improvements: https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
+
 ## [1.2.1] - 2026-01-08
 
 - Added `kirby://uuid/new` resource to generate Kirby UUID strings.

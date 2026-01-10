@@ -19,8 +19,10 @@ Add a new section type for blueprints (Panel layout), e.g. to show computed data
 ## Implementation steps
 
 1. Register the section type in PHP (`sections` extension).
+   - define `props`/`computed` (and optional `api` endpoints) for data
 2. Register the Vue section component in `src/index.js`.
 3. Implement the Vue section component (usually uses `k-section`, `k-items`, etc.).
+   - sections load async; call `this.load()` to fetch props/computed values
 4. Add the section to a blueprint and test.
 
 ## Examples

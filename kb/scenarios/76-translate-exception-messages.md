@@ -9,6 +9,7 @@ When throwing/catching Kirby exceptions during programmatic operations (create p
 - Target locale/language code (e.g. `de`)
 - Whether this is a single-language or multi-language site
 - Where exception messages are displayed (frontend forms, logs, etc.)
+- Whether the message should follow the current language or a fixed locale option
 
 ## Internal tools/resources to use
 
@@ -21,6 +22,7 @@ When throwing/catching Kirby exceptions during programmatic operations (create p
    - `I18n::template($e->getKey(), null, $e->getData(), '<lang>')`
 2. Or set `Kirby\Toolkit\I18n::$locale` before the action to affect `$e->getMessage()`.
 3. Prefer using `option('locale')` so the code stays configurable.
+4. Expect fallback to English when no translation exists.
 
 ## Examples (quicktip; abridged)
 

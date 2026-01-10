@@ -10,6 +10,7 @@ Model “authors” using Kirby users (with a dedicated role/blueprint) and assi
 - Which author profile fields are needed (bio, avatar, website, socials)
 - Where author info should appear (article template, authors index page, both)
 - Whether the project uses UUIDs for users (default: yes)
+- Whether the author picker should be restricted to a role (via `query`)
 
 ## Internal tools/resources to use
 
@@ -24,6 +25,8 @@ Model “authors” using Kirby users (with a dedicated role/blueprint) and assi
 1. Create a user blueprint for authors:
    - `site/blueprints/users/author.yml`
 2. Add a `users` field to the target page blueprint (e.g. `pages/article.yml`).
+   - Optionally restrict to `author` role with `query`
+   - If you must store IDs instead of UUIDs, set `store: id`
 3. In the template:
    - resolve author(s) with `toUser()` / `toUsers()`
    - render avatar and profile fields
@@ -54,6 +57,7 @@ fields:
 author:
   type: users
   multiple: false
+  query: kirby.users.filterBy('role', 'author')
 ```
 
 ### Template: render author block
@@ -80,8 +84,9 @@ author:
 
 ## Verification
 
-- Select an author in the Panel and confirm the content file stores a user UUID.
+- Select an author in the Panel and confirm the content file stores a user UUID (or ID if `store: id`).
 - Render an article page and confirm author info appears without errors.
+- Optionally evaluate the query with `kirby_query_dot` before editing the blueprint (pass `model=blog/post` or a `page://...` UUID when the query relies on `page.*`).
 
 ## Glossary quick refs
 

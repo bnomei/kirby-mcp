@@ -2,7 +2,7 @@
 
 ## Field summary
 
-User picker stored as user references (uuid by default, email when configured).
+User picker stored as user references (UUID by default; use `store: email` for email storage).
 
 ## Storage format
 
@@ -10,11 +10,16 @@ User picker stored as user references (uuid by default, email when configured).
 users:
   - user://aBc123XyZ
   - user://dEf456UvW
+
+# store: email
+users:
+  - editor@example.com
+  - author@example.com
 ```
 
 ## Runtime value
 
-Use `$page->users()->toUsers()` for multiple or `->toUser()` for single.
+Use `$page->users()->toUsers()` for multiple or `->toUser()` for single. These methods resolve UUIDs or emails.
 
 ## Update payload (kirby_update_page_content)
 
@@ -46,3 +51,4 @@ With `store: email`, values are user emails. Keep `multiple` in sync with payloa
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/users
+- https://getkirby.com/docs/guide/uuids

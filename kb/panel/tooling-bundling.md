@@ -32,7 +32,7 @@ With a build step, use `kirbyup` and point the Panel assets to the build output.
 ## Dev workflow
 
 - K5: `kirbyup serve src/index.js` for HMR.
-- K6: `kirbyup src/index.js --watch` for watch-mode rebuilds.
+- K6: `kirbyup serve src/index.js` when HMR works, otherwise `kirbyup src/index.js --watch`.
 - No bundler: edit `index.js`/`index.css` and reload the Panel.
 
 ## Build output
@@ -46,6 +46,7 @@ With a build step, use `kirbyup` and point the Panel assets to the build output.
 - Use `kirbyup` as the default bundler for Panel plugins.
 - `kirbyuse` 2.x (K6) requires an import map entry before any imports.
 - If you only ship plain JS, keep your component templates small and avoid heavy logic.
+- Converting SFCs to plain JS: move `<script>` logic into the component object, `<template>` into a `template` string, and `<style>` into `index.css`.
 
 ## MCP: Inspect/verify
 
@@ -64,5 +65,5 @@ With a build step, use `kirbyup` and point the Panel assets to the build output.
 ## Version notes (K5/K6)
 
 - K5: `kirbyup` 3.x supports HMR and Vue 2 Panel runtime.
-- K6: `kirbyup` 4.x targets Vue 3; use watch mode until HMR is available.
+- K6: `kirbyup` 4.x targets Vue 3; use watch mode if HMR is unavailable.
 - K5 -> K6: update build scripts and Panel asset paths if outputs changed.

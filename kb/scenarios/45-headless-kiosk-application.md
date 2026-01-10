@@ -27,6 +27,7 @@ This is a larger system integration scenario where MCP can help most with:
 
 1. Model kiosk content in Kirby (page types + blueprints).
 2. Expose required data through the API (often via KQL or custom endpoints).
+   - If offline is required, prebuild static JSON/assets and avoid live API calls
 3. Keep the frontend app decoupled: treat Kirby as the source of truth.
 
 ## Examples

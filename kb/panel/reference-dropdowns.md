@@ -49,6 +49,9 @@ Use Panel dropdown components and load options from the backend:
 - Dropdown callbacks return a list of option objects.
 - `dialog` values refer to dialog patterns without the `/panel/dialogs` prefix.
 - `click` can trigger a global event for custom handling.
+- Option settings include `text`, `icon`, `dialog`, `click`, `link`, `target`, and `disabled`.
+- `dialog` can be a string pattern or a full dialog config array.
+- `click` can be a string or `['global' => 'myEvent', 'payload' => [...]]` and listened to with `this.$events.on('myEvent', ...)`.
 
 ## Common UI components
 
@@ -58,8 +61,10 @@ Use Panel dropdown components and load options from the backend:
 ## Gotchas
 
 - Patterns are matched against the dropdown path; keep them unique and predictable.
+- Use `(:any)` (or other route tokens) when you need dynamic IDs in the pattern.
 - Reuse core dropdowns with `$page->panel()->dropdown()` or `$kirby->core()->area('site')['dropdowns']['page']['options']`.
 - Use `click` events when you need to handle a custom action in Vue.
+- Core dropdown names: `site/page`, `site/page.file`, `site/site.file`, `users/user`, `users/user.file`.
 
 ## MCP: Inspect/verify
 

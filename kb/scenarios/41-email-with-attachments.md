@@ -23,6 +23,7 @@ Accept file uploads in a form and send them as email attachments.
    - `enctype="multipart/form-data"`
 2. In the controller:
    - validate form fields and uploads
+   - check upload errors/type/size and sanitize filenames (e.g. `F::safeName()`)
    - move/store uploads (or keep temporary paths)
    - call `$kirby->email([... 'attachments' => [...]])`
 3. Add email templates for text + HTML variants.

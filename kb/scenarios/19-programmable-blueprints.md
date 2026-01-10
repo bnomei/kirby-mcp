@@ -28,6 +28,7 @@ Generate blueprint definitions dynamically in PHP, e.g.:
    - `Data::read(...yml)` result, or
    - `include ...php` result (PHP array)
 3. Keep conditions deterministic and avoid untrusted inputs.
+   - PHP blueprint callbacks don’t receive the current page context; use fixed ids if needed
 
 ## Examples
 

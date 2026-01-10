@@ -21,11 +21,13 @@ Allow users to upload files from the frontend safely and attach metadata via a f
 
 1. Create a file blueprint used for uploaded files:
    - `site/blueprints/files/upload.yml`
+   - define `accept` rules (mime/extension/maxsize) to enforce limits server-side
 2. Create a template with:
    - `<form enctype="multipart/form-data">`
    - a honeypot field
 3. Create a controller that:
    - validates file count/type/size
+   - rejects duplicates or adds a unique prefix to filenames
    - stores uploads with `$page->createFile([...])` (after authentication/impersonation if required)
    - returns success/errors to the template
 

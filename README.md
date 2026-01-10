@@ -169,6 +169,15 @@ kirby MCP tinker $site->index()->count()
 ---
 
 ```text
+kirby MCP check query site.find('notes').unlisted.count
+kirby MCP check query page.siblings.count (model: notes)
+```
+
+`kirby_query_dot`
+
+---
+
+```text
 run kirby cli command uuid:populate
 ```
 
@@ -189,7 +198,7 @@ My home page renders incorrectly. Help me debug it with mcp_dump() to return the
 
 At initialization, the server tells the agent which tools/resources to use. The knowledge base cross-references them so the agent can find the next step.
 
-Current inventory: 36 tools, 15 resources, 15 resource templates, 216 KB articles.
+Current inventory: 37 tools, 15 resources, 15 resource templates, 216 KB articles.
 
 <details>
 <summary>🛠️ Tools</summary>
@@ -206,6 +215,7 @@ Current inventory: 36 tools, 15 resources, 15 resource templates, 216 KB article
 - `kirby_online_plugins` — search the official Kirby plugins directory (online fallback) and optionally fetch plugin details
 - `kirby_dump_log_tail` — tail `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`
 - `kirby_eval` — execute PHP in Kirby runtime for quick inspection, requires enable plus confirm
+- `kirby_query_dot` — evaluate Kirby query language (dot-notation) strings, requires confirm and can be disabled via config
 - `kirby_generate_ide_helpers` — generate regeneratable IDE helper files into `.kirby-mcp/`
 - `kirby_ide_helpers_status` — report missing template/snippet PHPDoc `@var` hints + helper file freshness (mtime-based)
 - `kirby_info` — project runtime info, composer audit and local environment detection
@@ -297,13 +307,6 @@ Bundled Skills live in `vendor/bnomei/kirby-mcp/skills` after installation. Copy
 - `kirby-ide-support` — IDE helper status plus minimal PHPDoc/type-hint improvements.
 - `kirby-upgrade-and-maintenance` — Safe Kirby upgrades with composer audit, plugin checks, and verification.
 - `kirby-forms-and-frontend-actions` — Contact forms, uploads, emails, and frontend page creation with validation/CSRF.
-
-<details>
-<summary>💬 Completions</summary>
-
-- Resource templates provide parameter completions (e.g. blueprint ids + config hosts).
-
-</details>
 
 ## Client setup
 
@@ -401,6 +404,7 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 - `kirby_run_cli_command` is guarded by an allowlist; extend it via `.kirby-mcp/mcp.json` (`cli.allow`, `cli.allowWrite`) and block via `cli.deny`.
 - Write-capable actions require explicit opt-in (e.g. `allowWrite=true` or `confirm=true`, depending on the tool).
 - `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still confirm per call.
+- `kirby_query_dot` is enabled by default; disable via `.kirby-mcp/mcp.json` (`{"query":{"enabled":false}}`) and still confirm per call.
 
 ## What `install` / `update` change in your project
 
@@ -468,16 +472,18 @@ Kirby host selection:
 | `ide.typeHintScanBytes` | `int`      | `16384`    | Max bytes to read from controller/model files when detecting Kirby IDE baseline type hints (see `kirby_ide_helpers_status`).                                                                                 |
 | `kirby.host`            | `string`   | `null`     | Default Kirby host to pass as `KIRBY_HOST` to the Kirby CLI (affects host-specific config like `config.{host}.php`).                                                                                         |
 | `eval.enabled`          | `bool`     | `false`    | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
+| `query.enabled`         | `bool`     | `true`     | Enable `kirby_query_dot` / `kirby mcp:query:dot` (still requires explicit confirmation per call).                                                                                                            |
 
 Environment variables:
 
-| Env var                         | Description                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| `KIRBY_MCP_PROJECT_ROOT`        | Project root (overrides auto-detection).                                       |
-| `KIRBY_MCP_KIRBY_BIN`           | Path to `vendor/bin/kirby` (overrides binary resolution).                      |
-| `KIRBY_MCP_HOST` / `KIRBY_HOST` | Kirby host override (takes precedence over config).                            |
-| `KIRBY_MCP_DUMPS_ENABLED`       | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                      |
-| `KIRBY_MCP_ENABLE_EVAL`         | Enable eval override (takes precedence over config; still needs confirmation). |
+| Env var                         | Description                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------------ |
+| `KIRBY_MCP_PROJECT_ROOT`        | Project root (overrides auto-detection).                                             |
+| `KIRBY_MCP_KIRBY_BIN`           | Path to `vendor/bin/kirby` (overrides binary resolution).                            |
+| `KIRBY_MCP_HOST` / `KIRBY_HOST` | Kirby host override (takes precedence over config).                                  |
+| `KIRBY_MCP_DUMPS_ENABLED`       | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                            |
+| `KIRBY_MCP_ENABLE_EVAL`         | Enable eval override (takes precedence over config; still needs confirmation).       |
+| `KIRBY_MCP_ENABLE_QUERY`        | Enable query eval override (takes precedence over config; still needs confirmation). |
 
 ## Troubleshooting
 

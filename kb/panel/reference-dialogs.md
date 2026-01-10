@@ -48,8 +48,9 @@ Most dialogs use built-in components (`k-form-dialog`, `k-text-dialog`, etc.). I
 
 - `load` is called via GET at `/panel/dialogs/{pattern}` and returns the dialog component and props.
 - `submit` is called via POST at the same path and returns a result.
-- Return `true` to close the dialog, return an array to emit an event, or throw an exception to show an error.
+- Return `true` to close the dialog, return `['event' => 'name', 'data' => [...]]` to emit an event, or throw an exception to show an error.
 - Use `Panel::go()` to redirect after submit if needed.
+- The dialog key defines the `{pattern}`; omit the `panel/` prefix.
 
 ## Common UI components
 
@@ -62,6 +63,7 @@ Most dialogs use built-in components (`k-form-dialog`, `k-text-dialog`, etc.). I
 
 - Returning `null` or `false` from `submit` results in a 404.
 - Dialog patterns are scoped to areas; keep them unique.
+- When extending core dialogs, reuse the base handlers with `$kirby->core()->area('site')['dialogs']['page.changeStatus']['load']($id)` (and `submit`).
 - Use dropdown `dialog` options or the Panel dialog helper to open dialogs.
 
 ## MCP: Inspect/verify

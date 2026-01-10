@@ -8,6 +8,7 @@ Implement frontend user registration and login using Kirby’s user system.
 
 - User role to assign on registration (e.g. `client`)
 - Required registration fields and whether email verification is required
+- Login method (password vs login code via email)
 - Login UX (redirect target, “remember me”, logout behavior)
 - Whether registration should be open or invite-only
 
@@ -21,6 +22,7 @@ Implement frontend user registration and login using Kirby’s user system.
 ## Implementation steps
 
 1. Create a user blueprint for the role you register (e.g. `site/blueprints/users/client.yml`).
+   - Configure `auth.methods` and email transport if using login codes
 2. Add a registration form and include a CSRF token:
    - hidden input `csrf` with `csrf()`
 3. In the registration controller:
@@ -29,7 +31,8 @@ Implement frontend user registration and login using Kirby’s user system.
    - impersonate and create user via `$kirby->users()->create([...])`
 4. Add a login form/controller:
    - verify CSRF
-   - use `$kirby->auth()->login($email, $password)`
+   - use `$kirby->auth()->login($email, $password)` for password login
+   - or use `$kirby->auth()->createChallenge()` + `verifyChallenge()` for login codes
 5. Add logout route/button if needed.
 
 ## Examples (from the cookbook recipe; abridged)

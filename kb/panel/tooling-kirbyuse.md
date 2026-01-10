@@ -36,12 +36,16 @@ Kirby::plugin('vendor/plugin', [
 ```
 
 The import-map URL should point to a bundled copy of `kirbyuse/dist/index.mjs` (or your own build artifact).
+Confirm the import map registration API for your Kirby version; the example shows one possible pattern.
 
 ## Core features
 
 - Type augmentation for `window.panel` to improve IntelliSense.
 - Composables: `usePanel`, `useApi`, `useApp`, `useBlock`, `useContent`, `useDialog`, `useI18n`, `useSection`, `useHelpers`, `useLibrary`.
 - Re-exports of Vue Composition API functions (`ref`, `computed`, `watch`, etc.).
+- Props helpers in `kirbyuse/props` (for example `section` for custom sections).
+- `useDialog` exposes helpers like `openTextDialog`/`openFieldsDialog`; `useHelpers` and `useLibrary` wrap `window.panel.app.$helper`/`$library` (see Panel Lab).
+- Import `kirbyuse` once in your entry file to augment `window.panel` types globally when desired.
 
 ## Dev workflow
 
@@ -54,6 +58,7 @@ The import-map URL should point to a bundled copy of `kirbyuse/dist/index.mjs` (
 - `useContent` uses `window.panel.content` and expects Kirby 5.0.0-rc.1+ in the Kirby 5 line.
 - `useBlock` mirrors the default block component methods (`field`, `open`, `update`) for Composition API use.
 - `useStore` and `isKirby4`/`isKirby5` exist only in 1.x for Kirby 4/5 compatibility.
+- Kirby 6 removes the global `Vue`; use ESM imports from `vue` or `kirbyuse` with an import map.
 
 ## MCP: Inspect/verify
 

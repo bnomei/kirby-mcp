@@ -12,9 +12,12 @@ Create a modal dialog with `load` and `submit` callbacks.
 ## Pattern
 
 1. Define a dialog pattern in the area with `load` and `submit` callbacks.
+   - `load` maps to GET `/panel/dialogs/{pattern}`, `submit` maps to POST.
 2. Use `k-form-dialog` and return `fields` + `value` from `load`.
-3. Return `true` on success or emit an event from `submit`.
-4. Trigger the dialog via a dropdown `dialog` option or the Panel dialog helper.
+3. Return `true` on success or `['event' => 'name', 'data' => [...]]` to emit an event from `submit`.
+4. Throw exceptions from `submit` to show an error dialog.
+5. Use `Panel::go()` in `submit` when you need to redirect after success.
+6. Trigger the dialog via a dropdown `dialog` option or the Panel dialog helper.
 
 ## Example
 

@@ -9,6 +9,7 @@ Serve appropriately sized images per viewport and device pixel ratio using `srcs
 - Target breakpoints/sizes
 - Whether art direction is required (different crops per breakpoint)
 - Whether WebP/AVIF generation is allowed/desired
+- Whether the project overrides `file::url` or media handling (serving from `/content`)
 
 ## Internal tools/resources to use
 
@@ -17,9 +18,10 @@ Serve appropriately sized images per viewport and device pixel ratio using `srcs
 
 ## Implementation steps
 
-1. Use `$image->srcset([...])` to generate `srcset` candidates.
-2. Provide a `sizes` attribute that matches the layout.
-3. Optional: use `<picture>` with AVIF/WebP sources.
+1. Optional: define `thumbs.srcsets` presets in `config.php` to reuse sizes.
+2. Use `$image->srcset([...])` (or `$image->srcset('preset')`) to generate `srcset` candidates.
+3. Provide a `sizes` attribute that matches the layout.
+4. Optional: use `<picture>` with AVIF/WebP sources or media queries for art direction.
 
 ## Examples (cookbook pattern)
 
@@ -33,11 +35,14 @@ Serve appropriately sized images per viewport and device pixel ratio using `srcs
 ?>
 
 <?php if ($image = $page->image('flower-power.jpg')): ?>
+  <?php $thumb = $image->resize(900) ?>
   <img
-    src="<?= $image->resize(900)->url() ?>"
+    src="<?= $thumb->url() ?>"
     srcset="<?= $image->srcset([300, 600, 900, 1200, 1800]) ?>"
     sizes="(max-width: 900px) 100vw, 900px"
-    alt=""
+    width="<?= $thumb->width() ?>"
+    height="<?= $thumb->height() ?>"
+    alt="<?= $image->alt() ?>"
   >
 <?php endif ?>
 ```
@@ -56,6 +61,5 @@ Serve appropriately sized images per viewport and device pixel ratio using `srcs
 
 - Cookbook: Responsive images: https://getkirby.com/docs/cookbook/performance/responsive-images
 - Quicktip: Art-directed blog posts: https://getkirby.com/docs/quicktips/art-directed-blog-posts
-- Quicktip: Rounded corners: https://getkirby.com/docs/quicktips/rounded-corners
 - Quicktip: Purpose of the media folder: https://getkirby.com/docs/quicktips/purpose-of-media-folder
 - Reference: `$file->srcset()`: https://getkirby.com/docs/reference/objects/cms/file/srcset

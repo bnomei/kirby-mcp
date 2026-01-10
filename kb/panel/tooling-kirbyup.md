@@ -3,7 +3,7 @@
 ## When to use
 
 - Build Panel plugin assets (JS/CSS) with a zero-config Vite-based bundler.
-- Use HMR for Kirby 5 Panel development or watch-mode builds for Kirby 6.
+- Use HMR when available; fall back to watch-mode builds when HMR is unavailable.
 - Add PostCSS, env-based conditionals, or custom Vite config in a small plugin.
 
 ## Minimal setup
@@ -36,7 +36,8 @@ export default defineConfig({
 
 - `kirbyup serve src/index.js` starts the dev server and generates `index.dev.mjs` that points the Panel at the dev server.
 - `kirbyup src/index.js --watch` builds dev bundles on file changes (useful for older Kirby versions or when HMR is unavailable).
-- `--watch` (serve) defaults to `./**/*.php` and can be extended; `--no-watch` disables PHP watching.
+- `serve` watches `./**/*.php` by default; `--watch` overrides that list (add the PHP glob back if needed); `--no-watch` disables PHP watching.
+- `--watch` (build) watches the entry file folder if no path is provided.
 
 ## Build output
 
@@ -49,6 +50,7 @@ export default defineConfig({
 - `.env` and `.env.local` files are supported via Vite; only `KIRBYUP_` and `VITE_` prefixed variables are exposed.
 - `kirbyup.config.js`/`kirbyup.config.ts` uses `defineConfig` from `kirbyup/config`.
 - `alias` and `vite` are supported; `extendViteConfig` is deprecated.
+- Built-in path aliases: `~/` and `@/`.
 
 ## MCP: Inspect/verify
 
@@ -65,5 +67,5 @@ export default defineConfig({
 ## Version notes (K5/K6)
 
 - K5: `kirbyup` 3.x (main branch) uses Vue 2.7 with `@vitejs/plugin-vue2` and supports HMR via `kirbyup serve`.
-- K6: `kirbyup` 4.x (feat/vue-3, `v4.0.0-alpha.5`) uses Vue 3 with `@vitejs/plugin-vue`. HMR is not implemented yet; use `kirbyup build <entry> --watch` for development.
-- K5 -> K6: upgrade to `kirbyup` 4.x, switch to Vue 3-based Panel tooling, and replace `serve` with watch-mode builds until HMR lands.
+- K6: `kirbyup` 4.x (feat/vue-3) targets Vue 3 with `@vitejs/plugin-vue`; use `serve` when HMR works or `--watch` as fallback.
+- K5 -> K6: upgrade to `kirbyup` 4.x, switch to Vue 3-based Panel tooling, and re-check dev workflow.

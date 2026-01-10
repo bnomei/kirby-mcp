@@ -45,11 +45,14 @@ const panel = usePanel();
 const results = await panel.search('todos', 'Search query');
 ```
 
+In Options API you can also call `this.$search('todos', query)`.
+
 ## Data flow (props/events/load)
 
 - `query` receives `(query, limit, page)` and returns a results array plus pagination.
 - Result items can include `text`, `link`, `info`, `icon`, `image`, and `uuid`.
 - Set `search` in the area to control the default search type.
+- For simple searches, returning a flat array of results is acceptable; pagination is optional.
 
 ## Common UI components
 
@@ -59,6 +62,7 @@ const results = await panel.search('todos', 'Search query');
 
 - The search key must match the type used in `panel.search()`.
 - When overriding core searches, call `$kirby->core()->area('site')['searches']['pages']['query']` for fallback behavior.
+- Core search types are `site/pages`, `site/files`, and `users/users`.
 
 ## MCP: Inspect/verify
 

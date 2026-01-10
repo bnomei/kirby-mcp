@@ -2,7 +2,7 @@
 
 ## Field summary
 
-Repeatable entries stored as a YAML list of objects.
+Repeatable entries stored as a YAML list of objects. Row keys are defined by the structure field’s blueprint.
 
 ## Storage format
 
@@ -30,7 +30,7 @@ Read existing rows, merge/append in array form, then update the full list.
 
 ## Edge cases
 
-Rows have no built-in id; add your own `id` field if you need stable merges.
+Rows have no built-in id; add your own `id` field if you need stable merges. Avoid guessing row keys; read the structure field blueprint.
 
 ## MCP: Inspect/verify
 
@@ -48,3 +48,4 @@ Rows have no built-in id; add your own `id` field if you need stable merges.
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/structure
+- https://getkirby.com/docs/reference/templates/field-methods/yaml

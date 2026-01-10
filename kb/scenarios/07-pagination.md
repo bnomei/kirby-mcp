@@ -21,7 +21,9 @@ Split long lists into pages using Kirby’s pagination, and render navigation li
 
 1. Move pagination logic into a controller if the template is getting noisy.
 2. Apply `->paginate($limit)` to a collection and keep a handle to the pagination object.
+   - `paginate()` returns a new collection; reuse the returned variable
 3. Render navigation only when `hasPages()` is true.
+4. If you are splitting a single long post, split into parts (e.g. `<!--nextpage-->`) and paginate the parts collection.
 
 ## Examples (template-only)
 

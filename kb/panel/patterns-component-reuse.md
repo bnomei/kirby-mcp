@@ -4,6 +4,12 @@
 
 Reuse Panel UI components and core field/section components instead of rebuilding them.
 
+## Inputs to ask for
+
+- Panel version (K5 or K6)
+- Core component/field/section you want to extend
+- Build setup (kirbyup bundle vs plain JS)
+
 ## When to use
 
 - You want consistent Panel styling and behavior.
@@ -11,9 +17,10 @@ Reuse Panel UI components and core field/section components instead of rebuildin
 
 ## Pattern
 
-- Use Panel Lab to find component examples and props.
-- Extend core field components with `extends`.
-- Wrap area views in `k-inside` and `k-view` for standard layout.
+- Use Panel Lab to find component examples and props (Docs tab has prop lists).
+- Confirm canonical component names and slots in `panel/src/components` in the Panel repo.
+- Extend core field components with `extends` and keep the `input` event to update Panel state.
+- Wrap area views in `k-panel-inside` or `k-inside` plus `k-view` for standard layout.
 
 ## Example
 
@@ -37,6 +44,11 @@ panel.plugin('vendor/hello', {
 - Field reference: `kirby://extension/fields`
 - Section reference: `kirby://extension/sections`
 - KB references: `kirby://kb/panel/reference-fields`, `kirby://kb/panel/reference-sections`
+
+## Gotchas
+
+- Component names are kebab-case with `k-` prefix; blueprint field types are not component names.
+- If you override `onInput`, always `$emit('input', value)` (or derived value) to keep the field reactive.
 
 ## Links
 

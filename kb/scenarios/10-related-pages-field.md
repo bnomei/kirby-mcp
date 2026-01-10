@@ -17,10 +17,11 @@ Let editors select related pages in the Panel and render them in templates.
 - Blueprint inspection: `kirby_blueprint_read` / `kirby://blueprint/{encodedId}`
 - Panel field reference: `kirby://field/pages`
 - Render and inspect: `kirby_render_page`
+- Confirm stored references: `kirby_read_page_content`
 
 ## Implementation steps
 
-1. Add a `pages` field to the blueprint (limit candidates via `query:`).
+1. Add a `pages` field to the blueprint (limit candidates via `query:`). Default storage is UUID; set `store: id` only when you need path-based ids.
 2. In the template, convert the stored YAML list to a pages collection via `->toPages()`.
 3. Render the related list only when non-empty.
 
@@ -60,6 +61,8 @@ if ($related->isNotEmpty()):
 ## Verification
 
 - Select related pages in the Panel and confirm the frontend renders them.
+- Inspect the content file to confirm whether `page://...` UUIDs or ids were stored (matches `store`).
+- Optionally evaluate the query with `kirby_query_dot` before editing the blueprint (pass `model=notes` or a `page://...` UUID when the query relies on `page.*`).
 
 ## Glossary quick refs
 
@@ -67,6 +70,7 @@ if ($related->isNotEmpty()):
 - kirby://glossary/field
 - kirby://glossary/blueprint
 - kirby://glossary/template
+- kirby://glossary/uuid
 
 ## Links
 

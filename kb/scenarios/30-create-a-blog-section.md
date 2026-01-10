@@ -31,6 +31,7 @@ Create a standard “Blog” section:
    - `site/templates/article.php`
 3. Add blueprints so editors can manage content in the Panel.
 4. Keep listing logic in a controller if it grows (sorting/filtering/pagination).
+   - If you rely on dates instead of numbered folders, sort by a date field.
 5. Extend later with:
    - pagination (`07-pagination.md`)
    - tags (`09-filtering-with-tags.md`)
@@ -59,6 +60,8 @@ Create a standard “Blog” section:
 <?php endforeach ?>
 ```
 
+If you don't use numbered folders, replace `flip()` with `sortBy('date', 'desc')`.
+
 ### Article template: simple “back” link
 
 ```php
@@ -70,7 +73,7 @@ Create a standard “Blog” section:
  */
 ?>
 
-<a href="<?= url('blog') ?>">Back…</a>
+<a href="<?= $page->parent()->url() ?>">Back…</a>
 ```
 
 ## Verification

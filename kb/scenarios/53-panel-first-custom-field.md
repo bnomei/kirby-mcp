@@ -21,9 +21,11 @@ Add a new field type for the Panel (blueprints) with custom UI and optional back
 
 1. Register the field type in PHP:
    - `Kirby::plugin(..., ['fields' => ['doi' => []]])`
+   - add `props`/`computed`/`api` definitions here if the field needs backend logic
 2. Register the Vue field component in `src/index.js`:
    - `panel.plugin(..., { fields: { doi: DoiField } })`
 3. Implement the Vue field component and align with Kirby UI components.
+   - add optional `index.css` if needed
 4. Use the field in a blueprint and test in the Panel.
 
 ## Examples (from the cookbook recipe; abridged)

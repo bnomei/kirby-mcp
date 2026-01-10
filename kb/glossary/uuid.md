@@ -4,17 +4,19 @@
 
 Kirby UUIDs are stable identifiers for models (pages, files, users, etc.) that stay the same even if you move or rename content. This makes them ideal for persistent relations (linking/embedding) compared to paths and filenames.
 
-In Kirby, UUID strings typically look like `page://Eesj89FnbMzMMvs0` (or similar for files/users). UUIDs can also be generated in UUID v4 format (configurable) or disabled entirely.
+In Kirby, UUID strings typically look like `page://Eesj89FnbMzMMvs0` (or similar for files/users). Picker fields (`pages`, `files`, `users`) store UUIDs by default unless you disable UUID storage with the field’s `store` property. UUID generation can be configured (including UUID v4) or disabled entirely; the setting only affects newly generated UUIDs.
 
 ## In prompts (what it usually implies)
 
 - “Use UUIDs so links survive renames/moves” means: store UUIDs in fields and resolve them back to models at runtime.
 - “Why are there duplicate UUIDs?” often means: someone duplicated content folders manually in the filesystem (UUIDs got copied) instead of duplicating via the Panel (which regenerates UUIDs).
 - “Fetch page/file by UUID” means: use APIs/tools that accept UUIDs (preferred) instead of guessing ids/paths.
+- “We need permalinks” means: use the built-in `@/page/<uuid>` style URLs or `$model->permalink()` to generate stable links.
 
 ## Variants / aliases
 
 - UUID schemes: `page://…`, `file://…`, `user://…`
+- Permalink path format: `@/page/<uuid>` (pages; use `$model->permalink()` for other model types)
 - `$model->uuid()->toString()` (get UUID string)
 - Config (affects newly generated UUIDs only):
   - `content.uuid: 'uuid-v4'`
@@ -25,6 +27,9 @@ In Kirby, UUID strings typically look like `page://Eesj89FnbMzMMvs0` (or similar
 ```php
 // store or compare stable identifiers
 $uuid = $page->uuid()->toString();
+
+// generate a stable permalink for sharing
+$permalink = $page->permalink();
 ```
 
 ## MCP: Inspect/verify

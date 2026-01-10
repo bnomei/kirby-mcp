@@ -29,6 +29,7 @@ Filter Kirby collections (most commonly `Pages`) based on:
 
 1. Build the base collection first (keep it readable):
    - e.g. `$items = page('projects')->children()->listed();`
+   - avoid `site()->index()` on large sites; prefer the smallest base set
 2. Prefer `filterBy()` for simple cases (faster, more declarative).
 3. Use `filter()` with a callback for computed criteria (dates, cross-field conditions).
 4. For multi-value fields stored as comma-separated strings (tags):

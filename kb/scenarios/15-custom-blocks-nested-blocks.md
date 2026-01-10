@@ -27,6 +27,7 @@ Add custom block types for the `blocks` field, including nested blocks (block co
 4. Register blueprint + snippet paths in `index.php` via `Kirby::plugin(..., [...])`.
 5. Optional: add `index.js` (Panel preview templates) and `index.css` (preview styles).
 6. If you need a build step or Panel composables, default to `kirbyup` + `kirbyuse` and decide whether to bundle.
+7. Optional: define `blocks.fieldsets` in config to group custom blocks globally instead of per-field.
 
 ## Examples (FAQ block with nested Q/A blocks)
 

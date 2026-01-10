@@ -31,6 +31,8 @@ Modify text parsing output by hooking into KirbyText/KirbyTags processing, e.g.:
    - `kirbytags:before` → before KirbyTags are parsed
    - `kirbytags:after` → after KirbyTags, before Markdown/SmartyPants
    - `kirbytext:after` → final rendered HTML
+   - order: `kirbytext:before` → `kirbytags:before` → `kirbytags:after` → `kirbytext:after`
+   - `kirbytags:*` hooks receive `(string $text, array $data, array $options)`; ignore unused args
 3. Keep hook callbacks small and deterministic; always return the modified string.
 
 ## Examples

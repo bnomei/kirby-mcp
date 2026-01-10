@@ -4,6 +4,12 @@
 
 Send backend data into a Panel view component via `props`.
 
+## Inputs to ask for
+
+- Data to preload vs fetch later via API
+- Expected size/shape of the data (pagination needed?)
+- Serialization rules (dates, users/pages/files)
+
 ## When to use
 
 - Custom Panel areas with view routes.
@@ -12,8 +18,9 @@ Send backend data into a Panel view component via `props`.
 ## Pattern
 
 1. Return `component` and `props` from the view action.
-2. Declare matching props in the Vue view component.
-3. Use API endpoints for large or frequently changing data.
+2. Add optional view keys like `breadcrumb` and `search` when needed.
+3. Declare matching props in the Vue view component.
+4. Use API endpoints for large or frequently changing data.
 
 ## Example
 
@@ -44,6 +51,11 @@ panel.plugin('vendor/reports', {
 - Verify plugin load: `kirby_plugins_index`
 - Area reference: `kirby://extension/panel-areas`
 - KB reference: `kirby://kb/panel/reference-areas`
+
+## Gotchas
+
+- Props must be JSON-serializable; convert CMS objects via `->toArray()`/`->panel()` or map to arrays.
+- Keep props small; for large or live data, pass filters and fetch via API instead.
 
 ## Links
 

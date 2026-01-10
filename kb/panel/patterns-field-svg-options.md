@@ -17,7 +17,7 @@ Build a custom field that renders selectable options with SVG previews (icons or
 - kirby_plugins_index
 - kirby_blueprints_index
 - kirby_blueprint_read
-- kirby://extension/panel-fields
+- kirby://extension/fields
 
 ## Files to touch
 
@@ -30,9 +30,10 @@ Build a custom field that renders selectable options with SVG previews (icons or
 
 1. Extend an existing field (for example tags or multiselect) and compute options server-side.
 2. Build option objects with text, value, and an SVG string or sprite reference.
-3. Cache computed option lists and sanitize SVG markup before returning to the Panel.
-4. Extend the field input components to render SVGs in tags and dropdown choices.
-5. Prefer kirbyup and kirbyuse for new work; if shipping prebuilt JS, keep extensions minimal and compatible with core components.
+3. Expose options via field `props`/`computed` so the API payload stays consistent.
+4. Cache computed option lists and sanitize SVG markup before returning to the Panel.
+5. Extend the field input components to render SVGs in tags and dropdown choices.
+6. Prefer kirbyup and kirbyuse for new work; if shipping prebuilt JS, keep extensions minimal and compatible with core components.
 
 ## Examples
 
@@ -111,9 +112,14 @@ panel.plugin('example/icon-field', {
 - Search and pagination behave correctly with large icon sets.
 - SVG content is sanitized and cached.
 
+## Gotchas
+
+- Inline SVGs can bloat API responses; prefer sprite references when the list is large.
+- Never accept user-supplied SVG without sanitizing; `v-html` will render raw markup.
+
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/panel-fields
+- https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
 ## Version notes (K5/K6)

@@ -10,15 +10,17 @@ Create a Panel area that switches between multiple views (config, list, detail) 
 - Authentication flow (developer token, user token, refresh, revoke)
 - External API endpoints, rate limits, and CORS requirements
 - Which parts should be a field or block vs an area view
+- Where tokens will be stored (user meta, site config, custom storage)
 
 ## MCP tools/resources to use
 
 - kirby://roots
 - kirby_plugins_index
 - kirby_routes_index
+- kirby://extension/api
 - kirby://extension/panel-areas
-- kirby://extension/panel-fields
-- kirby://extension/panel-blocks
+- kirby://extension/fields
+- kirby://extension/blocks
 
 ## Files to touch
 
@@ -31,7 +33,8 @@ Create a Panel area that switches between multiple views (config, list, detail) 
 ## Implementation steps
 
 1. Register an area with multiple view routes (list and detail paths).
-2. Add routes for auth, token storage, data fetch, and search under a namespaced prefix.
+2. Add routes for auth, token storage, data fetch, and search under a namespaced prefix (use the `api` extension for `/api`-protected endpoints).
+   - Use non-API routes for redirect-based auth flows when needed.
 3. In the area view, call the routes with `useApi()`, including credentials and CSRF headers.
 4. Switch the initial view based on config status and token availability.
 5. Keep view components focused and reuse shared helpers for API calls and notifications.
@@ -39,9 +42,9 @@ Create a Panel area that switches between multiple views (config, list, detail) 
 
 ## Examples
 
-- `GET /my-app/config-status` drives the initial view (config vs list).
-- `GET /my-app/search?q=...` returns items with Panel links.
-- `GET /my-app/item/:id` powers detail views.
+- `GET /api/my-app/config-status` drives the initial view (config vs list).
+- `GET /api/my-app/search?q=...` returns items with Panel links.
+- `GET /api/my-app/item/:id` powers detail views.
 
 ## Panel JS (K5)
 

@@ -168,6 +168,19 @@ final readonly class KirbyMcpConfig
         return false;
     }
 
+    public function queryEnabled(): bool
+    {
+        $query = $this->data['query'] ?? null;
+        if (is_array($query)) {
+            $enabled = $query['enabled'] ?? null;
+            if (is_bool($enabled)) {
+                return $enabled;
+            }
+        }
+
+        return true;
+    }
+
     public function cacheTtlSeconds(): int
     {
         $cache = $this->data['cache'] ?? null;

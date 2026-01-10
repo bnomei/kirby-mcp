@@ -30,6 +30,8 @@ Expose a `.json` representation for a page template, typically to:
    - `site/controllers/<template>.json.php`
 2. Create the representation template:
    - `site/templates/<template>.json.php`
+   - ensure the base template (`site/templates/<template>.php`) exists; representations are variants
+   - cast `Field` objects to scalars (e.g. `->value()` or `(string)`) before `json_encode()`
 3. If you’re doing “load more”:
    - update the HTML template to output initial items + a button and pagination metadata
    - add a JS fetch that hits `<page>.json/page:<n>` and appends `html`/`json`

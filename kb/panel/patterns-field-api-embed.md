@@ -18,7 +18,8 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 - kirby_routes_index
 - kirby_blueprints_index
 - kirby_blueprint_read
-- kirby://extension/panel-fields
+- kirby://extension/api
+- kirby://extension/fields
 
 ## Files to touch
 
@@ -29,7 +30,8 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 
 ## Implementation steps
 
-1. Create a plugin API route that accepts a URL and returns parsed embed metadata.
+1. Create a plugin API route (via the `api` extension) that accepts a URL and returns parsed embed metadata.
+   - If the endpoint should be scoped to the field, define a field `api` endpoint instead (auto-prefixed with `/fields/<fieldName>`).
 2. Store a structured field value (input URL plus media payload) to avoid re-fetching on reload.
 3. In the field component, call `useApi().get()` when the URL changes and update the stored value.
 4. Render a preview and load provider scripts only when needed.
@@ -37,7 +39,7 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 
 ## Examples
 
-- API endpoint namespace: `/my-embed/get-data` with `{ url }` input.
+- API endpoint namespace: `/api/my-embed/get-data` with `{ url }` input.
 - Field value shape: `{ input: "...", media: { title, code, providerName } }`.
 - Preview shows a status badge for synced vs failed.
 
@@ -108,7 +110,7 @@ panel.plugin('example/embed-field', {
 
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/panel-fields
+- https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
 ## Version notes (K5/K6)

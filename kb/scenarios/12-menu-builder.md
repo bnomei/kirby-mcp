@@ -31,6 +31,7 @@ Common variants:
 
 1. Add a structure field to store menu definitions.
 2. Use `toStructure()` (for structure) + `toPages()`/`toPage()` (for selected pages).
+   - for link fields, derive the label from `linkTitle` or the resolved page to avoid UUID output
 3. Add guard clauses so empty menus don’t render empty `<nav>` elements.
 
 ## Examples
@@ -109,8 +110,9 @@ Template:
 ?>
 
 <?php foreach ($site->mixedMenu()->toStructure() as $item): ?>
+  <?php $pageLink = $item->link()->toPage(); ?>
   <a href="<?= $item->link()->toUrl() ?>">
-    <?= $item->linkTitle()->or($item->link()->html()) ?>
+    <?= $item->linkTitle()->or($pageLink ? $pageLink->title()->value() : $item->link()->html()) ?>
   </a>
 <?php endforeach ?>
 ```

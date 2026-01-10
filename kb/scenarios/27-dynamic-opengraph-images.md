@@ -9,7 +9,7 @@ Generate Open Graph (`og:image`) images dynamically per page using a `.png` cont
 ## Inputs to ask for
 
 - Which template(s) should get dynamic OG images
-- Desired dimensions (Open Graph default: `1200×628`)
+- Desired dimensions (cookbook prefers `1200×628` for 1.91:1; `1200×630` is common but slightly off)
 - Text and branding elements to render (title, logo, colors)
 - Available PHP extensions on the server (GD is required for the cookbook approach)
 
@@ -22,11 +22,12 @@ Generate Open Graph (`og:image`) images dynamically per page using a `.png` cont
 
 ## Implementation steps
 
-1. Add a `.png` representation template:
+1. Confirm target pages use a dedicated template (cookbook assumes one page type).
+2. Add a `.png` representation template:
    - `site/templates/<template>.png.php` (e.g. `article.png.php`)
-2. Generate an image using GD (canvas, colors, text, optional logo).
-3. Update your HTML head to point `og:image` to the `.png` representation URL.
-4. Add a fallback `og:image` for templates that don’t have a `.png` representation.
+3. Generate an image using GD (canvas, colors, text, optional logo).
+4. Update your HTML head to point `og:image` to the `.png` representation URL.
+5. Add a fallback `og:image` for templates that don’t have a `.png` representation.
 
 ## Examples (cookbook pattern)
 
@@ -91,4 +92,4 @@ imagedestroy($canvas);
 
 - Cookbook: Dynamic Open Graph images: https://getkirby.com/docs/cookbook/content-representations/dynamic-og-images
 - Guide: Content representations: https://getkirby.com/docs/guide/templates/content-representations
-- Quicktip: OpenGraph: https://getkirby.com/docs/quicktips/opengraph
+- Open Graph protocol: https://ogp.me/

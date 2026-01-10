@@ -3,15 +3,18 @@
 ## What changed
 
 - Panel runtime moved from Vue 2.7 to Vue 3.
+- Kirby 6 Panel uses native ESM import maps; there is no global `Vue` object.
 - `kirbyup` 3.x (Vue 2) became `kirbyup` 4.x (Vue 3).
 - `kirbyuse` 1.x became `kirbyuse` 2.x and requires an import map.
-- HMR is not yet available in `kirbyup` 4.x; use watch mode instead.
+- HMR support depends on the `kirbyup` 4.x branch; fall back to `--watch` if needed.
 
 ## Migration checklist
 
 - Update `kirbyup` and `kirbyuse` versions.
 - Replace Vue 2 syntax with Vue 3 compatible options.
+- Replace global `Vue` usage with ESM imports (`vue` or `kirbyuse`).
 - Add import map for `kirbyuse` in the Panel bootstrap.
+- Register `importMaps` in the plugin `index.php` for ESM dependencies.
 - Verify `panel` asset paths match the new build output.
 - Re-test custom fields, sections, areas, dialogs, dropdowns, and searches.
 

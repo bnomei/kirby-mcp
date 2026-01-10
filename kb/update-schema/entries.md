@@ -2,7 +2,7 @@
 
 ## Field summary
 
-Mixed-content picker stored as a YAML list; item shape depends on configured entry types.
+Mixed-content picker stored as a YAML list; item shape depends on configured entry types (pages/files/users/urls/custom).
 
 ## Storage format
 
@@ -30,13 +30,14 @@ Read existing entries, merge by your own rules (type/value), then update the ful
 
 ## Edge cases
 
-Entry payload shape varies by entry config; verify in the content lab before writing.
+Entry payload shape varies by entry config; verify in the content lab before writing. For picker-based entries, `value` often uses UUIDs unless configured otherwise.
 
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/entries`.
+- Check UUID generation settings via `kirby://config/content.uuid`.
 
 ## Glossary quick refs
 
@@ -46,3 +47,4 @@ Entry payload shape varies by entry config; verify in the content lab before wri
 ## Links
 
 - https://getkirby.com/docs/reference/panel/fields/entries
+- https://getkirby.com/docs/guide/uuids

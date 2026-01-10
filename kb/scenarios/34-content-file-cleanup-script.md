@@ -31,6 +31,7 @@ This is a destructive operation: treat it like a migration.
    - impersonates (`$kirby->impersonate('kirby')`)
    - compares `$model->content()->fields()` vs `$model->blueprint()->fields()`
    - updates undefined fields to `null`
+   - iterates languages when `kirby()->multilang()` is true
 3. Run once, verify, then delete the script/route.
 
 ## Examples (cookbook approach; abridged)

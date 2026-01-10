@@ -9,6 +9,7 @@ Maintain translation strings in a flexible way and support placeholder substitut
 - How translations are managed (small fixed set vs external workflow)
 - Whether translations should be stored as PHP arrays, YAML, or generated dynamically
 - Whether translation strings need placeholders (filename, counts, links, etc.)
+- Whether editors should manage translations in the Panel (language editor)
 
 ## Internal tools/resources to use
 
@@ -21,7 +22,9 @@ Maintain translation strings in a flexible way and support placeholder substitut
 2. If you need more flexibility:
    - load translations from YAML (`Yaml::decode(F::read(...))`)
    - or call a function (e.g. backed by a structure field or external source)
-3. For placeholder substitution, use `I18n::template()`.
+3. Fetch translations with `t('key')` (with fallback if needed).
+4. For placeholder substitution, use `I18n::template()` with `{placeholders}` in the strings.
+5. If using external YAML + Panel language editor, expect Panel to move variables into language definition files.
 
 ## Examples (quicktips)
 
