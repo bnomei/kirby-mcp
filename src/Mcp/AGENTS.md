@@ -42,6 +42,6 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - Init gating is session-scoped via `SessionInterface`; use `RequestContext` to access per-session state from tools when needed.
 - Logging level is session-scoped; read and set it via `LoggingState` using the active `SessionInterface` (`Protocol::SESSION_LOGGING_LEVEL`).
 - Dump trace IDs are session-scoped; only use `DumpState` with the active `SessionInterface`.
-- Provide tool output schemas via `_meta.outputSchema` until the PHP MCP SDK supports first-class `outputSchema`; keep `structuredContent` + JSON text in sync.
+- Provide tool output schemas via `#[McpTool(outputSchema: ...)]` (SDK v0.3+); keep `structuredContent` + JSON text in sync.
 - Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually in `bin/kirby-mcp`.
 - Keep init/info payloads lean; omit heavy blobs like `composer.lock` from tool/resource outputs (composer audit does not return lock data).

@@ -42,7 +42,14 @@ final class RuntimeTools
         'additionalProperties' => true,
     ];
 
+    private const UPDATE_DATA_PROPERTY_SCHEMA = [
+        'type' => ['object', 'string'],
+        'description' => 'JSON object mapping field keys to values (pass the object directly or as a JSON string).',
+        'additionalProperties' => true,
+    ];
+
     private const READ_PAGE_CONTENT_OUTPUT_SCHEMA = [
+        'type' => 'object',
         'oneOf' => [
             [
                 'type' => 'object',
@@ -104,6 +111,7 @@ final class RuntimeTools
     ];
 
     private const READ_SITE_CONTENT_OUTPUT_SCHEMA = [
+        'type' => 'object',
         'oneOf' => [
             [
                 'type' => 'object',
@@ -163,6 +171,7 @@ final class RuntimeTools
     ];
 
     private const READ_FILE_CONTENT_OUTPUT_SCHEMA = [
+        'type' => 'object',
         'oneOf' => [
             [
                 'type' => 'object',
@@ -226,6 +235,7 @@ final class RuntimeTools
     ];
 
     private const READ_USER_CONTENT_OUTPUT_SCHEMA = [
+        'type' => 'object',
         'oneOf' => [
             [
                 'type' => 'object',
@@ -577,9 +587,7 @@ final class RuntimeTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
-        meta: [
-            'outputSchema' => self::READ_PAGE_CONTENT_OUTPUT_SCHEMA,
-        ],
+        outputSchema: self::READ_PAGE_CONTENT_OUTPUT_SCHEMA,
     )]
     public function readPageContent(
         ?string $id = null,
@@ -649,13 +657,9 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
+    #[Schema(properties: ['data' => self::UPDATE_DATA_PROPERTY_SCHEMA])]
     public function updatePageContent(
         string $id,
-        #[Schema(
-            type: 'object',
-            description: 'JSON object mapping field keys to values (pass the object directly).',
-            additionalProperties: true,
-        )]
         array|string $data,
         bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,
@@ -785,9 +789,7 @@ final class RuntimeTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
-        meta: [
-            'outputSchema' => self::READ_SITE_CONTENT_OUTPUT_SCHEMA,
-        ],
+        outputSchema: self::READ_SITE_CONTENT_OUTPUT_SCHEMA,
     )]
     public function readSiteContent(
         ?string $language = null,
@@ -849,9 +851,7 @@ final class RuntimeTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
-        meta: [
-            'outputSchema' => self::READ_FILE_CONTENT_OUTPUT_SCHEMA,
-        ],
+        outputSchema: self::READ_FILE_CONTENT_OUTPUT_SCHEMA,
     )]
     public function readFileContent(
         string $id,
@@ -922,9 +922,7 @@ final class RuntimeTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
-        meta: [
-            'outputSchema' => self::READ_USER_CONTENT_OUTPUT_SCHEMA,
-        ],
+        outputSchema: self::READ_USER_CONTENT_OUTPUT_SCHEMA,
     )]
     public function readUserContent(
         string $id,
@@ -1000,12 +998,8 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
+    #[Schema(properties: ['data' => self::UPDATE_DATA_PROPERTY_SCHEMA])]
     public function updateSiteContent(
-        #[Schema(
-            type: 'object',
-            description: 'JSON object mapping field keys to values (pass the object directly).',
-            additionalProperties: true,
-        )]
         array|string $data,
         bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,
@@ -1132,13 +1126,9 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
+    #[Schema(properties: ['data' => self::UPDATE_DATA_PROPERTY_SCHEMA])]
     public function updateFileContent(
         string $id,
-        #[Schema(
-            type: 'object',
-            description: 'JSON object mapping field keys to values (pass the object directly).',
-            additionalProperties: true,
-        )]
         array|string $data,
         bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,
@@ -1273,13 +1263,9 @@ final class RuntimeTools
             openWorldHint: false,
         ),
     )]
+    #[Schema(properties: ['data' => self::UPDATE_DATA_PROPERTY_SCHEMA])]
     public function updateUserContent(
         string $id,
-        #[Schema(
-            type: 'object',
-            description: 'JSON object mapping field keys to values (pass the object directly).',
-            additionalProperties: true,
-        )]
         array|string $data,
         bool $payloadValidatedWithFieldSchemas = false,
         bool $confirm = false,

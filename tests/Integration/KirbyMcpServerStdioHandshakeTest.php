@@ -124,10 +124,11 @@ it('boots the MCP stdio server and answers initialize', function (): void {
 
     foreach (['kirby_info', 'kirby_read_page_content'] as $toolName) {
         expect($byName)->toHaveKey($toolName);
-        $meta = $byName[$toolName]['_meta'] ?? null;
-        expect($meta)->toBeArray();
-        expect($meta)->toHaveKey('outputSchema');
-        expect($meta['outputSchema'])->toBeArray();
+        $tool = $byName[$toolName];
+        $outputSchema = $tool['outputSchema'] ?? null;
+        expect($outputSchema)->toBeArray();
+        expect($outputSchema)->toHaveKey('type');
+        expect($outputSchema['type'])->toBe('object');
     }
 
     expect($byId)->toHaveKey('3');

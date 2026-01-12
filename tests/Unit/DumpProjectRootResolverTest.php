@@ -10,17 +10,17 @@ use Kirby\Cms\App;
  */
 function dumpProjectRootAppAccessors(): array
 {
-    $property = new ReflectionProperty(App::class, 'instance');
-    $property->setAccessible(true);
-
-    $getter = static function () use ($property): ?App {
-        $value = $property->getValue();
-
-        return $value instanceof App ? $value : null;
+    $getter = static function (): ?App {
+        return App::instance(lazy: true);
     };
 
-    $setter = static function (?App $instance) use ($property): void {
-        $property->setValue(null, $instance);
+    $setter = static function (?App $instance): void {
+        if ($instance === null) {
+            App::destroy();
+            return;
+        }
+
+        App::instance($instance);
     };
 
     return [$getter, $setter];

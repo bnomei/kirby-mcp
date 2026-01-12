@@ -161,9 +161,7 @@ final class ProjectTools
             readOnlyHint: true,
             openWorldHint: false,
         ),
-        meta: [
-            'outputSchema' => self::INFO_OUTPUT_SCHEMA,
-        ],
+        outputSchema: self::INFO_OUTPUT_SCHEMA,
     )]
     public function projectInfo(?RequestContext $context = null): array|CallToolResult
     {
