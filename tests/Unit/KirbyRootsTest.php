@@ -19,3 +19,20 @@ TEXT;
     expect($roots->get('site'))->toBe('/a/b/c/site');
     expect($roots->commandsRoot())->toBe('/a/b/c/commands');
 });
+
+it('parses `kirby roots` climate dump output', function (): void {
+    $output = <<<'TEXT'
+/app/vendor/league/climate/src/TerminalObject/Basic/Dump.php:28:
+array(2) {
+  'index' =>
+  string(6) "/a/b/c"
+  'commands.local' =>
+  string(15) "/a/b/c/commands"
+}
+TEXT;
+
+    $roots = KirbyRoots::fromCliOutput($output);
+
+    expect($roots->get('index'))->toBe('/a/b/c');
+    expect($roots->commandsRoot())->toBe('/a/b/c/commands');
+});

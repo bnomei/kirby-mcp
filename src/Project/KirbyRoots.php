@@ -24,16 +24,17 @@ final readonly class KirbyRoots
     }
 
     /**
-     * Parses the output of `kirby roots`, which uses PHP's `var_dump()` format.
+     * Parses the output of `kirby roots`, which uses PHP array dump formats.
      */
     public static function fromCliOutput(string $output): self
     {
         $roots = [];
 
-        $pattern = '/\\["([^"]+)"\\]=>\\s*\\R\\s*string\\(\\d+\\)\\s*"([^"]*)"/m';
+        $pattern = '/(?:\\["([^"]+)"\\]|\'([^\']+)\')\\s*=>\\s*\\R\\s*string\\(\\d+\\)\\s*"([^"]*)"/m';
         if (preg_match_all($pattern, $output, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
-                $roots[$match[1]] = $match[2];
+                $key = $match[1] !== '' ? $match[1] : $match[2];
+                $roots[$key] = $match[3];
             }
         }
 
