@@ -50,4 +50,7 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - Write tools that mutate content exposed via `kirby://...` resources should emit `notifications/resources/updated` for subscribed URIs (session-scoped subscriptions).
 - Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually by `src/Mcp/ServerFactory.php`.
 - HTTP `/mcp` requests are auth-gated before MCP protocol handling: validate Origin, reject query-string credentials, require Bearer auth, attach `oauth.*` request metadata, and enforce operation scopes without hiding tools/resources.
+- Keep HTTP as a transport wrapper around the same MCP server surface as stdio. Do not remove tools/resources for scoped clients; fail unauthorized operations with structured 403/`insufficient_scope` responses.
+- HTTP session state is per MCP session and uses the `MCP-Session-Id` header contract across POST/GET/DELETE requests. Init gating, logging level, dump trace IDs, subscriptions, and confirm state must remain session-scoped.
+- Shared-token HTTP auth is loopback/local-development only. Production or non-loopback HTTP exposure must use OAuth JWT validation with issuer, audience/resource, signature/JWKS, expiry, and scope checks.
 - Keep init/info payloads lean; omit heavy blobs like `composer.lock` from tool/resource outputs (composer audit does not return lock data).

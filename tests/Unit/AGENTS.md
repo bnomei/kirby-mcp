@@ -13,6 +13,7 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 ## Workflows
 
 - Add a unit test for behavior changes that don’t require a real Kirby runtime.
+- For HTTP transport changes, keep auth, Origin, scope mapping, shared-token loopback restrictions, token metadata, and session-header helpers in unit tests where possible.
 - Run a subset: `vendor/bin/pest tests/Unit/SomeTest.php`.
 - Coverage: run `composer cms:starterkit` then `herd coverage ./vendor/bin/pest --coverage` (see `TESTING.md`).
 

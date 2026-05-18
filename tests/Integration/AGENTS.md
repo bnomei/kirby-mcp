@@ -17,6 +17,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Run just integration tests: `vendor/bin/pest tests/Integration`.
 - Coverage: run `composer cms:starterkit` then `herd coverage ./vendor/bin/pest --coverage` (see `TESTING.md`).
 - When adding runtime commands/tools, add integration tests for both the CLI command and the MCP tool wrapper.
+- For HTTP transport changes, add focused integration coverage for default stdio not entering HTTP mode, `/mcp` POST/GET/DELETE/OPTIONS behavior, `MCP-Session-Id` reuse, auth/origin failures, insufficient scopes, and unchanged confirm gates for write/eval/query tools.
 
 ## Guardrails
 

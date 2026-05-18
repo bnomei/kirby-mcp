@@ -317,6 +317,7 @@ Bundled Skills live in `vendor/bnomei/kirby-mcp/skills` after installation. Copy
 > [!NOTE]
 > The `--project` flag is optional when you run the server from the Kirby project root.
 > Use it (or `KIRBY_MCP_PROJECT_ROOT`) when running from elsewhere or from a global MCP config.
+> Command-based stdio is the default and recommended setup for local IDE/agent use.
 
 ### Cursor
 
@@ -388,6 +389,90 @@ Start the server (point it at a composer-based Kirby project):
 - From the Kirby project root: `vendor/bin/kirby-mcp`
 - Or explicitly: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
 
+### HTTP transport (optional)
+
+Kirby MCP can also expose Streamable HTTP for clients that support an HTTP MCP URL.
+HTTP is disabled by default; `vendor/bin/kirby-mcp` continues to run the stdio transport
+unless you explicitly run the `http` subcommand and enable HTTP by environment variable or
+`.kirby-mcp/mcp.json`.
+
+When enabled, the MCP endpoint is a single route:
+
+```text
+http://127.0.0.1:8765/mcp
+```
+
+All `/mcp` requests require `Authorization: Bearer ...`. Do not put credentials in query
+strings. The default bind host is `127.0.0.1`, Origin validation is enabled, and write/eval/query
+tools keep their existing confirmation and enablement gates.
+
+Shared-token mode is for local development only:
+
+```bash
+KIRBY_MCP_HTTP_ENABLED=1 \
+KIRBY_MCP_HTTP_AUTH_MODE=shared-token \
+KIRBY_MCP_HTTP_TOKEN='replace-with-a-long-random-secret' \
+KIRBY_MCP_HTTP_ALLOWED_ORIGINS='http://127.0.0.1:3000' \
+vendor/bin/kirby-mcp http --project=/absolute/path/to/kirby-project
+```
+
+The global binary uses the same subcommand shape:
+
+```bash
+kirby-mcp http --project=/absolute/path/to/kirby-project
+```
+
+OAuth configuration fields are available for protected-resource metadata and JWT validation wiring,
+but the HTTP listener does not currently start in OAuth mode. Starting `kirby-mcp http` with
+`http.auth.mode=oauth` fails closed with "HTTP OAuth listener auth is not implemented yet"; use
+shared-token on loopback for the runnable local listener until OAuth listener support is completed.
+
+Runnable shared-token project config:
+
+```json
+{
+  "http": {
+    "enabled": true,
+    "host": "127.0.0.1",
+    "port": 8765,
+    "path": "/mcp",
+    "allowedOrigins": ["http://127.0.0.1:3000"],
+    "auth": {
+      "mode": "shared-token",
+      "token": "replace-with-a-long-random-secret",
+      "scopes": ["kirby-mcp:read", "kirby-mcp:runtime", "kirby-mcp:write", "kirby-mcp:execute", "kirby-mcp:admin"]
+    }
+  }
+}
+```
+
+Planned/partial OAuth config shape:
+
+```json
+{
+  "http": {
+    "auth": {
+      "mode": "oauth",
+      "issuer": "https://auth.example.test",
+      "audience": "https://example.test/mcp",
+      "jwksUri": "https://auth.example.test/.well-known/jwks.json",
+      "scopes": ["kirby-mcp:read", "kirby-mcp:runtime", "kirby-mcp:write", "kirby-mcp:execute", "kirby-mcp:admin"]
+    }
+  }
+}
+```
+
+HTTP tokens are scope-checked per operation. Available scope names are:
+
+- `kirby-mcp:read` for read-only tools and resources.
+- `kirby-mcp:runtime` for runtime inspection that executes Kirby CLI wrappers.
+- `kirby-mcp:write` for content/file/user/site mutations, still requiring confirmation.
+- `kirby-mcp:execute` for query/eval-style operations, still requiring enablement and confirmation.
+- `kirby-mcp:admin` for administrative runtime actions.
+
+Composer installs the HTTP/OAuth runtime libraries as direct package dependencies; upgrading this
+package is enough for consumers unless your deployment pins Composer with `--no-update`.
+
 ## IDE helpers (optional, for humans)
 
 The agent can both check and generate IDE helpers for your project: `kirby_ide_helpers_status` and `kirby_generate_ide_helpers`. You can also use the CLI commands yourself.
@@ -409,6 +494,10 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 - Write-capable actions require explicit opt-in (e.g. `allowWrite=true` or `confirm=true`, depending on the tool).
 - `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - `kirby_query_dot` is enabled by default; disable via `.kirby-mcp/mcp.json` (`{"query":{"enabled":false}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
+- HTTP transport is disabled by default and must never be exposed without Bearer-token authorization.
+- HTTP shared-token auth is limited to local development. Keep the token outside source control, bind to loopback, and use OAuth for production deployments.
+- HTTP validates `Origin` before MCP protocol handling and rejects missing, malformed, expired, invalid, or insufficient-scope tokens before tool/resource side effects.
+- HTTP exposes only `/mcp` for MCP traffic. OAuth protected-resource metadata may be exposed for discovery when OAuth mode is configured.
 
 ## What `install` / `update` change in your project
 
@@ -463,31 +552,53 @@ Kirby host selection:
 - To use host-specific Kirby config, set `KIRBY_MCP_HOST` (or `KIRBY_HOST`) when starting the MCP server, or set `kirby.host` in `.kirby-mcp/mcp.json`:
   - `{"kirby":{"host":"localhost"}}`
 
-| Option                  | Type       | Default    | Description                                                                                                                                                                                                  |
-| ----------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `cache.ttlSeconds`      | `int`      | `60`       | In-memory cache TTL (seconds) for read-only resources like `kirby://commands` and `kirby://cli/command/{command}` plus a few internal caches (roots inspection, completions); set to `0` to disable caching. |
-| `docs.ttlSeconds`       | `int`      | `86400`    | In-memory cache TTL (seconds) for fetched getkirby.com markdown docs (e.g. `kirby://field/{type}` and `kirby://section/{type}`); set to `0` to disable caching.                                              |
-| `cli.allow`             | `string[]` | `[]`       | Additional allowlist patterns for `kirby_run_cli_command` (supports `*` wildcard, e.g. `plugin:*`).                                                                                                          |
-| `cli.allowWrite`        | `string[]` | `[]`       | Additional allowlist patterns for write-capable commands; requires `allowWrite=true` when calling `kirby_run_cli_command` (supports `*`).                                                                    |
-| `cli.deny`              | `string[]` | `[]`       | Deny patterns that always block commands, even if allowlisted (supports `*`).                                                                                                                                |
-| `dumps.enabled`         | `bool`     | `true`     | Enable/disable `mcp_dump()` writes to `.kirby-mcp/dumps.jsonl`.                                                                                                                                              |
-| `dumps.maxBytes`        | `int`      | `2097152`  | Max size for `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`. When the next write would exceed it, the log is compacted by keeping the newest half of lines, then the new entry is appended.                |
-| `dumps.secretPatterns`  | `string[]` | (defaults) | Regex patterns for secret redaction in dump logs. Omit to use defaults (API keys, tokens, IPs, etc.), set to `[]` to disable masking, or provide custom patterns.                                            |
-| `ide.typeHintScanBytes` | `int`      | `16384`    | Max bytes to read from controller/model files when detecting Kirby IDE baseline type hints (see `kirby_ide_helpers_status`).                                                                                 |
-| `kirby.host`            | `string`   | `null`     | Default Kirby host to pass as `KIRBY_HOST` to the Kirby CLI (affects host-specific config like `config.{host}.php`).                                                                                         |
-| `eval.enabled`          | `bool`     | `false`    | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
-| `query.enabled`         | `bool`     | `true`     | Enable `kirby_query_dot` / `kirby mcp:query:dot` (still requires explicit confirmation per call).                                                                                                            |
+| Option                  | Type       | Default     | Description                                                                                                                                                                                                  |
+| ----------------------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cache.ttlSeconds`      | `int`      | `60`        | In-memory cache TTL (seconds) for read-only resources like `kirby://commands` and `kirby://cli/command/{command}` plus a few internal caches (roots inspection, completions); set to `0` to disable caching. |
+| `docs.ttlSeconds`       | `int`      | `86400`     | In-memory cache TTL (seconds) for fetched getkirby.com markdown docs (e.g. `kirby://field/{type}` and `kirby://section/{type}`); set to `0` to disable caching.                                              |
+| `cli.allow`             | `string[]` | `[]`        | Additional allowlist patterns for `kirby_run_cli_command` (supports `*` wildcard, e.g. `plugin:*`).                                                                                                          |
+| `cli.allowWrite`        | `string[]` | `[]`        | Additional allowlist patterns for write-capable commands; requires `allowWrite=true` when calling `kirby_run_cli_command` (supports `*`).                                                                    |
+| `cli.deny`              | `string[]` | `[]`        | Deny patterns that always block commands, even if allowlisted (supports `*`).                                                                                                                                |
+| `dumps.enabled`         | `bool`     | `true`      | Enable/disable `mcp_dump()` writes to `.kirby-mcp/dumps.jsonl`.                                                                                                                                              |
+| `dumps.maxBytes`        | `int`      | `2097152`   | Max size for `.kirby-mcp/dumps.jsonl` written by `mcp_dump()`. When the next write would exceed it, the log is compacted by keeping the newest half of lines, then the new entry is appended.                |
+| `dumps.secretPatterns`  | `string[]` | (defaults)  | Regex patterns for secret redaction in dump logs. Omit to use defaults (API keys, tokens, IPs, etc.), set to `[]` to disable masking, or provide custom patterns.                                            |
+| `ide.typeHintScanBytes` | `int`      | `16384`     | Max bytes to read from controller/model files when detecting Kirby IDE baseline type hints (see `kirby_ide_helpers_status`).                                                                                 |
+| `kirby.host`            | `string`   | `null`      | Default Kirby host to pass as `KIRBY_HOST` to the Kirby CLI (affects host-specific config like `config.{host}.php`).                                                                                         |
+| `eval.enabled`          | `bool`     | `false`     | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
+| `query.enabled`         | `bool`     | `true`      | Enable `kirby_query_dot` / `kirby mcp:query:dot` (still requires explicit confirmation per call).                                                                                                            |
+| `http.enabled`          | `bool`     | `false`     | Enable the optional Streamable HTTP MCP transport. Stdio remains the default when this is false or unset.                                                                                                    |
+| `http.host`             | `string`   | `127.0.0.1` | Bind host for HTTP mode. Non-loopback binds require production-grade OAuth configuration.                                                                                                                    |
+| `http.port`             | `int`      | `8765`      | Bind port for HTTP mode.                                                                                                                                                                                     |
+| `http.path`             | `string`   | `/mcp`      | Single MCP endpoint path for Streamable HTTP requests.                                                                                                                                                       |
+| `http.allowedOrigins`   | `string[]` | `[]`        | Allowed browser origins for HTTP mode. Configure the exact client origins you expect.                                                                                                                        |
+| `http.auth.mode`        | `string`   | `null`      | Required when HTTP is enabled: `oauth` for production-grade JWT validation or `shared-token` for loopback local development.                                                                                 |
+| `http.auth.token`       | `string`   | `null`      | Shared-token secret for local development. Prefer `KIRBY_MCP_HTTP_TOKEN` so secrets stay out of source control.                                                                                              |
+| `http.auth.issuer`      | `string`   | `null`      | OAuth issuer expected in JWT access tokens.                                                                                                                                                                  |
+| `http.auth.audience`    | `string`   | `null`      | OAuth audience/resource expected in JWT access tokens, usually the MCP resource URL.                                                                                                                         |
+| `http.auth.jwksUri`     | `string`   | `null`      | OAuth JWKS URI used to verify access-token signatures.                                                                                                                                                       |
+| `http.auth.scopes`      | `string[]` | `[]`        | Accepted operation scopes such as `kirby-mcp:read`, `kirby-mcp:runtime`, `kirby-mcp:write`, `kirby-mcp:execute`, and `kirby-mcp:admin`.                                                                      |
 
 Environment variables:
 
-| Env var                         | Description                                                                          |
-| ------------------------------- | ------------------------------------------------------------------------------------ |
-| `KIRBY_MCP_PROJECT_ROOT`        | Project root (overrides auto-detection).                                             |
-| `KIRBY_MCP_KIRBY_BIN`           | Path to `vendor/bin/kirby` (overrides binary resolution).                            |
-| `KIRBY_MCP_HOST` / `KIRBY_HOST` | Kirby host override (takes precedence over config).                                  |
-| `KIRBY_MCP_DUMPS_ENABLED`       | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                            |
-| `KIRBY_MCP_ENABLE_EVAL`         | Enable eval override (takes precedence over config; still needs confirmation).       |
-| `KIRBY_MCP_ENABLE_QUERY`        | Enable query eval override (takes precedence over config; still needs confirmation). |
+| Env var                          | Description                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| `KIRBY_MCP_PROJECT_ROOT`         | Project root (overrides auto-detection).                                             |
+| `KIRBY_MCP_KIRBY_BIN`            | Path to `vendor/bin/kirby` (overrides binary resolution).                            |
+| `KIRBY_MCP_HOST` / `KIRBY_HOST`  | Kirby host override (takes precedence over config).                                  |
+| `KIRBY_MCP_DUMPS_ENABLED`        | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                            |
+| `KIRBY_MCP_ENABLE_EVAL`          | Enable eval override (takes precedence over config; still needs confirmation).       |
+| `KIRBY_MCP_ENABLE_QUERY`         | Enable query eval override (takes precedence over config; still needs confirmation). |
+| `KIRBY_MCP_HTTP_ENABLED`         | Enable optional HTTP transport (`1/0`, `true/false`, `on/off`).                      |
+| `KIRBY_MCP_HTTP_HOST`            | HTTP bind host; defaults to `127.0.0.1`.                                             |
+| `KIRBY_MCP_HTTP_PORT`            | HTTP bind port; defaults to `8765`.                                                  |
+| `KIRBY_MCP_HTTP_PATH`            | HTTP MCP endpoint path; defaults to `/mcp`.                                          |
+| `KIRBY_MCP_HTTP_ALLOWED_ORIGINS` | Comma-separated allowed origins for HTTP requests.                                   |
+| `KIRBY_MCP_HTTP_AUTH_MODE`       | HTTP auth mode: `oauth` or `shared-token`.                                           |
+| `KIRBY_MCP_HTTP_TOKEN`           | Shared-token bearer secret for loopback local development.                           |
+| `KIRBY_MCP_HTTP_OAUTH_ISSUER`    | OAuth JWT issuer.                                                                    |
+| `KIRBY_MCP_HTTP_OAUTH_AUDIENCE`  | OAuth JWT audience/resource.                                                         |
+| `KIRBY_MCP_HTTP_OAUTH_JWKS_URI`  | OAuth JWKS URI for JWT signature validation.                                         |
+| `KIRBY_MCP_HTTP_SCOPES`          | Comma-separated accepted operation scopes.                                           |
 
 ## Troubleshooting
 
@@ -497,6 +608,7 @@ Environment variables:
 - Host-specific config not applied: set `KIRBY_MCP_HOST`/`KIRBY_HOST` or configure `{"kirby":{"host":"..."}}`.
 - Docs resources are slow/failing: confirm network access or adjust `docs.ttlSeconds` (set to `0` to disable caching).
 - No dump output: ensure `dumps.enabled=true`, a `.kirby-mcp/dumps.jsonl` exists, and use the correct `traceId` with `kirby_dump_log_tail`.
+- HTTP client gets 401/403: confirm Bearer auth, token audience/resource, scopes, and `Origin` match the configured HTTP settings.
 
 ## Development
 
