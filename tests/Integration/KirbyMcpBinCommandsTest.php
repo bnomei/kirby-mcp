@@ -165,7 +165,7 @@ it('exposes an explicit HTTP config check without changing normal bin commands',
     expect($decoded['http'])->toHaveKey('path', '/mcp');
 });
 
-it('does not report HTTP startup success before the listener is implemented', function (): void {
+it('reports enabled HTTP config without starting the listener when JSON output is requested', function (): void {
     $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
     expect($bin)->not()->toBeFalse();
 
@@ -184,10 +184,37 @@ it('does not report HTTP startup success before the listener is implemented', fu
 
     $process->run();
 
-    expect($process->getExitCode())->toBe(1);
+    expect($process->getExitCode())->toBe(0);
 
     $decoded = McpMarkedJsonExtractor::extract($process->getOutput());
     expect($decoded)->toBeArray();
-    expect($decoded)->toHaveKey('ok', false);
-    expect($decoded['errors'])->toContain('HTTP listener startup is not implemented yet; run with --check to validate configuration.');
+    expect($decoded)->toHaveKey('ok', true);
+    expect($decoded['http'])->toHaveKey('enabled', true);
+    expect($decoded['http'])->toHaveKey('authMode', 'shared-token');
+    expect($decoded['errors'])->toBe([]);
+});
+
+it('fails closed before starting the HTTP listener when OAuth auth is configured but not implemented', function (): void {
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+
+    $projectRoot = cmsPath();
+
+    $process = new Process(
+        command: [PHP_BINARY, $bin, 'http', '--project=' . $projectRoot],
+        cwd: dirname(__DIR__, 2),
+        env: [
+            'KIRBY_MCP_HTTP_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_AUTH_MODE' => 'oauth',
+            'KIRBY_MCP_HTTP_OAUTH_ISSUER' => 'https://auth.example.test',
+            'KIRBY_MCP_HTTP_OAUTH_AUDIENCE' => 'https://example.test/mcp',
+            'KIRBY_MCP_HTTP_OAUTH_JWKS_URI' => 'https://auth.example.test/.well-known/jwks.json',
+        ],
+        timeout: 60,
+    );
+
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1);
+    expect($process->getOutput())->toContain('HTTP OAuth listener auth is not implemented yet');
 });

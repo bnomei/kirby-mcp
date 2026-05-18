@@ -27,10 +27,12 @@ if (is_string($autoloadPath) && $autoloadPath !== '' && is_file($autoloadPath)) 
 }
 
 use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
+use Bnomei\KirbyMcp\Mcp\HttpMcpListener;
 use Bnomei\KirbyMcp\Mcp\ServerFactory;
 use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
 use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Bnomei\KirbyMcp\Project\ProjectRootFinder;
 use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
@@ -508,12 +510,30 @@ if ($subcommand === 'http') {
 
     $json = in_array('--json', $argv, true);
     $check = in_array('--check', $argv, true) || in_array('--dry-run', $argv, true);
+    $once = in_array('--once', $argv, true);
     $config = KirbyMcpConfig::load($root)->http();
     $errors = $config->validationErrors();
     $commandErrors = $errors;
+    $sseMaxSeconds = 300;
+    $sseMaxSecondsEnv = getenv('KIRBY_MCP_HTTP_SSE_MAX_SECONDS');
+    if (is_string($sseMaxSecondsEnv) && $sseMaxSecondsEnv !== '') {
+        $parsedSseMaxSeconds = filter_var($sseMaxSecondsEnv, FILTER_VALIDATE_INT);
+        if ($parsedSseMaxSeconds !== false) {
+            $sseMaxSeconds = max(1, min(3600, (int) $parsedSseMaxSeconds));
+        }
+    }
 
-    if ($check === false) {
-        $commandErrors[] = 'HTTP listener startup is not implemented yet; run with --check to validate configuration.';
+    if ($check === false && $config->enabled === false) {
+        $commandErrors[] = 'HTTP listener is disabled; set KIRBY_MCP_HTTP_ENABLED=1 or http.enabled=true.';
+    }
+
+    if (
+        $check === false
+        && $json === false
+        && $config->enabled === true
+        && $config->authMode !== KirbyMcpHttpConfig::AUTH_MODE_SHARED_TOKEN
+    ) {
+        $commandErrors[] = 'HTTP OAuth listener auth is not implemented yet; use shared-token on loopback or run --check only.';
     }
 
     $payload = [
@@ -537,7 +557,7 @@ if ($subcommand === 'http') {
         'errors' => $commandErrors,
     ];
 
-    if ($json === true) {
+    if ($json === true || $check === true || $commandErrors !== []) {
         echo JsonMarkers::START . "\n";
         echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
         echo JsonMarkers::END . "\n";
@@ -555,9 +575,22 @@ if ($subcommand === 'http') {
         foreach ($commandErrors as $error) {
             echo "- {$error}\n";
         }
+
+        exit(1);
     }
 
-    exit($payload['ok'] === true ? 0 : 1);
+    $sharedToken = $config->authMode === KirbyMcpHttpConfig::AUTH_MODE_SHARED_TOKEN ? $config->sharedToken : null;
+
+    exit((new HttpMcpListener())->serve(
+        host: $config->host,
+        port: $config->port,
+        path: $config->path,
+        projectRoot: $root,
+        sharedToken: $sharedToken,
+        allowedOrigins: $config->allowedOrigins,
+        once: $once,
+        sseMaxSeconds: $sseMaxSeconds,
+    ));
 }
 
 $server = (new ServerFactory())->create();
