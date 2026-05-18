@@ -5,13 +5,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-18
+
 - Added an explicit `KirbyMcpRoute::handle()` adapter for copy-paste Kirby `/mcp` route integration, including PSR-7-to-Kirby response bridging for Streamable HTTP responses.
 - Updated HTTP docs to recommend the Kirby route integration only, with a production dependency note and no web-server proxy route.
 - Hardened Kirby route shared-token mode so it remains loopback-only even when the route is installed on a public Kirby site.
 - Fixed Kirby route project-root propagation and added CORS headers to Streamable HTTP GET/SSE responses.
-
-## [1.6.0] - 2026-05-18
-
 - Added an opt-in `kirby-mcp http` listener for a Streamable HTTP MCP endpoint at `/mcp`; stdio remains the default transport.
 - Added file-backed HTTP MCP sessions, GET SSE delivery, POST JSON-RPC handling, DELETE session cleanup, and authenticated CORS preflight support.
 - Added mandatory Bearer auth for HTTP, shared-token loopback mode, query-string credential rejection, Origin validation, OAuth protected-resource metadata wiring, and per-operation scope enforcement.
