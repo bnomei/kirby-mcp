@@ -27,6 +27,20 @@ TEXT;
     expect($parsed['sections']['core'])->toContain('version');
 });
 
+it('parses `kirby help` output with prerelease and build metadata versions', function (): void {
+    $stdout = <<<TEXT
+Kirby CLI v2.0.0-beta.1+build.42
+
+Core commands:
+- kirby version
+TEXT;
+
+    $parsed = KirbyCliHelpParser::parse($stdout);
+
+    expect($parsed['cliVersion'])->toBe('2.0.0-beta.1+build.42');
+    expect($parsed['commands'])->toContain('version');
+});
+
 it('parses `kirby <command> --help` usage output into args', function (): void {
     $stdout = <<<TEXT
 Displays Kirby license information in table or JSON format.

@@ -29,7 +29,7 @@ final class KirbyCliHelpParser
                 continue;
             }
 
-            if ($cliVersion === null && preg_match('/^Kirby\\s+CLI\\s+([0-9]+\\.[0-9]+\\.[0-9]+)$/i', $line, $m) === 1) {
+            if ($cliVersion === null && preg_match('/^Kirby\\s+CLI\\s+v?([0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.+-]+)?)\\b/i', $line, $m) === 1) {
                 $cliVersion = $m[1];
                 continue;
             }
