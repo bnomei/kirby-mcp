@@ -471,9 +471,10 @@ Shared-token mode is for loopback local development only:
 }
 ```
 
-The Kirby route rejects shared-token requests whose actual request host is not loopback. Use OAuth
-for public or non-loopback deployments. The route adapter does not use `http.host` or `http.port`;
-those fields only apply to the low-level `kirby-mcp http` listener/config check.
+The Kirby route rejects shared-token requests unless PHP reports the request’s `REMOTE_ADDR` as
+loopback. Use OAuth for public, reverse-proxied, or otherwise non-local deployments. The route
+adapter does not use `http.host` or `http.port`; those fields only apply to the low-level
+`kirby-mcp http` listener/config check.
 
 HTTP tokens are scope-checked per operation. Available scope names are:
 
@@ -508,7 +509,7 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 - `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - `kirby_query_dot` is enabled by default; disable via `.kirby-mcp/mcp.json` (`{"query":{"enabled":false}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - HTTP transport is disabled by default and must never be exposed without Bearer-token authorization.
-- HTTP shared-token auth is limited to local development. Keep the token outside source control; the Kirby route rejects shared-token requests on non-loopback hosts, and production deployments should use OAuth.
+- HTTP shared-token auth is limited to local development. Keep the token outside source control; the Kirby route rejects shared-token requests when `REMOTE_ADDR` is not loopback, and production deployments should use OAuth.
 - HTTP validates `Origin` before MCP protocol handling and rejects missing, malformed, expired, invalid, or insufficient-scope tokens before tool/resource side effects.
 - HTTP exposes only the configured MCP route path, `/mcp` by default, for MCP traffic.
 
@@ -580,7 +581,7 @@ Kirby host selection:
 | `eval.enabled`          | `bool`     | `false`     | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
 | `query.enabled`         | `bool`     | `true`      | Enable `kirby_query_dot` / `kirby mcp:query:dot` (still requires explicit confirmation per call).                                                                                                            |
 | `http.enabled`          | `bool`     | `false`     | Enable the optional Streamable HTTP MCP transport. Stdio remains the default when this is false or unset.                                                                                                    |
-| `http.host`             | `string`   | `127.0.0.1` | Bind host for the low-level HTTP listener/config check. The Kirby route adapter uses the current request host and rejects shared-token auth on non-loopback requests.                                        |
+| `http.host`             | `string`   | `127.0.0.1` | Bind host for the low-level HTTP listener/config check. The Kirby route adapter does not use this field and rejects shared-token auth unless `REMOTE_ADDR` is loopback.                                      |
 | `http.port`             | `int`      | `8765`      | Bind port for the low-level HTTP listener/config check. The Kirby route adapter does not use this field.                                                                                                     |
 | `http.path`             | `string`   | `/mcp`      | Single MCP endpoint path for Streamable HTTP requests. Match this with the copied Kirby route pattern.                                                                                                       |
 | `http.allowedOrigins`   | `string[]` | `[]`        | Allowed browser origins for HTTP mode. Configure the exact client origins you expect.                                                                                                                        |

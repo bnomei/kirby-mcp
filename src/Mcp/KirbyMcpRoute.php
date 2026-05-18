@@ -40,7 +40,7 @@ final class KirbyMcpRoute
             return self::error(404, 'HTTP MCP route is disabled.');
         }
 
-        $errors = $config->validationErrors();
+        $errors = self::validationErrors($config);
         if ($errors !== []) {
             return self::error(503, 'HTTP MCP route is not configured correctly.', [
                 'errors' => $errors,
@@ -49,10 +49,12 @@ final class KirbyMcpRoute
 
         if (
             $config->authMode === KirbyMcpHttpConfig::AUTH_MODE_SHARED_TOKEN
-            && self::isLoopbackHost($request->getUri()->getHost()) === false
+            && self::isLoopbackRemoteAddress($request) === false
         ) {
             return self::error(503, 'HTTP shared-token auth is only allowed for loopback requests.');
         }
+
+        putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);
 
         try {
             $handler = self::handler($projectRoot, $config, $sseMaxSeconds);
@@ -103,6 +105,20 @@ final class KirbyMcpRoute
         );
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private static function validationErrors(KirbyMcpHttpConfig $config): array
+    {
+        $listenerOnlyErrors = [
+            'HTTP port must be between 1 and 65535.',
+            'HTTP shared-token auth is only allowed for loopback hosts.',
+            'Non-loopback HTTP binds require OAuth auth.',
+        ];
+
+        return array_values(array_diff($config->validationErrors(), $listenerOnlyErrors));
+    }
+
     private static function resolveProjectRoot(?string $projectRoot): ?string
     {
         $finder = new ProjectRootFinder();
@@ -124,14 +140,18 @@ final class KirbyMcpRoute
         return $detected ?? $finder->findKirbyProjectRoot();
     }
 
-    private static function isLoopbackHost(string $host): bool
+    private static function isLoopbackRemoteAddress(ServerRequestInterface $request): bool
     {
-        $host = strtolower(trim($host, " \t\n\r\0\x0B[]"));
+        $remoteAddress = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        if (!is_string($remoteAddress) || trim($remoteAddress) === '') {
+            return false;
+        }
 
-        return $host === 'localhost'
-            || $host === '::1'
-            || $host === '127.0.0.1'
-            || str_starts_with($host, '127.');
+        $remoteAddress = strtolower(trim($remoteAddress, " \t\n\r\0\x0B[]"));
+
+        return $remoteAddress === '::1'
+            || $remoteAddress === '127.0.0.1'
+            || str_starts_with($remoteAddress, '127.');
     }
 
     /**

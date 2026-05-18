@@ -67,14 +67,14 @@ final class HttpMcpHandler
         }
 
         if ($request->getUri()->getPath() !== $this->path) {
-            return $responseFactory->createResponse(404)
+            return $this->withCorsHeaders($responseFactory->createResponse(404)
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody($streamFactory->createStream($this->encodeError('MCP endpoint not found.')));
+                ->withBody($streamFactory->createStream($this->encodeError('MCP endpoint not found.'))), $request);
         }
 
         $queryCredentialResponse = $this->rejectQueryCredentials($request, $responseFactory, $streamFactory);
         if ($queryCredentialResponse instanceof ResponseInterface) {
-            return $queryCredentialResponse;
+            return $this->withCorsHeaders($queryCredentialResponse, $request);
         }
 
         $handler = new MiddlewareRequestHandler([
@@ -89,7 +89,7 @@ final class HttpMcpHandler
 
         $response = $handler->handle($request);
 
-        return $this->withStructuredAuthErrorBody($response, $streamFactory);
+        return $this->withCorsHeaders($this->withStructuredAuthErrorBody($response, $streamFactory), $request);
     }
 
     private function handleAuthorizedRequest(
@@ -277,6 +277,44 @@ final class HttpMcpHandler
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withBody($streamFactory->createStream($this->encodeAuthError($error, $this->authErrorMessage($error))));
+    }
+
+    private function withCorsHeaders(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+    {
+        $origin = trim($request->getHeaderLine('Origin'));
+        $headers = [
+            'Access-Control-Allow-Origin' => $origin !== '' ? $origin : '*',
+            'Access-Control-Allow-Methods' => 'GET, POST, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Protocol-Version,' . self::SESSION_HEADER,
+            'Access-Control-Expose-Headers' => self::SESSION_HEADER,
+        ];
+
+        foreach ($headers as $name => $value) {
+            if (!$response->hasHeader($name)) {
+                $response = $response->withHeader($name, $value);
+            }
+        }
+
+        if ($origin !== '') {
+            $response = $this->withVaryOrigin($response);
+        }
+
+        return $response;
+    }
+
+    private function withVaryOrigin(ResponseInterface $response): ResponseInterface
+    {
+        $vary = $response->getHeaderLine('Vary');
+        if ($vary === '') {
+            return $response->withHeader('Vary', 'Origin');
+        }
+
+        $values = array_map(static fn (string $value): string => strtolower(trim($value)), explode(',', $vary));
+        if (!in_array('origin', $values, true)) {
+            return $response->withHeader('Vary', $vary . ', Origin');
+        }
+
+        return $response;
     }
 
     private function encodeAuthError(string $error, string $message): string

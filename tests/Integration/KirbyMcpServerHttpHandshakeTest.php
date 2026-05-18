@@ -430,6 +430,17 @@ it('enforces shared-token authorization and origin policy before protocol handli
     );
     expect($allowedResponse->getStatusCode())->toBe(200);
     expect($allowedResponse->getHeaderLine('Mcp-Session-Id'))->not()->toBe('');
+
+    $getResponse = $handler->handle(
+        $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')
+            ->withHeader('Authorization', 'Bearer local-secret')
+            ->withHeader('Origin', 'http://allowed.example.test')
+            ->withHeader('Mcp-Session-Id', $allowedResponse->getHeaderLine('Mcp-Session-Id'))
+    );
+    expect($getResponse->getStatusCode())->toBe(200);
+    expect($getResponse->getHeaderLine('Content-Type'))->toStartWith('text/event-stream');
+    expect($getResponse->getHeaderLine('Access-Control-Allow-Origin'))->toBe('http://allowed.example.test');
+    expect($getResponse->getHeaderLine('Access-Control-Expose-Headers'))->toContain('Mcp-Session-Id');
 });
 
 it('starts the opt-in kirby-mcp http listener and serves /mcp', function (): void {
