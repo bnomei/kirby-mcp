@@ -48,5 +48,5 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - SDK v0.5 exposes top-level `title` on tools/prompts; keep `#[McpTool(title: ...)]` and `#[McpPrompt(title: ...)]` populated and aligned with display titles.
 - Prefer SDK v0.5 titled enum elicitation schemas for choice-style client prompts; keep legacy explicit parameters (e.g. `confirm=true`) working.
 - Write tools that mutate content exposed via `kirby://...` resources should emit `notifications/resources/updated` for subscribed URIs (session-scoped subscriptions).
-- Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually in `bin/kirby-mcp`.
+- Resource list entries should include MCP `annotations` (audience + priority) and `_meta.lastModified` when the data source is known; size-bearing resources are registered manually by `src/Mcp/ServerFactory.php`.
 - Keep init/info payloads lean; omit heavy blobs like `composer.lock` from tool/resource outputs (composer audit does not return lock data).
