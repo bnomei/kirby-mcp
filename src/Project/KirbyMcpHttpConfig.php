@@ -32,6 +32,7 @@ final readonly class KirbyMcpHttpConfig
         public ?string $oauthJwksUri = null,
         public array $scopes = [],
         public array $remoteTokens = [],
+        public KirbyMcpOAuthProviderConfig $oauthProvider = new KirbyMcpOAuthProviderConfig(),
     ) {
     }
 
@@ -87,16 +88,20 @@ final readonly class KirbyMcpHttpConfig
         }
 
         if ($this->authMode === self::AUTH_MODE_OAUTH) {
-            if ($this->oauthIssuer === null || $this->oauthIssuer === '') {
+            if ($this->oauthProvider->enabled === false && ($this->oauthIssuer === null || $this->oauthIssuer === '')) {
                 $errors[] = 'HTTP OAuth auth requires an issuer.';
             }
 
-            if ($this->oauthAudience === null || $this->oauthAudience === '') {
+            if ($this->oauthProvider->enabled === false && ($this->oauthAudience === null || $this->oauthAudience === '')) {
                 $errors[] = 'HTTP OAuth auth requires an audience.';
             }
 
-            if ($this->oauthJwksUri === null || $this->oauthJwksUri === '') {
+            if ($this->oauthProvider->enabled === false && ($this->oauthJwksUri === null || $this->oauthJwksUri === '')) {
                 $errors[] = 'HTTP OAuth auth requires a JWKS URI.';
+            }
+
+            if ($this->oauthProvider->enabled === true) {
+                array_push($errors, ...$this->oauthProvider->validationErrors());
             }
         }
 
@@ -131,5 +136,24 @@ final readonly class KirbyMcpHttpConfig
     public function isValid(): bool
     {
         return $this->validationErrors() === [];
+    }
+
+    public function withOAuthEndpoints(string $issuer, string $audience, string $jwksUri): self
+    {
+        return new self(
+            enabled: $this->enabled,
+            host: $this->host,
+            port: $this->port,
+            path: $this->path,
+            allowedOrigins: $this->allowedOrigins,
+            authMode: $this->authMode,
+            sharedToken: $this->sharedToken,
+            oauthIssuer: $this->oauthIssuer ?? $issuer,
+            oauthAudience: $this->oauthAudience ?? $audience,
+            oauthJwksUri: $this->oauthJwksUri ?? $jwksUri,
+            scopes: $this->scopes,
+            remoteTokens: $this->remoteTokens,
+            oauthProvider: $this->oauthProvider,
+        );
     }
 }

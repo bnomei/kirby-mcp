@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Http;
 
+use Bnomei\KirbyMcp\Mcp\OAuth\OAuthFileStore;
+use Bnomei\KirbyMcp\Mcp\OAuth\OAuthKeySet;
+use Bnomei\KirbyMcp\Mcp\OAuth\StaticJwksProvider;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpToken;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface;
@@ -43,6 +46,22 @@ final readonly class HttpAuthFactory
             issuer: (string) $config->oauthIssuer,
             audience: (string) $config->oauthAudience,
             jwksProvider: new JwksProvider(new OidcDiscovery()),
+            jwksUri: $config->oauthJwksUri,
+        );
+    }
+
+    public function oauthProviderValidator(KirbyMcpHttpConfig $config, string $projectRoot): AuthorizationTokenValidatorInterface
+    {
+        $store = new OAuthFileStore(
+            rtrim($projectRoot, DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR . '.kirby-mcp'
+            . DIRECTORY_SEPARATOR . 'oauth',
+        );
+
+        return new JwtTokenValidator(
+            issuer: (string) $config->oauthIssuer,
+            audience: (string) $config->oauthAudience,
+            jwksProvider: new StaticJwksProvider((new OAuthKeySet($store))->jwks()),
             jwksUri: $config->oauthJwksUri,
         );
     }

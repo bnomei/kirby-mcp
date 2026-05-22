@@ -35,7 +35,7 @@ final class KirbyMcpRoute
             ]);
         }
 
-        $config = $projectConfig->http();
+        $config = KirbyMcpOAuthRoute::withResolvedOAuthProvider($projectConfig->http(), $request);
         if ($config->enabled === false) {
             return self::error(404, 'HTTP MCP route is disabled.');
         }
@@ -97,7 +97,9 @@ final class KirbyMcpRoute
         } elseif ($config->authMode === KirbyMcpHttpConfig::AUTH_MODE_REMOTE_TOKEN) {
             $tokenValidator = $authFactory->remoteTokenValidator($config->remoteTokens);
         } elseif ($config->authMode === KirbyMcpHttpConfig::AUTH_MODE_OAUTH && is_string($config->oauthIssuer) && is_string($config->oauthAudience)) {
-            $tokenValidator = $authFactory->oauthValidator($config);
+            $tokenValidator = $config->oauthProvider->enabled
+                ? $authFactory->oauthProviderValidator($config, $projectRoot)
+                : $authFactory->oauthValidator($config);
             $protectedResourceMetadata = $authFactory->metadata($config->oauthIssuer, $config->oauthAudience);
         }
 

@@ -18,10 +18,11 @@ final class KirbyMcpRoutes
         string $path = KirbyMcpHttpConfig::DEFAULT_PATH,
         ?string $projectRoot = null,
         int $sseMaxSeconds = 300,
+        string $oauthPath = '/mcp/oauth',
     ): array {
         return [
             ...self::mcp($path, $projectRoot, $sseMaxSeconds),
-            ...self::oauth($projectRoot, $sseMaxSeconds),
+            ...self::oauth($projectRoot, $sseMaxSeconds, $oauthPath),
         ];
     }
 
@@ -50,9 +51,58 @@ final class KirbyMcpRoutes
      *
      * @return list<array{pattern: string, method: string, action: \Closure, name: string}>
      */
-    public static function oauth(?string $projectRoot = null, int $sseMaxSeconds = 300): array
-    {
-        return self::oauthProtectedResourceMetadata($projectRoot, $sseMaxSeconds);
+    public static function oauth(
+        ?string $projectRoot = null,
+        int $sseMaxSeconds = 300,
+        string $oauthPath = '/mcp/oauth',
+    ): array {
+        $oauthPath = '/' . trim(self::patternFromPath($oauthPath), '/');
+
+        return [
+            ...self::oauthProtectedResourceMetadata($projectRoot, $sseMaxSeconds),
+            [
+                'pattern' => self::patternFromPath('/.well-known/oauth-authorization-server'),
+                'method' => 'GET',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-authorization-server',
+            ],
+            [
+                'pattern' => self::patternFromPath('/.well-known/openid-configuration'),
+                'method' => 'GET',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.openid-configuration',
+            ],
+            [
+                'pattern' => self::patternFromPath($oauthPath . '/register'),
+                'method' => 'POST',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-register',
+            ],
+            [
+                'pattern' => self::patternFromPath($oauthPath . '/authorize'),
+                'method' => 'GET|POST',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-authorize',
+            ],
+            [
+                'pattern' => self::patternFromPath($oauthPath . '/token'),
+                'method' => 'POST',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-token',
+            ],
+            [
+                'pattern' => self::patternFromPath($oauthPath . '/jwks.json'),
+                'method' => 'GET',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-jwks',
+            ],
+            [
+                'pattern' => self::patternFromPath($oauthPath . '/login'),
+                'method' => 'GET|POST',
+                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'name' => 'kirby-mcp.oauth-login',
+            ],
+        ];
     }
 
     /**

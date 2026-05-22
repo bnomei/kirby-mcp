@@ -338,6 +338,8 @@ final readonly class KirbyMcpConfig
         $http = is_array($http) ? $http : [];
         $auth = $http['auth'] ?? null;
         $auth = is_array($auth) ? $auth : [];
+        $oauthProvider = $http['oauthProvider'] ?? $http['oauth_provider'] ?? $auth['provider'] ?? null;
+        $oauthProvider = is_array($oauthProvider) ? $oauthProvider : [];
         $scopes = $this->envStringList('KIRBY_MCP_HTTP_SCOPES')
             ?? $this->stringList($auth['scopes'] ?? null);
 
@@ -372,6 +374,23 @@ final readonly class KirbyMcpConfig
                 ?? $this->stringValue($auth['jwksUri'] ?? $auth['jwks_uri'] ?? null),
             scopes: $scopes,
             remoteTokens: $this->remoteTokens($auth, $scopes),
+            oauthProvider: new KirbyMcpOAuthProviderConfig(
+                enabled: $this->envBool('KIRBY_MCP_HTTP_OAUTH_PROVIDER_ENABLED')
+                    ?? $this->boolValue($oauthProvider['enabled'] ?? null)
+                    ?? KirbyMcpOAuthProviderConfig::DEFAULT_ENABLED,
+                path: $this->normalizeHttpPath(
+                    $this->envString('KIRBY_MCP_HTTP_OAUTH_PROVIDER_PATH')
+                        ?? $this->stringValue($oauthProvider['path'] ?? null)
+                        ?? KirbyMcpOAuthProviderConfig::DEFAULT_PATH,
+                ),
+                consent: $this->normalizeOAuthConsent(
+                    $this->envString('KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT')
+                        ?? $this->stringValue($oauthProvider['consent'] ?? null),
+                ),
+                consentSnippet: $this->envString('KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT_SNIPPET')
+                    ?? $this->stringValue($oauthProvider['consentSnippet'] ?? $oauthProvider['consent_snippet'] ?? null)
+                    ?? KirbyMcpOAuthProviderConfig::DEFAULT_CONSENT_SNIPPET,
+            ),
         );
     }
 
@@ -557,5 +576,18 @@ final readonly class KirbyMcpConfig
         }
 
         return $mode;
+    }
+
+    /**
+     * @return 'auto'|'remember'|'always'|'snippet'
+     */
+    private function normalizeOAuthConsent(?string $consent): string
+    {
+        $consent = strtolower(trim($consent ?? ''));
+
+        return match ($consent) {
+            'remember', 'always', 'snippet' => $consent,
+            default => KirbyMcpOAuthProviderConfig::DEFAULT_CONSENT,
+        };
     }
 }

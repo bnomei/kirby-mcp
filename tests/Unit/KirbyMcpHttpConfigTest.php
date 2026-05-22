@@ -45,6 +45,10 @@ function kirbyMcpHttpConfigWithEnv(array $env, Closure $callback): mixed
         'KIRBY_MCP_HTTP_OAUTH_ISSUER',
         'KIRBY_MCP_HTTP_OAUTH_AUDIENCE',
         'KIRBY_MCP_HTTP_OAUTH_JWKS_URI',
+        'KIRBY_MCP_HTTP_OAUTH_PROVIDER_ENABLED',
+        'KIRBY_MCP_HTTP_OAUTH_PROVIDER_PATH',
+        'KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT',
+        'KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT_SNIPPET',
         'KIRBY_MCP_HTTP_SCOPES',
     ];
 
@@ -300,4 +304,54 @@ it('accepts OAuth config for non-loopback HTTP binds', function (): void {
     } finally {
         kirbyMcpHttpConfigRemoveRoot($root);
     }
+});
+
+it('accepts built-in OAuth provider config without external issuer metadata', function (): void {
+    $root = kirbyMcpHttpConfigTempRoot([
+        'http' => [
+            'enabled' => true,
+            'host' => '0.0.0.0',
+            'auth' => [
+                'mode' => 'oauth',
+                'scopes' => ['kirby-mcp:read', 'kirby-mcp:runtime'],
+            ],
+            'oauthProvider' => [
+                'enabled' => true,
+                'path' => '/mcp/oauth',
+                'consent' => 'remember',
+                'consentSnippet' => 'custom/oauth-consent',
+            ],
+        ],
+    ]);
+
+    try {
+        kirbyMcpHttpConfigWithEnv([], function () use ($root): void {
+            $config = KirbyMcpConfig::load($root)->http();
+
+            expect($config->validationErrors())->toBe([])
+                ->and($config->oauthProvider->enabled)->toBeTrue()
+                ->and($config->oauthProvider->path)->toBe('/mcp/oauth')
+                ->and($config->oauthProvider->consent)->toBe('remember')
+                ->and($config->oauthProvider->consentSnippet)->toBe('custom/oauth-consent');
+        });
+    } finally {
+        kirbyMcpHttpConfigRemoveRoot($root);
+    }
+});
+
+it('validates built-in OAuth provider settings', function (): void {
+    $config = new KirbyMcpHttpConfig(
+        enabled: true,
+        authMode: KirbyMcpHttpConfig::AUTH_MODE_OAUTH,
+        oauthProvider: new Bnomei\KirbyMcp\Project\KirbyMcpOAuthProviderConfig(
+            enabled: true,
+            path: '',
+            consent: 'auto',
+            consentSnippet: '',
+        ),
+    );
+
+    expect($config->validationErrors())
+        ->toContain('HTTP OAuth provider path must start with /.')
+        ->toContain('HTTP OAuth provider consent snippet must not be empty.');
 });

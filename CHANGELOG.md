@@ -5,7 +5,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-05-22
+
 - Added explicit `remote-token` HTTP auth for public Kirby `/mcp` routes used by header-capable clients, with hashed token records, per-token scopes, HTTPS enforcement for non-loopback requests, and unchanged query-string credential rejection.
+- Added built-in, disabled-by-default OAuth provider routes for Claude Desktop/Claude.ai custom connectors, including metadata discovery, dynamic client registration, auth code + PKCE, refresh tokens, JWKS, and Kirby-user-backed login/consent storage under `.kirby-mcp/oauth`.
+- Expanded `KirbyMcpRoutes::routes()` to include the complete optional OAuth route set alongside `/mcp`.
 
 ## [1.6.1] - 2026-05-18
 
