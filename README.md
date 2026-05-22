@@ -531,6 +531,10 @@ Claude will discover the OAuth metadata, dynamically register a public client, o
 flow, receive the callback at `https://claude.ai/api/mcp/auth_callback`, and then call `/mcp` with
 the issued Bearer token.
 
+No separate OAuth server package is required for this built-in Claude flow. The provider is shipped
+with `bnomei/kirby-mcp`; enabling `http.oauthProvider.enabled` is enough once the Kirby route helper
+is registered.
+
 ```json
 {
   "http": {
@@ -592,6 +596,10 @@ configure the issuer, audience/resource, and JWKS URI yourself:
 OAuth mode validates JWT access tokens by issuer, audience/resource, JWKS signature, expiry, and
 operation scopes.
 
+If you build that external issuer inside Kirby with a package such as `league/oauth2-server`, install
+and configure that package in the host project yourself. Kirby MCP only validates the resulting JWTs
+for this external-issuer mode; it does not install or run the external authorization server for you.
+
 HTTP tokens are scope-checked per operation. Available scope names are:
 
 - `kirby-mcp:read` for read-only tools and resources.
@@ -600,8 +608,9 @@ HTTP tokens are scope-checked per operation. Available scope names are:
 - `kirby-mcp:execute` for query/eval-style operations, still requiring enablement and confirmation.
 - `kirby-mcp:admin` for administrative runtime actions.
 
-Composer installs the HTTP/OAuth runtime libraries as direct package dependencies; upgrading this
-package is enough for consumers unless your deployment pins Composer with `--no-update`.
+Composer installs the HTTP/JWT runtime libraries needed by Kirby MCP itself as direct package
+dependencies; upgrading this package is enough for consumers unless your deployment pins Composer
+with `--no-update`.
 
 ## IDE helpers (optional, for humans)
 
