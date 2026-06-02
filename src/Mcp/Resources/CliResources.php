@@ -39,6 +39,7 @@ final class CliResources
     #[McpResource(
         uri: 'kirby://commands',
         name: 'commands',
+        title: 'Kirby CLI Commands',
         description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
         mimeType: 'application/json',
         annotations: new Annotations(
@@ -121,6 +122,7 @@ final class CliResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://cli/command/{command}',
         name: 'cli_command',
+        title: 'Kirby CLI Command Help',
         description: 'Parsed help output for a single Kirby CLI command via `kirby <command> --help` (e.g. backup, uuid:generate).',
         mimeType: 'application/json',
     )]

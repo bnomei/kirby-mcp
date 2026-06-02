@@ -84,7 +84,7 @@ final class KirbyMcpRoute
             . DIRECTORY_SEPARATOR . '.kirby-mcp'
             . DIRECTORY_SEPARATOR . 'http-sessions';
 
-        $sessionStore = new FileSessionStore($sessionDir);
+        $sessionStore = new FileSessionStore($sessionDir, ServerFactory::HTTP_SESSION_TTL_SECONDS);
         $factory = new HttpFactory();
         $authFactory = new HttpAuthFactory();
         $sharedToken = null;

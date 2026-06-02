@@ -27,6 +27,7 @@ final class ConfigResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://config/{option}',
         name: 'config_get',
+        title: 'Kirby Config Option',
         description: 'Read a Kirby config option by dot notation (or JSON-encoded array of path segments) via the installed `kirby mcp:config:get` runtime command.',
         mimeType: 'text/plain',
     )]

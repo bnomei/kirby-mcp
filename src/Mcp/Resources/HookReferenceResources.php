@@ -21,6 +21,7 @@ final class HookReferenceResources extends AbstractMarkdownDocsResource
     #[McpResource(
         uri: 'kirby://hooks',
         name: 'hooks',
+        title: 'Kirby Hooks',
         description: 'List Kirby plugin hook names (links to kirby://hook/{name}).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -61,6 +62,7 @@ final class HookReferenceResources extends AbstractMarkdownDocsResource
     #[McpResourceTemplate(
         uriTemplate: 'kirby://hook/{name}',
         name: 'hook',
+        title: 'Kirby Hook Reference',
         description: 'Fetch Kirby hook reference markdown from getkirby.com (docs/reference/plugins/hooks/{slug}). Accepts hook names like file.changeName:after or slugs like file-changename-after.',
         mimeType: 'text/markdown',
     )]

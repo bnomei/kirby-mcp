@@ -5,6 +5,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-02
+
+- Updated MCP PHP SDK dependency to `mcp/sdk` v0.6.0.
+- Added MCP spec-level titles to resources and resource templates.
+- Added explicit HTTP MCP session TTL and SDK-backed session garbage-collection settings.
+- Added SDK protocol-version validation to Streamable HTTP POST and GET/SSE requests while keeping the existing auth, origin, and CORS handling authoritative.
+
 ## [1.7.0] - 2026-05-22
 
 - Added explicit `remote-token` HTTP auth for public Kirby `/mcp` routes used by header-capable clients, with hashed token records, per-token scopes, HTTPS enforcement for non-loopback requests, and unchanged query-string credential rejection.

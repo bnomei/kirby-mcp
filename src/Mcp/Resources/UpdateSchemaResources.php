@@ -22,6 +22,7 @@ final class UpdateSchemaResources
     #[McpResource(
         uri: 'kirby://fields/update-schema',
         name: 'update_schema_fields',
+        title: 'Content Field Update Schemas',
         description: 'List bundled content field update schemas (links to kirby://field/{type}/update-schema).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -80,6 +81,7 @@ final class UpdateSchemaResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://field/{type}/update-schema',
         name: 'update_schema_field',
+        title: 'Content Field Update Schema',
         description: 'Read a bundled content field update schema from kb/update-schema/{type}.md.',
         mimeType: 'text/markdown',
     )]
@@ -119,6 +121,7 @@ final class UpdateSchemaResources
     #[McpResource(
         uri: 'kirby://blueprints/update-schema',
         name: 'update_schema_blueprints',
+        title: 'Blueprint Update Schemas',
         description: 'List bundled blueprint update schemas (links to kirby://blueprint/{type}/update-schema).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -181,6 +184,7 @@ final class UpdateSchemaResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://blueprint/{type}/update-schema',
         name: 'update_schema_blueprint',
+        title: 'Blueprint Update Schema',
         description: 'Read a bundled blueprint update schema from kb/update-schema/blueprint-{type}.md.',
         mimeType: 'text/markdown',
     )]

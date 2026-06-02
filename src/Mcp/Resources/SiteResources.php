@@ -29,6 +29,7 @@ final class SiteResources
     #[McpResource(
         uri: 'kirby://site/content',
         name: 'site_content',
+        title: 'Site Content',
         description: 'Read the site’s content (current version) via the runtime CLI command.',
         mimeType: 'application/json',
     )]

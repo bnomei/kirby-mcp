@@ -29,6 +29,7 @@ final class FileResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://file/content/{encodedIdOrUuid}',
         name: 'file_content',
+        title: 'File Content',
         description: 'Read a file’s content/metadata by id or uuid. The id must be URL-encoded (e.g. about%2Fcover.jpg). UUIDs can be passed as the raw UUID or as a URL-encoded Kirby UUID like file%3A%2F%2F<uuid>.',
         mimeType: 'application/json',
     )]

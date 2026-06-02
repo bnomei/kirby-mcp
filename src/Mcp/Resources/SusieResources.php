@@ -78,6 +78,7 @@ final class SusieResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://susie/{phase}/{step}',
         name: 'susie',
+        title: 'Susie Attack Loop',
         description: 'Easter egg: Susie (Kirby: Planet Robobot) boss attack loop. Provide phase (1-3) and step (1-based). Returns attack name or null.',
         mimeType: 'application/json',
     )]

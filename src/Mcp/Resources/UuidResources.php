@@ -24,6 +24,7 @@ final class UuidResources
     #[McpResource(
         uri: 'kirby://uuid/new',
         name: 'uuid_new',
+        title: 'New Kirby UUID',
         description: 'Generate a new random Kirby UUID string (respects content.uuid format).',
         mimeType: 'text/plain',
         annotations: new Annotations(

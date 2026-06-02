@@ -29,6 +29,7 @@ final class UserResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://user/content/{encodedIdOrEmail}',
         name: 'user_content',
+        title: 'User Content',
         description: 'Read a user’s content by id or email. The id/email must be URL-encoded (e.g. jane%40example.com).',
         mimeType: 'application/json',
     )]

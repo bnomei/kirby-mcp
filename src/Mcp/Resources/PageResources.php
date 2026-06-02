@@ -29,6 +29,7 @@ final class PageResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://page/content/{encodedIdOrUuid}',
         name: 'page_content',
+        title: 'Page Content',
         description: 'Read a page’s content by id or uuid. The id must be URL-encoded (e.g. home or blog%2Fpost). UUIDs can be passed as the raw UUID (preferred) or as a URL-encoded Kirby UUID like page%3A%2F%2F<uuid>.',
         mimeType: 'application/json',
     )]

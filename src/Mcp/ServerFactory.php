@@ -23,7 +23,7 @@ use Mcp\Capability\Registry\Container;
 use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Schema\Annotations;
 use Mcp\Schema\Enum\Role;
-use Mcp\Schema\Resource;
+use Mcp\Schema\ResourceDefinition;
 use Mcp\Schema\ServerCapabilities;
 use Mcp\Server;
 use Mcp\Server\Handler\Request\CallToolHandler;
@@ -34,6 +34,10 @@ use Throwable;
 
 final class ServerFactory
 {
+    public const HTTP_SESSION_TTL_SECONDS = 3600;
+    public const SESSION_GC_PROBABILITY = 1;
+    public const SESSION_GC_DIVISOR = 20;
+
     public function create(?SessionStoreInterface $sessionStore = null): Server
     {
         $container = new Container();
@@ -48,7 +52,11 @@ final class ServerFactory
             ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
 
         if ($sessionStore !== null) {
-            $builder->setSession($sessionStore);
+            $builder->setSession(
+                sessionStore: $sessionStore,
+                gcProbability: self::SESSION_GC_PROBABILITY,
+                gcDivisor: self::SESSION_GC_DIVISOR,
+            );
         }
 
         $server = $builder
@@ -84,9 +92,10 @@ final class ServerFactory
         try {
             $contents = (new ExtensionReferenceResources())->extensionsList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://extensions',
                     name: 'extensions',
+                    title: 'Kirby Extensions',
                     description: 'List Kirby plugin extensions (links to kirby://extension/{name}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -94,7 +103,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveClassMtime(ExtensionReferenceIndex::class)),
                 ),
                 [ExtensionReferenceResources::class, 'extensionsList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if sizing fails.
@@ -103,9 +111,10 @@ final class ServerFactory
         try {
             $contents = (new HookReferenceResources())->hooksList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://hooks',
                     name: 'hooks',
+                    title: 'Kirby Hooks',
                     description: 'List Kirby plugin hook names (links to kirby://hook/{name}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -113,7 +122,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveClassMtime(HookReferenceIndex::class)),
                 ),
                 [HookReferenceResources::class, 'hooksList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if sizing fails.
@@ -124,9 +132,10 @@ final class ServerFactory
 
             $fields = $panel->fieldsList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://fields',
                     name: 'panel_fields',
+                    title: 'Panel Field Types',
                     description: 'List Kirby Panel field types (links to kirby://field/{type}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -134,14 +143,14 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveClassMtime(PanelReferenceIndex::class)),
                 ),
                 [PanelReferenceResources::class, 'fieldsList'],
-                true,
             );
 
             $sections = $panel->sectionsList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://sections',
                     name: 'panel_sections',
+                    title: 'Panel Section Types',
                     description: 'List Kirby Panel section types (links to kirby://section/{type}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -149,7 +158,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveClassMtime(PanelReferenceIndex::class)),
                 ),
                 [PanelReferenceResources::class, 'sectionsList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resources available via attribute discovery if sizing fails.
@@ -158,9 +166,10 @@ final class ServerFactory
         try {
             $contents = (new GlossaryResources())->glossaryList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://glossary',
                     name: 'glossary',
+                    title: 'Kirby Glossary',
                     description: 'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -168,7 +177,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveKbPrefixMtime('kb/glossary/')),
                 ),
                 [GlossaryResources::class, 'glossaryList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if sizing fails.
@@ -177,9 +185,10 @@ final class ServerFactory
         try {
             $contents = (new KbResources())->kbList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://kb',
                     name: 'kb',
+                    title: 'Kirby Knowledge Base',
                     description: 'List bundled KB documents (links to kirby://kb/{path}).',
                     mimeType: 'text/markdown',
                     annotations: $defaultAnnotations,
@@ -187,7 +196,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveKbPrefixMtime('kb/')),
                 ),
                 [KbResources::class, 'kbList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if sizing fails.
@@ -196,9 +204,10 @@ final class ServerFactory
         try {
             $contents = (new UpdateSchemaResources())->contentFieldsList();
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://fields/update-schema',
                     name: 'update_schema_fields',
+                    title: 'Content Field Update Schemas',
                     description: 'List bundled content field update schemas (links to kirby://field/{type}/update-schema).',
                     mimeType: 'text/markdown',
                     annotations: $importantAnnotations,
@@ -206,7 +215,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($this->resolveKbPrefixMtime('kb/update-schema/')),
                 ),
                 [UpdateSchemaResources::class, 'contentFieldsList'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if sizing fails.
@@ -228,9 +236,10 @@ final class ServerFactory
             }
 
             $registry->registerResource(
-                new Resource(
+                new ResourceDefinition(
                     uri: 'kirby://commands',
                     name: 'commands',
+                    title: 'Kirby CLI Commands',
                     description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
                     mimeType: 'application/json',
                     annotations: $importantAnnotations,
@@ -238,7 +247,6 @@ final class ServerFactory
                     meta: $this->resourceMetaFromMtime($lastModified),
                 ),
                 [CliResources::class, 'commands'],
-                true,
             );
         } catch (Throwable) {
             // Keep resource available via attribute discovery if registration fails.

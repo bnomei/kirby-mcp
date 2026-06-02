@@ -263,6 +263,9 @@ it('serves the MCP server over a single /mcp HTTP endpoint with reusable session
     foreach (($resourcesPayload['result']['resources'] ?? []) as $resource) {
         if (is_array($resource) && is_string($resource['uri'] ?? null)) {
             $httpResources[$resource['uri']] = true;
+            if ($resource['uri'] === 'kirby://kb') {
+                expect($resource['title'] ?? null)->toBe('Kirby Knowledge Base');
+            }
         }
     }
 
@@ -430,6 +433,28 @@ it('enforces shared-token authorization and origin policy before protocol handli
     );
     expect($allowedResponse->getStatusCode())->toBe(200);
     expect($allowedResponse->getHeaderLine('Mcp-Session-Id'))->not()->toBe('');
+
+    $badProtocolResponse = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer local-secret')
+            ->withHeader('Origin', 'http://allowed.example.test')
+            ->withHeader('Mcp-Session-Id', $allowedResponse->getHeaderLine('Mcp-Session-Id'))
+            ->withHeader('Mcp-Protocol-Version', '1900-01-01')
+            ->withBody($factory->createStream(kirbyMcpHttpJsonRequest('tools/list', 2)))
+    );
+    expect($badProtocolResponse->getStatusCode())->toBe(400);
+    expect((string) $badProtocolResponse->getBody())->toContain('Unsupported Mcp-Protocol-Version header value');
+
+    $badGetProtocolResponse = $handler->handle(
+        $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')
+            ->withHeader('Authorization', 'Bearer local-secret')
+            ->withHeader('Origin', 'http://allowed.example.test')
+            ->withHeader('Mcp-Session-Id', $allowedResponse->getHeaderLine('Mcp-Session-Id'))
+            ->withHeader('Mcp-Protocol-Version', '1900-01-01')
+    );
+    expect($badGetProtocolResponse->getStatusCode())->toBe(400);
+    expect((string) $badGetProtocolResponse->getBody())->toContain('Unsupported Mcp-Protocol-Version header value');
 
     $getResponse = $handler->handle(
         $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')

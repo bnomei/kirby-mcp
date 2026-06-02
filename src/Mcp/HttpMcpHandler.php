@@ -14,6 +14,7 @@ use Mcp\Schema\JsonRpc\MessageInterface;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Transport\Http\Middleware\AuthorizationMiddleware;
 use Mcp\Server\Transport\Http\Middleware\OAuthRequestMetaMiddleware;
+use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\Http\Middleware\ProtectedResourceMetadataMiddleware;
 use Mcp\Server\Transport\Http\MiddlewareRequestHandler;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationResult;
@@ -114,6 +115,9 @@ final class HttpMcpHandler
             request: $request,
             responseFactory: $responseFactory,
             streamFactory: $streamFactory,
+            middleware: [
+                new ProtocolVersionMiddleware(responseFactory: $responseFactory, streamFactory: $streamFactory),
+            ],
         );
 
         return $this->serverFactory->create($this->sessionStore)->run($transport);
@@ -165,6 +169,11 @@ final class HttpMcpHandler
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
     ): ResponseInterface {
+        $protocolVersionResponse = $this->validateProtocolVersion($request, $responseFactory, $streamFactory);
+        if ($protocolVersionResponse instanceof ResponseInterface) {
+            return $protocolVersionResponse;
+        }
+
         $sessionId = $request->getHeaderLine(self::SESSION_HEADER);
         if ($sessionId === '') {
             return $responseFactory->createResponse(400)
@@ -192,6 +201,18 @@ final class HttpMcpHandler
                 pollIntervalMicros: $this->ssePollIntervalMicros,
             ),
         );
+    }
+
+    private function validateProtocolVersion(
+        ServerRequestInterface $request,
+        ResponseFactoryInterface $responseFactory,
+        StreamFactoryInterface $streamFactory,
+    ): ?ResponseInterface {
+        $response = (new MiddlewareRequestHandler([
+            new ProtocolVersionMiddleware(responseFactory: $responseFactory, streamFactory: $streamFactory),
+        ], static fn (): ResponseInterface => $responseFactory->createResponse(204)))->handle($request);
+
+        return $response->getStatusCode() === 204 ? null : $response;
     }
 
     private function sessionIdFromRequest(

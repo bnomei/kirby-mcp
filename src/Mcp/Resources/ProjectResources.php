@@ -38,6 +38,7 @@ final class ProjectResources
     #[McpResource(
         uri: 'kirby://info',
         name: 'info',
+        title: 'Project Info',
         description: 'Project runtime info (PHP + Kirby version via CLI), composer audit, and local environment detection (Herd/DDEV/Docker).',
         mimeType: 'application/json',
         annotations: new Annotations(
@@ -78,6 +79,7 @@ final class ProjectResources
     #[McpResource(
         uri: 'kirby://composer',
         name: 'composer',
+        title: 'Composer Audit',
         description: 'Composer audit (composer.json): detects test runner and quality tools (phpstan/larastan/psalm/mago/pint/phpcs/php-cs-fixer); returns “how to run” commands.',
         mimeType: 'application/json',
         annotations: new Annotations(
@@ -112,6 +114,7 @@ final class ProjectResources
     #[McpResource(
         uri: 'kirby://roots',
         name: 'roots',
+        title: 'Kirby Roots',
         description: 'Kirby roots (kirby()->roots) discovered via Kirby CLI using the configured default host (KIRBY_MCP_HOST/KIRBY_HOST or .kirby-mcp/mcp.json) when present.',
         mimeType: 'application/json',
         annotations: new Annotations(

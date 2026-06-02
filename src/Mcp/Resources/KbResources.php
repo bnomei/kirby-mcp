@@ -19,6 +19,7 @@ final class KbResources
     #[McpResource(
         uri: 'kirby://kb',
         name: 'kb',
+        title: 'Kirby Knowledge Base',
         description: 'List bundled KB documents (links to kirby://kb/{path}). Paths are relative to kb/ and omit .md.',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -89,6 +90,7 @@ final class KbResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://kb/{path}',
         name: 'kb_document',
+        title: 'Kirby KB Document',
         description: 'Read a bundled KB document from kb/{path}.md (path relative to kb/, no .md).',
         mimeType: 'text/markdown',
     )]

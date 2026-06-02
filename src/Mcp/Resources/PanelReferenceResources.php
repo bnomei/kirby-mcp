@@ -22,6 +22,7 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
     #[McpResource(
         uri: 'kirby://fields',
         name: 'panel_fields',
+        title: 'Panel Field Types',
         description: 'List Kirby Panel field types (links to kirby://field/{type}).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -63,6 +64,7 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
     #[McpResource(
         uri: 'kirby://sections',
         name: 'panel_sections',
+        title: 'Panel Section Types',
         description: 'List Kirby Panel section types (links to kirby://section/{type}).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -104,6 +106,7 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
     #[McpResourceTemplate(
         uriTemplate: 'kirby://field/{type}',
         name: 'panel_field',
+        title: 'Panel Field Reference',
         description: 'Fetch Kirby Panel field reference markdown from getkirby.com (docs/reference/panel/fields/{type}).',
         mimeType: 'text/markdown',
     )]
@@ -136,6 +139,7 @@ final class PanelReferenceResources extends AbstractMarkdownDocsResource
     #[McpResourceTemplate(
         uriTemplate: 'kirby://section/{type}',
         name: 'panel_section',
+        title: 'Panel Section Reference',
         description: 'Fetch Kirby Panel section reference markdown from getkirby.com (docs/reference/panel/sections/{type}).',
         mimeType: 'text/markdown',
     )]

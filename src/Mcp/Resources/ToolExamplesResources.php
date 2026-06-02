@@ -24,6 +24,7 @@ final class ToolExamplesResources
     #[McpResource(
         uri: 'kirby://tool-examples',
         name: 'tool-examples',
+        title: 'Tool Examples',
         description: 'Curated usage examples for Kirby MCP tools with stricter inputs or confirm flows.',
         mimeType: 'application/json',
         annotations: new Annotations(

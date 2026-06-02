@@ -34,6 +34,7 @@ final class BlueprintResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://blueprint/{encodedId}',
         name: 'blueprint',
+        title: 'Blueprint',
         description: 'Read a blueprint by id via the installed `kirby mcp:blueprint` runtime command (supports plugin extensions). The id must be URL-encoded (e.g. pages%2Fhome).',
         mimeType: 'application/json',
     )]

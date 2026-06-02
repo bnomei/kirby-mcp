@@ -21,6 +21,7 @@ final class ExtensionReferenceResources extends AbstractMarkdownDocsResource
     #[McpResource(
         uri: 'kirby://extensions',
         name: 'extensions',
+        title: 'Kirby Extensions',
         description: 'List Kirby plugin extensions (links to kirby://extension/{name}).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -61,6 +62,7 @@ final class ExtensionReferenceResources extends AbstractMarkdownDocsResource
     #[McpResourceTemplate(
         uriTemplate: 'kirby://extension/{name}',
         name: 'extension',
+        title: 'Kirby Extension Reference',
         description: 'Fetch Kirby extension reference markdown from getkirby.com (docs/reference/plugins/extensions/{slug}).',
         mimeType: 'text/markdown',
     )]

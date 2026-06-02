@@ -48,7 +48,7 @@ final class HttpMcpListener
         }
 
         $sessionDir = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'http-sessions';
-        $sessionStore = new FileSessionStore($sessionDir);
+        $sessionStore = new FileSessionStore($sessionDir, ServerFactory::HTTP_SESSION_TTL_SECONDS);
         $factory = new HttpFactory();
         $config = KirbyMcpConfig::load($projectRoot)->http();
         $authFactory = new HttpAuthFactory();

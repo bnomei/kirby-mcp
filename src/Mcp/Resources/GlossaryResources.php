@@ -19,6 +19,7 @@ final class GlossaryResources
     #[McpResource(
         uri: 'kirby://glossary',
         name: 'glossary',
+        title: 'Kirby Glossary',
         description: 'List bundled Kirby glossary terms (links to kirby://glossary/{term}).',
         mimeType: 'text/markdown',
         annotations: new Annotations(
@@ -75,6 +76,7 @@ final class GlossaryResources
     #[McpResourceTemplate(
         uriTemplate: 'kirby://glossary/{term}',
         name: 'glossary_term',
+        title: 'Kirby Glossary Term',
         description: 'Read a bundled Kirby glossary entry from kb/glossary/{term}.md.',
         mimeType: 'text/markdown',
     )]

@@ -29,6 +29,7 @@ final class MetaResources
     #[McpResource(
         uri: 'kirby://tools',
         name: 'tools',
+        title: 'Kirby MCP Tool Index',
         description: 'Weighted keyword index for Kirby MCP tools, resources, and resource templates (used by kirby_tool_suggest).',
         mimeType: 'application/json',
         annotations: new Annotations(

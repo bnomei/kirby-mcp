@@ -71,6 +71,8 @@ it('indexes tools and resources via #[McpToolIndex]', function (): void {
                     $resource = $resourceAttributes[0]->newInstance();
                     $expectedNames[] = $resource->uri;
 
+                    expect($resource->title)->toBeString()->not()->toBe('');
+
                     if (!in_array($resource->uri, $ignoredNames, true) && $indexAttributes === []) {
                         $missingIndex[] = $class . '::' . $method->getName() . ' (' . $resource->uri . ')';
                     }
@@ -83,6 +85,8 @@ it('indexes tools and resources via #[McpToolIndex]', function (): void {
                     /** @var McpResourceTemplate $template */
                     $template = $templateAttributes[0]->newInstance();
                     $expectedNames[] = $template->uriTemplate;
+
+                    expect($template->title)->toBeString()->not()->toBe('');
 
                     if (!in_array($template->uriTemplate, $ignoredNames, true) && $indexAttributes === []) {
                         $missingIndex[] = $class . '::' . $method->getName() . ' (' . $template->uriTemplate . ')';
