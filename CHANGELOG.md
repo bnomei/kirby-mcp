@@ -5,6 +5,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-06-16
+
+- Added projectless global reference mode via `kirby-mcp --global` for always-available Kirby KB, glossary, reference docs, update schemas, official docs search, and plugin directory research.
+- Added profile-gated MCP discovery so global reference mode exposes only docs/research/static reference tools and resources while project-local MCP servers keep the full project/runtime surface.
+- Updated client setup docs with separate global reference and project-local MCP examples.
+- Tightened global reference isolation so it rejects `--project` and project subcommands, skips project auto-detection, excludes cache/project administration tools, and avoids reading project config from global docs resources.
+
 ## [1.8.0] - 2026-06-02
 
 - Updated MCP PHP SDK dependency to `mcp/sdk` v0.6.0.
