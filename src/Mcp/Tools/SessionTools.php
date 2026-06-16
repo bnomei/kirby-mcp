@@ -8,6 +8,7 @@ use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\McpLog;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
+use Bnomei\KirbyMcp\Mcp\ServerProfile;
 use Bnomei\KirbyMcp\Mcp\SessionState;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
 use Bnomei\KirbyMcp\Project\EnvironmentDetector;
@@ -31,6 +32,7 @@ final class SessionTools
 
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
+        private readonly string $profile = ServerProfile::PROJECT,
     ) {
     }
 
@@ -66,6 +68,10 @@ final class SessionTools
         SessionState::markInitCalled($context?->getSession());
 
         try {
+            if (ServerProfile::isGlobalReference($this->profile)) {
+                return $this->globalReferenceInit();
+            }
+
             $projectRoot = $this->context->projectRoot();
 
             $composerAudit = (new ComposerInspector())->inspect($projectRoot);
@@ -202,5 +208,51 @@ TEXT;
             ]);
             throw new ToolCallException($exception->getMessage());
         }
+    }
+
+    private function globalReferenceInit(): string
+    {
+        $instructions = <<<'TEXT'
+Kirby MCP initialization (global reference mode)
+
+Hard constraints:
+- This MCP server is not connected to any Kirby project.
+- Do not use it for project inspection, rendering, content updates, CLI commands, runtime install, eval/query tools, or IDE helper generation.
+- Use a separate project-local Kirby MCP server when a task needs real project context or mutations.
+
+Tool/resource-first guidance:
+- Prefer bundled resources before online search: `kirby://kb`, `kirby://glossary`, `kirby://fields`, `kirby://sections`, `kirby://hooks`, `kirby://extensions`, and update schema resources.
+- Use `kirby_search` for bundled KB search.
+- Use `kirby_online` for official Kirby docs fallback.
+- Use `kirby_online_plugins` for official plugin directory research.
+- Use `kirby_tool_suggest` or `kirby://tools` when unsure which reference tool/resource to use.
+
+Available scope:
+- Local KB, glossary, panel field/section reference, hooks, extensions, content update schemas, blueprint update schemas, official docs search, and official plugin search.
+TEXT;
+
+        $projectInfo = [
+            'mode' => ServerProfile::GLOBAL_REFERENCE,
+            'projectRoot' => null,
+            'phpVersion' => PHP_VERSION,
+            'capabilities' => [
+                'reference' => true,
+                'project' => false,
+                'runtime' => false,
+                'writes' => false,
+            ],
+        ];
+
+        $json = json_encode($projectInfo, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            $json = '{}';
+        }
+
+        return "<Kirby>\n"
+            . $instructions
+            . "\n\n## Mode\n```json\n"
+            . $json
+            . "\n```\n"
+            . "</Kirby>";
     }
 }

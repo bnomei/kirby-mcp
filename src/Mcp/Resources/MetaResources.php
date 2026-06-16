@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
+use Bnomei\KirbyMcp\Mcp\ServerProfile;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Schema\Annotations;
@@ -12,6 +13,11 @@ use Mcp\Schema\Enum\Role;
 
 final class MetaResources
 {
+    public function __construct(
+        private readonly string $profile = ServerProfile::PROJECT,
+    ) {
+    }
+
     /**
      * Weighted keyword index used by `kirby_tool_suggest`.
      *
@@ -60,6 +66,6 @@ final class MetaResources
     )]
     public function toolIndex(): array
     {
-        return ToolIndex::all();
+        return ToolIndex::all($this->profile);
     }
 }

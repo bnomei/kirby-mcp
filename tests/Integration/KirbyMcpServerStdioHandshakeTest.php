@@ -226,6 +226,217 @@ it('boots the MCP stdio server and answers initialize', function (): void {
     expect($meta)->toHaveKey('lastModified');
 });
 
+it('boots the global reference MCP stdio server without project tools', function (): void {
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+
+    $cwd = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-global-reference-' . bin2hex(random_bytes(6));
+    mkdir($cwd, 0777, true);
+
+    $input = implode("\n", [
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2024-11-05',
+                'capabilities' => new stdClass(),
+                'clientInfo' => [
+                    'name' => 'tests',
+                    'version' => 'dev',
+                ],
+            ],
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'method' => 'notifications/initialized',
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 2,
+            'method' => 'tools/list',
+            'params' => new stdClass(),
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 3,
+            'method' => 'resources/list',
+            'params' => new stdClass(),
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 4,
+            'method' => 'resources/templates/list',
+            'params' => new stdClass(),
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 5,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'kirby_init',
+                'arguments' => new stdClass(),
+            ],
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 6,
+            'method' => 'resources/read',
+            'params' => [
+                'uri' => 'kirby://tools',
+            ],
+        ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 7,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'kirby_tool_suggest',
+                'arguments' => [
+                    'query' => 'render update roots page content',
+                    'limit' => 20,
+                ],
+            ],
+        ], JSON_UNESCAPED_SLASHES),
+        '',
+    ]);
+
+    try {
+        $process = new Process(
+            command: [
+                PHP_BINARY,
+                '-d',
+                'display_errors=0',
+                '-d',
+                'display_startup_errors=0',
+                $bin,
+                '--global',
+            ],
+            cwd: $cwd,
+            env: [
+                'KIRBY_MCP_PROJECT_ROOT' => false,
+            ],
+            timeout: 15,
+        );
+
+        $process->setInput($input);
+        $process->run();
+    } finally {
+        @rmdir($cwd);
+    }
+
+    expect($process->getExitCode())->toBe(0);
+
+    $lines = array_values(array_filter(array_map('trim', explode("\n", trim($process->getOutput())))));
+    expect($lines)->not()->toBeEmpty();
+
+    $byId = [];
+    foreach ($lines as $line) {
+        $decoded = json_decode($line, true);
+        expect($decoded)->toBeArray();
+        if (array_key_exists('id', $decoded)) {
+            $byId[(string) $decoded['id']] = $decoded;
+        }
+    }
+
+    expect($byId['1']['result']['serverInfo']['name'] ?? null)->toBe('Kirby MCP Reference');
+    expect($byId['1']['result']['instructions'] ?? '')->toContain('global Kirby reference MCP');
+
+    $tools = $byId['2']['result']['tools'] ?? [];
+    $toolNames = array_values(array_filter(array_map(
+        static fn (array $tool): ?string => is_string($tool['name'] ?? null) ? $tool['name'] : null,
+        $tools,
+    )));
+    sort($toolNames);
+    expect($toolNames)->toBe([
+        'kirby_cache_clear',
+        'kirby_init',
+        'kirby_online',
+        'kirby_online_plugins',
+        'kirby_search',
+        'kirby_tool_suggest',
+    ]);
+    expect($toolNames)->not()->toContain('kirby_info');
+    expect($toolNames)->not()->toContain('kirby_read_page_content');
+    expect($toolNames)->not()->toContain('kirby_runtime_install');
+    expect($toolNames)->not()->toContain('kirby_update_page_content');
+
+    $resources = $byId['3']['result']['resources'] ?? [];
+    $resourceUris = array_values(array_filter(array_map(
+        static fn (array $resource): ?string => is_string($resource['uri'] ?? null) ? $resource['uri'] : null,
+        $resources,
+    )));
+    sort($resourceUris);
+    expect($resourceUris)->toBe([
+        'kirby://blueprints/update-schema',
+        'kirby://extensions',
+        'kirby://fields',
+        'kirby://fields/update-schema',
+        'kirby://glossary',
+        'kirby://hooks',
+        'kirby://kb',
+        'kirby://sections',
+        'kirby://tools',
+    ]);
+    expect($resourceUris)->not()->toContain('kirby://commands');
+    expect($resourceUris)->not()->toContain('kirby://info');
+    expect($resourceUris)->not()->toContain('kirby://roots');
+
+    $templates = $byId['4']['result']['resourceTemplates'] ?? [];
+    $templateUris = array_values(array_filter(array_map(
+        static fn (array $template): ?string => is_string($template['uriTemplate'] ?? null) ? $template['uriTemplate'] : null,
+        $templates,
+    )));
+    sort($templateUris);
+    expect($templateUris)->toBe([
+        'kirby://blueprint/{type}/update-schema',
+        'kirby://extension/{name}',
+        'kirby://field/{type}',
+        'kirby://field/{type}/update-schema',
+        'kirby://glossary/{term}',
+        'kirby://hook/{name}',
+        'kirby://kb/{path}',
+        'kirby://section/{type}',
+    ]);
+    expect($templateUris)->not()->toContain('kirby://page/content/{encodedIdOrUuid}');
+
+    $initText = $byId['5']['result']['content'][0]['text'] ?? '';
+    expect($initText)->toBeString();
+    expect($initText)->toContain('global reference mode');
+    expect($initText)->toContain('not connected to any Kirby project');
+    expect($initText)->toContain('"projectRoot": null');
+    expect($initText)->not()->toContain('Composer Audit');
+    expect($initText)->not()->toContain('missing getkirby/cms');
+    expect($byId['5']['result']['isError'] ?? false)->not()->toBeTrue();
+
+    $toolIndexText = $byId['6']['result']['contents'][0]['text'] ?? '';
+    expect($toolIndexText)->toBeString();
+    $toolIndex = json_decode($toolIndexText, true);
+    expect($toolIndex)->toBeArray();
+    $toolIndexItems = is_array($toolIndex) ? $toolIndex : [];
+    $toolIndexNames = array_values(array_filter(array_map(
+        static fn (mixed $item): ?string => is_array($item) && is_string($item['name'] ?? null)
+            ? $item['name']
+            : null,
+        $toolIndexItems,
+    )));
+    expect($toolIndexNames)->toContain('kirby_search');
+    expect($toolIndexNames)->toContain('kirby://field/{type}');
+    expect($toolIndexNames)->not()->toContain('kirby_render_page');
+    expect($toolIndexNames)->not()->toContain('kirby_roots');
+    expect($toolIndexNames)->not()->toContain('kirby_update_page_content');
+
+    $suggestions = $byId['7']['result']['structuredContent']['suggestions'] ?? [];
+    expect($suggestions)->toBeArray();
+    $suggestedNames = array_values(array_filter(array_map(
+        static fn (array $suggestion): ?string => is_string($suggestion['name'] ?? null) ? $suggestion['name'] : null,
+        $suggestions,
+    )));
+    expect($suggestedNames)->not()->toContain('kirby_render_page');
+    expect($suggestedNames)->not()->toContain('kirby_roots');
+    expect($suggestedNames)->not()->toContain('kirby_update_page_content');
+});
+
 /**
  * @param array<string, mixed> $schema
  * @param array<int, string> $violations

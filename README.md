@@ -11,6 +11,8 @@
 
 CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
 
+It can also run as a projectless global reference MCP (`kirby-mcp --global`) for always-on Kirby docs/KB research. Global reference mode is intentionally separate from project-local MCP servers and cannot inspect, render, update, or run commands in a Kirby project.
+
 > [!WARNING]
 > Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
 
@@ -31,6 +33,23 @@ This quickstart is for a local stdio MCP server. If you want Kirby to serve a pr
 Then configure your MCP client (Cursor/Claude Code/Codex CLI) using the examples in **Client setup** and copy the bundled Skills as described below.
 
 See **Client setup → Claude Code** and **Client setup → Codex CLI** for per-agent install and Skill sync steps.
+
+## Global Reference Mode
+
+Install once with Composer and run the global reference MCP anywhere:
+
+```bash
+composer global require bnomei/kirby-mcp
+kirby-mcp --global
+```
+
+Use this mode for always-available Kirby research: bundled KB search, glossary, Panel field/section reference, hooks, extensions, update-schema guides, official docs search, and plugin directory search.
+
+Global reference mode is projectless by design:
+
+- It does not auto-detect or accept `--project`.
+- It does not expose project/runtime tools such as `kirby_roots`, `kirby_info`, `kirby_render_page`, content updates, eval/query, runtime install, or IDE helper generation.
+- If you need project context or mutations, add a separate project-local MCP server with `vendor/bin/kirby-mcp`.
 
 ## Copy-paste request examples
 
@@ -204,6 +223,8 @@ At initialization, the server tells the agent which tools/resources to use. The 
 
 Current inventory: 37 tools, 15 resources, 15 resource templates, 216 KB articles.
 
+In global reference mode (`kirby-mcp --global`), the exposed surface is intentionally smaller: `kirby_init`, `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`, `kirby_cache_clear`, and static reference resources/templates (`kirby://kb`, glossary, fields/sections, hooks, extensions, and update schemas).
+
 <details>
 <summary>🛠️ Tools</summary>
 
@@ -320,8 +341,9 @@ Bundled Skills live in `vendor/bnomei/kirby-mcp/skills` after installation. Copy
 
 > [!NOTE]
 > The `--project` flag is optional when you run the server from the Kirby project root.
-> Use it (or `KIRBY_MCP_PROJECT_ROOT`) when running from elsewhere or from a global MCP config.
+> Use it (or `KIRBY_MCP_PROJECT_ROOT`) only for project-local MCP servers that should inspect a specific Kirby project.
 > Command-based stdio is the default and recommended setup for local IDE/agent use.
+> `kirby-mcp --global` is a separate projectless reference server and must not be combined with `--project`.
 
 ### Cursor
 
@@ -330,15 +352,18 @@ Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
 ```json
 {
   "mcpServers": {
-    "kirby": {
-      "command": "vendor/bin/kirby-mcp",
-      "args": ["--project=/absolute/path/to/kirby-project"]
+    "kirby-reference": {
+      "command": "kirby-mcp",
+      "args": ["--global"]
+    },
+    "kirby-project": {
+      "command": "/absolute/path/to/kirby-project/vendor/bin/kirby-mcp"
     }
   }
 }
 ```
 
-If you use the global config, set `"command"` to an absolute path to the project’s `vendor/bin/kirby-mcp` (or create a wrapper script).
+Use `kirby-reference` for docs/KB research that is always available. Use `kirby-project` only when that specific Kirby project should be inspectable or mutable.
 
 ### Claude Code
 
@@ -346,6 +371,12 @@ From the Kirby project directory:
 
 ```bash
 claude mcp add kirby -- vendor/bin/kirby-mcp
+```
+
+Global reference server:
+
+```bash
+claude mcp add kirby-reference -- kirby-mcp --global
 ```
 
 Or explicitly:
@@ -371,6 +402,12 @@ From the Kirby project directory:
 codex mcp add kirby -- vendor/bin/kirby-mcp
 ```
 
+Global reference server:
+
+```bash
+codex mcp add kirby-reference -- kirby-mcp --global
+```
+
 Or explicitly:
 
 ```bash
@@ -392,6 +429,7 @@ Start the server (point it at a composer-based Kirby project):
 
 - From the Kirby project root: `vendor/bin/kirby-mcp`
 - Or explicitly: `vendor/bin/kirby-mcp --project=/absolute/path/to/kirby-project`
+- Or as the projectless global reference server: `kirby-mcp --global`
 
 ### HTTP transport (optional)
 

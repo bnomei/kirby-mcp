@@ -29,6 +29,7 @@ if (is_string($autoloadPath) && $autoloadPath !== '' && is_file($autoloadPath)) 
 use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
 use Bnomei\KirbyMcp\Mcp\HttpMcpListener;
 use Bnomei\KirbyMcp\Mcp\ServerFactory;
+use Bnomei\KirbyMcp\Mcp\ServerProfile;
 use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
 use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
@@ -41,6 +42,7 @@ use Mcp\Server\Transport\Stdio\RunnerState;
 
 $projectRoot = null;
 $projectFlagProvided = false;
+$globalMode = false;
 $subcommand = null;
 
 for ($index = 1; $index < count($argv); $index++) {
@@ -51,6 +53,11 @@ for ($index = 1; $index < count($argv); $index++) {
 
     if ($arg === 'install' || $arg === 'update' || $arg === 'ide:status' || $arg === 'ide:generate' || $arg === 'http') {
         $subcommand = $arg;
+        continue;
+    }
+
+    if ($arg === '--global') {
+        $globalMode = true;
         continue;
     }
 
@@ -71,10 +78,20 @@ for ($index = 1; $index < count($argv); $index++) {
     }
 }
 
-if (is_string($projectRoot) && $projectRoot !== '') {
+if ($globalMode === true && $subcommand !== null) {
+    fwrite(STDERR, "Kirby MCP: --global starts the projectless reference MCP server and cannot be combined with '{$subcommand}'.\n");
+    exit(1);
+}
+
+if ($globalMode === true && ($projectFlagProvided === true || (is_string($projectRoot) && $projectRoot !== ''))) {
+    fwrite(STDERR, "Kirby MCP: --global is projectless and cannot be combined with --project.\n");
+    exit(1);
+}
+
+if ($globalMode !== true && is_string($projectRoot) && $projectRoot !== '') {
     $resolved = realpath($projectRoot) ?: $projectRoot;
     putenv('KIRBY_MCP_PROJECT_ROOT=' . $resolved);
-} elseif (getenv('KIRBY_MCP_PROJECT_ROOT') === false || getenv('KIRBY_MCP_PROJECT_ROOT') === '') {
+} elseif ($globalMode !== true && (getenv('KIRBY_MCP_PROJECT_ROOT') === false || getenv('KIRBY_MCP_PROJECT_ROOT') === '')) {
     $detected = (new ProjectRootFinder())->findKirbyProjectRoot();
     if (is_string($detected) && $detected !== '') {
         putenv('KIRBY_MCP_PROJECT_ROOT=' . $detected);
@@ -594,7 +611,9 @@ if ($subcommand === 'http') {
     ));
 }
 
-$server = (new ServerFactory())->create();
+$server = (new ServerFactory())->create(
+    profile: $globalMode === true ? ServerProfile::GLOBAL_REFERENCE : ServerProfile::PROJECT,
+);
 
 $runnerControl = new RunnerControl();
 

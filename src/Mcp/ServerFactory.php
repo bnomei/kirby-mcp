@@ -14,10 +14,14 @@ use Bnomei\KirbyMcp\Mcp\Resources\ExtensionReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
 use Bnomei\KirbyMcp\Mcp\Resources\HookReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\KbResources;
+use Bnomei\KirbyMcp\Mcp\Resources\MetaResources;
 use Bnomei\KirbyMcp\Mcp\Resources\PanelReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources;
 use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
+use Bnomei\KirbyMcp\Mcp\Tools\MetaTools;
+use Bnomei\KirbyMcp\Mcp\Tools\SessionTools;
 use Composer\InstalledVersions;
+use Mcp\Capability\Discovery\Discoverer;
 use Mcp\Capability\Registry;
 use Mcp\Capability\Registry\Container;
 use Mcp\Capability\Registry\ReferenceHandler;
@@ -38,18 +42,26 @@ final class ServerFactory
     public const SESSION_GC_PROBABILITY = 1;
     public const SESSION_GC_DIVISOR = 20;
 
-    public function create(?SessionStoreInterface $sessionStore = null): Server
+    public function create(?SessionStoreInterface $sessionStore = null, string $profile = ServerProfile::PROJECT): Server
     {
+        $profile = ServerProfile::normalize($profile);
         $container = new Container();
         $registry = new Registry();
         $referenceHandler = new ReferenceHandler($container);
         $callToolHandler = new CallToolHandler($registry, $referenceHandler);
 
+        $container->set(MetaResources::class, new MetaResources($profile));
+        $container->set(MetaTools::class, new MetaTools($profile));
+        $container->set(SessionTools::class, new SessionTools(profile: $profile));
+
         $builder = Server::builder()
             ->setContainer($container)
             ->setRegistry($registry)
-            ->setServerInfo('Kirby MCP', $this->resolveVersion())
-            ->setInstructions('Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.');
+            ->setServerInfo(
+                ServerProfile::isGlobalReference($profile) ? 'Kirby MCP Reference' : 'Kirby MCP',
+                $this->resolveVersion(),
+            )
+            ->setInstructions($this->instructions($profile));
 
         if ($sessionStore !== null) {
             $builder->setSession(
@@ -59,8 +71,21 @@ final class ServerFactory
             );
         }
 
+        if (ServerProfile::isGlobalReference($profile)) {
+            $builder->addLoader(new ProfileDiscoveryLoader(
+                basePath: dirname(__DIR__, 2),
+                scanDirs: ['src/Mcp/Tools', 'src/Mcp/Resources'],
+                excludeDirs: [],
+                discoverer: new Discoverer(),
+                toolNames: ServerProfile::tools($profile),
+                resourceUris: ServerProfile::resources($profile),
+                resourceTemplateUris: ServerProfile::resourceTemplates($profile),
+            ));
+        } else {
+            $builder->setDiscovery(dirname(__DIR__, 2), ['src/Mcp/Tools', 'src/Mcp/Resources']);
+        }
+
         $server = $builder
-            ->setDiscovery(dirname(__DIR__, 2), ['src/Mcp/Tools', 'src/Mcp/Resources'])
             ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
             ->addRequestHandler(new SetLogLevelHandler())
             ->setCapabilities(new ServerCapabilities(
@@ -73,12 +98,21 @@ final class ServerFactory
             ))
             ->build();
 
-        $this->registerSizedMarkdownResources($registry);
+        $this->registerSizedMarkdownResources($registry, $profile);
 
         return $server;
     }
 
-    private function registerSizedMarkdownResources(Registry $registry): void
+    private function instructions(string $profile): string
+    {
+        if (ServerProfile::isGlobalReference($profile)) {
+            return 'Call kirby_init once per session. This is the global Kirby reference MCP: use it for bundled KB, glossary, update schemas, reference docs, and official online Kirby search. It is not connected to any project and cannot inspect, render, mutate, or run commands in a Kirby project.';
+        }
+
+        return 'Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.';
+    }
+
+    private function registerSizedMarkdownResources(Registry $registry, string $profile): void
     {
         $defaultAnnotations = new Annotations(
             audience: [Role::Assistant],
@@ -220,36 +254,38 @@ final class ServerFactory
             // Keep resource available via attribute discovery if sizing fails.
         }
 
-        try {
+        if (!ServerProfile::isGlobalReference($profile)) {
             $context = new ProjectContext();
-            $projectRoot = $context->projectRoot();
-            $lastModified = $this->resolveProjectMtime($projectRoot);
-            $size = null;
-
             try {
-                $payload = (new CliResources($context))->commands();
-                if (($payload['ok'] ?? false) === true) {
-                    $size = $this->resolveJsonSize($payload);
-                }
-            } catch (Throwable) {
-                // Ignore size calculation failures; still register metadata.
-            }
+                $projectRoot = $context->projectRoot();
+                $lastModified = $this->resolveProjectMtime($projectRoot);
+                $size = null;
 
-            $registry->registerResource(
-                new ResourceDefinition(
-                    uri: 'kirby://commands',
-                    name: 'commands',
-                    title: 'Kirby CLI Commands',
-                    description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
-                    mimeType: 'application/json',
-                    annotations: $importantAnnotations,
-                    size: $size,
-                    meta: $this->resourceMetaFromMtime($lastModified),
-                ),
-                [CliResources::class, 'commands'],
-            );
-        } catch (Throwable) {
-            // Keep resource available via attribute discovery if registration fails.
+                try {
+                    $payload = (new CliResources($context))->commands();
+                    if (($payload['ok'] ?? false) === true) {
+                        $size = $this->resolveJsonSize($payload);
+                    }
+                } catch (Throwable) {
+                    // Ignore size calculation failures; still register metadata.
+                }
+
+                $registry->registerResource(
+                    new ResourceDefinition(
+                        uri: 'kirby://commands',
+                        name: 'commands',
+                        title: 'Kirby CLI Commands',
+                        description: 'Kirby CLI command list for this project (parsed from `kirby help`).',
+                        mimeType: 'application/json',
+                        annotations: $importantAnnotations,
+                        size: $size,
+                        meta: $this->resourceMetaFromMtime($lastModified),
+                    ),
+                    [CliResources::class, 'commands'],
+                );
+            } catch (Throwable) {
+                // Keep resource available via attribute discovery if registration fails.
+            }
         }
     }
 

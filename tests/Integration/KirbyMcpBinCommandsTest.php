@@ -67,6 +67,38 @@ it('supports vendor/bin-style install command', function (): void {
     }
 });
 
+it('rejects global mode when combined with a project flag', function (): void {
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+
+    $process = new Process(
+        command: [PHP_BINARY, $bin, '--global', '--project=' . cmsPath()],
+        cwd: dirname(__DIR__, 2),
+        timeout: 15,
+    );
+
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1);
+    expect($process->getErrorOutput())->toContain('--global is projectless');
+});
+
+it('rejects global mode when combined with project subcommands', function (): void {
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+
+    $process = new Process(
+        command: [PHP_BINARY, $bin, 'install', '--global'],
+        cwd: dirname(__DIR__, 2),
+        timeout: 15,
+    );
+
+    $process->run();
+
+    expect($process->getExitCode())->toBe(1);
+    expect($process->getErrorOutput())->toContain('--global starts the projectless reference MCP server');
+});
+
 it('supports vendor/bin-style update command', function (): void {
     $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
     expect($bin)->not()->toBeFalse();

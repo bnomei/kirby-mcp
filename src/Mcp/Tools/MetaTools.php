@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
+use Bnomei\KirbyMcp\Mcp\ServerProfile;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Bnomei\KirbyMcp\Mcp\SessionState;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
@@ -17,6 +18,11 @@ use Mcp\Server\RequestContext;
 final class MetaTools
 {
     use StructuredToolResult;
+
+    public function __construct(
+        private readonly string $profile = ServerProfile::PROJECT,
+    ) {
+    }
 
     /**
      * Suggest which Kirby MCP tool(s) to call for a task.
@@ -78,7 +84,7 @@ final class MetaTools
         $normalized = $this->normalizeKeywords(array_merge($keywords, $keywordsFromQuery));
 
         $scored = [];
-        foreach (ToolIndex::all() as $tool) {
+        foreach (ToolIndex::all($this->profile) as $tool) {
             $score = 0;
             $matched = [];
 

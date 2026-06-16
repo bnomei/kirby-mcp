@@ -17,12 +17,12 @@ use Mcp\Capability\Attribute\McpTool;
  */
 final class ToolIndex
 {
-    /** @var array<int, array{kind:string, name:string, title:string, whenToUse:string, keywords:array<string,int>}>|null */
-    private static ?array $cache = null;
+    /** @var array<string, array<int, array{kind:string, name:string, title:string, whenToUse:string, keywords:array<string,int>}>> */
+    private static array $cache = [];
 
     public static function clearCache(): void
     {
-        self::$cache = null;
+        self::$cache = [];
     }
 
     /**
@@ -34,10 +34,12 @@ final class ToolIndex
      *   keywords: array<string, int>
      * }>
      */
-    public static function all(): array
+    public static function all(string $profile = ServerProfile::PROJECT): array
     {
-        if (self::$cache !== null) {
-            return self::$cache;
+        $profile = ServerProfile::normalize($profile);
+
+        if (isset(self::$cache[$profile])) {
+            return self::$cache[$profile];
         }
 
         $items = [];
@@ -149,10 +151,19 @@ final class ToolIndex
             }
         }
 
-        ksort($items);
-        self::$cache = array_values($items);
+        $items = array_filter(
+            $items,
+            static fn (array $item): bool => ServerProfile::allowsIndexItem(
+                profile: $profile,
+                kind: (string)($item['kind'] ?? ''),
+                name: (string)($item['name'] ?? ''),
+            ),
+        );
 
-        return self::$cache;
+        ksort($items);
+        self::$cache[$profile] = array_values($items);
+
+        return self::$cache[$profile];
     }
 
     /**
