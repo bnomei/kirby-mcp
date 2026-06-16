@@ -223,7 +223,7 @@ At initialization, the server tells the agent which tools/resources to use. The 
 
 Current inventory: 37 tools, 15 resources, 15 resource templates, 216 KB articles.
 
-In global reference mode (`kirby-mcp --global`), the exposed surface is intentionally smaller: `kirby_init`, `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`, `kirby_cache_clear`, and static reference resources/templates (`kirby://kb`, glossary, fields/sections, hooks, extensions, and update schemas).
+In global reference mode (`kirby-mcp --global`), the exposed surface is intentionally smaller: `kirby_init`, `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`, and static reference resources/templates (`kirby://kb`, glossary, fields/sections, hooks, extensions, and update schemas).
 
 <details>
 <summary>🛠️ Tools</summary>

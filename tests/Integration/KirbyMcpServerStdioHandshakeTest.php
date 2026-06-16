@@ -349,7 +349,6 @@ it('boots the global reference MCP stdio server without project tools', function
     )));
     sort($toolNames);
     expect($toolNames)->toBe([
-        'kirby_cache_clear',
         'kirby_init',
         'kirby_online',
         'kirby_online_plugins',

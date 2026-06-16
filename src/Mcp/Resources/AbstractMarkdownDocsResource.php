@@ -15,6 +15,7 @@ abstract class AbstractMarkdownDocsResource
 
     public function __construct(
         protected readonly ProjectContext $context = new ProjectContext(),
+        private readonly ?int $configuredDocsTtlSeconds = null,
     ) {
     }
 
@@ -44,6 +45,10 @@ abstract class AbstractMarkdownDocsResource
 
     protected function docsTtlSeconds(): int
     {
+        if ($this->configuredDocsTtlSeconds !== null) {
+            return max(0, $this->configuredDocsTtlSeconds);
+        }
+
         try {
             return KirbyMcpConfig::load($this->context->projectRoot())->docsTtlSeconds();
         } catch (\Throwable) {

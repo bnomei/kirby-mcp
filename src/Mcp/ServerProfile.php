@@ -19,7 +19,6 @@ final class ServerProfile
         }
 
         return [
-            'kirby_cache_clear',
             'kirby_init',
             'kirby_online',
             'kirby_online_plugins',

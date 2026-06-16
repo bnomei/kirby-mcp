@@ -20,6 +20,7 @@ use Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources;
 use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
 use Bnomei\KirbyMcp\Mcp\Tools\MetaTools;
 use Bnomei\KirbyMcp\Mcp\Tools\SessionTools;
+use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Composer\InstalledVersions;
 use Mcp\Capability\Discovery\Discoverer;
 use Mcp\Capability\Registry;
@@ -53,6 +54,9 @@ final class ServerFactory
         $container->set(MetaResources::class, new MetaResources($profile));
         $container->set(MetaTools::class, new MetaTools($profile));
         $container->set(SessionTools::class, new SessionTools(profile: $profile));
+        if (ServerProfile::isGlobalReference($profile)) {
+            $this->registerProjectlessReferenceResources($container);
+        }
 
         $builder = Server::builder()
             ->setContainer($container)
@@ -110,6 +114,21 @@ final class ServerFactory
         }
 
         return 'Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.';
+    }
+
+    private function registerProjectlessReferenceResources(Container $container): void
+    {
+        $docsTtlSeconds = KirbyMcpConfig::DEFAULT_DOCS_TTL_SECONDS;
+
+        $container->set(ExtensionReferenceResources::class, new ExtensionReferenceResources(
+            configuredDocsTtlSeconds: $docsTtlSeconds,
+        ));
+        $container->set(HookReferenceResources::class, new HookReferenceResources(
+            configuredDocsTtlSeconds: $docsTtlSeconds,
+        ));
+        $container->set(PanelReferenceResources::class, new PanelReferenceResources(
+            configuredDocsTtlSeconds: $docsTtlSeconds,
+        ));
     }
 
     private function registerSizedMarkdownResources(Registry $registry, string $profile): void
