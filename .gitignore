@@ -11,6 +11,7 @@ node_modules/
 .mcp.json
 coverage.xml
 .orchid
+.frigg
 specs/
 
 !tests/fixture/.kirby-mcp/
