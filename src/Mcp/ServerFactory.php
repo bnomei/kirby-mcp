@@ -7,6 +7,7 @@ namespace Bnomei\KirbyMcp\Mcp;
 use Bnomei\KirbyMcp\Docs\ExtensionReferenceIndex;
 use Bnomei\KirbyMcp\Docs\HookReferenceIndex;
 use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
+use Bnomei\KirbyMcp\Mcp\Handlers\CodexSafeListResourcesHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\RequireInitForToolsHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\SetLogLevelHandler;
 use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
@@ -90,6 +91,7 @@ final class ServerFactory
         }
 
         $server = $builder
+            ->addRequestHandler(new CodexSafeListResourcesHandler($registry))
             ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
             ->addRequestHandler(new SetLogLevelHandler())
             ->setCapabilities(new ServerCapabilities(

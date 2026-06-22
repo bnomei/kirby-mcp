@@ -152,6 +152,7 @@ function kirbyMcpStdioSurface(): array
     if (is_array($resourcesResult)) {
         foreach ($resourcesResult as $resource) {
             if (is_array($resource) && is_string($resource['uri'] ?? null)) {
+                expectCodexSafeResourceDescriptor($resource);
                 $resources[$resource['uri']] = true;
             }
         }
@@ -262,6 +263,7 @@ it('serves the MCP server over a single /mcp HTTP endpoint with reusable session
     $httpResources = [];
     foreach (($resourcesPayload['result']['resources'] ?? []) as $resource) {
         if (is_array($resource) && is_string($resource['uri'] ?? null)) {
+            expectCodexSafeResourceDescriptor($resource);
             $httpResources[$resource['uri']] = true;
             if ($resource['uri'] === 'kirby://kb') {
                 expect($resource['title'] ?? null)->toBe('Kirby Knowledge Base');

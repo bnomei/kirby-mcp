@@ -32,6 +32,25 @@ function ensureUser(App $app, string $email, array $content = []): User
 }
 
 /**
+ * @param array<string, mixed> $resource
+ */
+function expectCodexSafeResourceDescriptor(array $resource): void
+{
+    $allowed = [
+        'uri',
+        'name',
+        'title',
+        'description',
+        'mimeType',
+    ];
+
+    $unexpected = array_values(array_diff(array_keys($resource), $allowed));
+    sort($unexpected);
+
+    expect($unexpected)->toBe([]);
+}
+
+/**
  * @return array<int, callable>
  */
 function captureErrorHandlers(): array

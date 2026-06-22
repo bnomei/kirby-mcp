@@ -39,6 +39,14 @@ it('boots the MCP stdio server and answers initialize', function (): void {
             'method' => 'resources/list',
             'params' => new stdClass(),
         ], JSON_UNESCAPED_SLASHES),
+        json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 4,
+            'method' => 'resources/read',
+            'params' => [
+                'uri' => 'kirby://glossary',
+            ],
+        ], JSON_UNESCAPED_SLASHES),
         '',
     ]);
 
@@ -207,6 +215,8 @@ it('boots the MCP stdio server and answers initialize', function (): void {
             continue;
         }
 
+        expectCodexSafeResourceDescriptor($resource);
+
         $uri = $resource['uri'] ?? null;
         if (is_string($uri) && $uri !== '') {
             $byUri[$uri] = $resource;
@@ -215,13 +225,12 @@ it('boots the MCP stdio server and answers initialize', function (): void {
 
     expect($byUri)->toHaveKey('kirby://glossary');
     $glossary = $byUri['kirby://glossary'];
-    expect($glossary)->toHaveKey('annotations');
-    expect($glossary['annotations'])->toBeArray();
-    expect($glossary['annotations'])->toHaveKey('audience');
-    expect($glossary['annotations'])->toHaveKey('priority');
-    expect($glossary)->toHaveKey('size');
-    expect($glossary['size'])->toBeInt();
-    $meta = $glossary['_meta'] ?? null;
+    expect($glossary['title'] ?? null)->toBe('Kirby Glossary');
+    expect($glossary['mimeType'] ?? null)->toBe('text/markdown');
+
+    expect($byId)->toHaveKey('4');
+    expect($byId['4'])->toHaveKey('result');
+    $meta = $byId['4']['result']['contents'][0]['_meta'] ?? null;
     expect($meta)->toBeArray();
     expect($meta)->toHaveKey('lastModified');
 });
@@ -362,7 +371,11 @@ it('boots the global reference MCP stdio server without project tools', function
 
     $resources = $byId['3']['result']['resources'] ?? [];
     $resourceUris = array_values(array_filter(array_map(
-        static fn (array $resource): ?string => is_string($resource['uri'] ?? null) ? $resource['uri'] : null,
+        static function (array $resource): ?string {
+            expectCodexSafeResourceDescriptor($resource);
+
+            return is_string($resource['uri'] ?? null) ? $resource['uri'] : null;
+        },
         $resources,
     )));
     sort($resourceUris);
