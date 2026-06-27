@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=yes
+DEVANA-STATE: fixed | P2 | medium | security=yes
 DEVANA-KEY: src/Mcp/Http/HttpOriginPolicy.php:62 | origin-policy-127-prefix
 
 # Default Origin policy accepts hostnames starting with `127.` beyond loopback
@@ -53,7 +53,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed (resolved by commit `9f534b9` "require real loopback IP in default Origin allowlist"). `HttpOriginPolicy::isLoopbackOrigin()` no longer accepts any host that merely `str_starts_with($host, '127.')`. It now parses the URL host, accepts `localhost`/`::1` exactly, and otherwise requires a valid IPv4 literal (`filter_var(..., FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)`) AND a `127.` prefix — i.e. a genuine `127.0.0.0/8` loopback address. The counterexample Origin `http://127.0.0.1.evil.com` is not a valid IPv4 literal, so `allows()` returns false; `http://127.evil.com:8080` likewise. Explicit `allowedOrigins` still bypass the loopback fallback with exact matching, and an absent/empty Origin is still allowed (non-browser clients). Verified by existing unit assertions in `McpHttpAuthTest` ('it allows absent and default loopback Origin headers and rejects public origins without an allowlist'): `127.0.0.1`/`127.0.0.5`/`[::1]`/`localhost` pass; `127.0.0.1.evil.com` and `127.evil.com:8080` are rejected (9 assertions pass). This is the Origin/CORS half of the loose-`127.` pattern; the OAuth redirect half was handled under `oauth-redirect-127-prefix`.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Http/HttpOriginPolicy.php:62 | origin-policy-127-prefix
-DEVANA-SUMMARY: open | P2 | medium | HttpOriginPolicy treats any host starting with 127. as loopback, allowing credentialed cross-origin MCP requests from attacker domains like 127.0.0.1.evil.com.
+DEVANA-SUMMARY: fixed | P2 | medium | HttpOriginPolicy treats any host starting with 127. as loopback, allowing credentialed cross-origin MCP requests from attacker domains like 127.0.0.1.evil.com.
