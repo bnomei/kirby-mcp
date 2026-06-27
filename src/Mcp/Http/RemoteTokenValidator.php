@@ -37,7 +37,11 @@ final readonly class RemoteTokenValidator implements AuthorizationTokenValidator
             return AuthorizationResult::unauthorized('invalid_token', 'Invalid bearer token.');
         }
 
-        $scopes = $matchedToken->scopes === [] ? HttpAuthScopes::all() : $matchedToken->scopes;
+        // An empty scope list means "unspecified", not "grant everything".
+        // Default to least privilege (read-only) so a missing/omitted `scopes`
+        // field cannot silently elevate a token to write/execute/admin. Full
+        // access must be opted into by listing scopes explicitly.
+        $scopes = $matchedToken->scopes === [] ? [HttpAuthScopes::READ] : $matchedToken->scopes;
 
         return AuthorizationResult::allow([
             'oauth.claims' => [

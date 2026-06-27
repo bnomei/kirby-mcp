@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Http/RemoteTokenValidator.php:40 | remote-token-empty-scopes-grants-all
 
 # Remote HTTP tokens with empty `scopes` silently receive all MCP scopes
@@ -66,7 +66,10 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. `RemoteTokenValidator::validate()` now defaults an empty per-token `scopes` list to `[HttpAuthScopes::READ]` (least privilege) instead of `HttpAuthScopes::all()`. A token registered with an omitted/empty `scopes` field no longer silently receives write/execute/admin — full access must be opted into by listing scopes explicitly. Explicit non-empty scopes are still honored verbatim. Added unit test `it('defaults remote tokens with empty scopes to read-only instead of all scopes')`. Full remote-token route suite still passes (those tests only exercise READ). phpstan clean.
+  - Related (not in this report's scope, lower risk): `SharedTokenValidator` has the same `scopes === [] ? all()` pattern, but shared-token mode is loopback-only (see `shared-token-proxy-bypass`), so its exposure is local-trust. Left unchanged to keep this fix scoped to the reported remote-token validator; worth a follow-up for consistency.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Http/RemoteTokenValidator.php:40 | remote-token-empty-scopes-grants-all
-DEVANA-SUMMARY: open | P1 | high | Remote HTTP tokens with an empty scopes array are upgraded to HttpAuthScopes::all(), granting full MCP HTTP capabilities by default.
+DEVANA-SUMMARY: fixed | P1 | high | Remote HTTP tokens with an empty scopes array are upgraded to HttpAuthScopes::all(), granting full MCP HTTP capabilities by default.
