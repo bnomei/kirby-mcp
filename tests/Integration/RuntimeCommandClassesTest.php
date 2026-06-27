@@ -294,6 +294,51 @@ it('reads config options via the config:get command', function (): void {
     }
 });
 
+it('redacts sensitive config option values in config:get', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        $secret = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.secretoption',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($secret['ok'])->toBeTrue();
+        expect($secret['redacted'] ?? null)->toBeTrue();
+        expect($secret['value'])->toBe('[REDACTED]');
+        expect($secret['value'])->not()->toContain('super-secret-value');
+        expect($secret['line'])->not()->toContain('super-secret-value');
+
+        $apiKey = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.apiKey',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($apiKey['redacted'] ?? null)->toBeTrue();
+        expect($apiKey['value'])->toBe('[REDACTED]');
+
+        // Non-sensitive option paths are returned verbatim.
+        $plain = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.someoption',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($plain['redacted'] ?? null)->toBeFalse();
+        expect($plain['value'])->toBe('5');
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
 it('accepts JSON list paths in the config:get command', function (): void {
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
 

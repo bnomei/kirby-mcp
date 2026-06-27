@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Resources/ConfigResources.php:44 | config-resource-read-scope-secrets
 
 # `kirby://config/{option}` exposes secrets at read scope
@@ -47,6 +47,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed (both halves). (1) Scope: `kirby://config/*` now requires `kirby-mcp:runtime` rather than READ — handled in the sibling fix `http-resources-read-scope-bypass` (`HttpScopePolicy::resourceScopes()`). (2) Masking: `ConfigGet::run()` now redacts values for sensitive option paths before emitting. `isSensitiveOptionPath()` flags any path segment matching descriptive secret words (substring: password/passwd/passphrase/secret/token/apikey/api_key/credential/privatekey/private_key) or short ambiguous whole segments (key/auth/pwd/dsn/salt/credentials). Sensitive non-empty values become `[REDACTED]` and the payload gains a `redacted` flag; the `line` field is built from the redacted string so nothing leaks. This applies at the source command, covering both stdio and HTTP transports regardless of scope. Added `it('redacts sensitive config option values in config:get')` (in-process, asserts secretoption/apiKey redacted, someoption verbatim) and two sensitive fixture options (`tests/fixture/config/config.php`). phpstan clean. Note: the end-to-end `KirbyConfigResourceTest` is a pre-existing environment failure here (the spawned `kirby` CLI cannot bootstrap Kirby — exit 255 — in this sandbox), unrelated to this change; the in-process runtime-command test validates the redaction.
 
 DEVANA-KEY: src/Mcp/Resources/ConfigResources.php:44 | config-resource-read-scope-secrets
-DEVANA-SUMMARY: open | P1 | high | Read-scoped HTTP tokens can fetch plaintext Kirby config secrets via kirby://config/{option}.
+DEVANA-SUMMARY: fixed | P1 | high | Read-scoped HTTP tokens can fetch plaintext Kirby config secrets via kirby://config/{option}.

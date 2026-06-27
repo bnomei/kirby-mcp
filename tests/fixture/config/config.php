@@ -11,6 +11,8 @@ return [
   'debug' => true,
   'yaml.handler' => 'symfony', // already makes use of the more modern Symfony YAML parser: https://getkirby.com/docs/reference/system/options/yaml (will become the default in a future Kirby version)
   'vendorname.pluginname.someoption' => 5,
+  'vendorname.pluginname.secretoption' => 'super-secret-value',
+  'vendorname.pluginname.apiKey' => 'sk-live-1234567890',
   'vendorname.pluginname.arrayoption' => [
     'a' => 1,
     'b' => [
