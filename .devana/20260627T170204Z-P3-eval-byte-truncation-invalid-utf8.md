@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P3 | medium | security=no
+DEVANA-STATE: fixed | P3 | medium | security=no
 DEVANA-KEY: src/Mcp/Commands/EvalPhp.php:161 | eval-byte-truncation-invalid-utf8
 
 # EvalPhp byte-truncates stdout/dump, can emit invalid UTF-8 into the MCP JSON sink
@@ -87,5 +87,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
   `:191-194`; `mb_substr` intent in `DumpValueNormalizer.php:37-38`. Emit
   encoder flags unverified (vendor absent).
 
+- 2026-06-27: fixed. Switched all three `--max` truncation sites in `EvalPhp::run()` (stdout, the oversized JSON-encoded return dump, and the `var_export` dump fallback) from byte-based `strlen`/`substr` to character-based `mb_strlen`/`mb_substr`, matching `DumpValueNormalizer`. Truncation no longer splits a multibyte UTF-8 codepoint, so no invalid bytes reach `CLI::json()` / the MCP-marked output envelope. Added runtime-command test `it('truncates eval stdout by characters without splitting multibyte UTF-8')` (`echo 'aaébb'` with `--max 3` → `"aaé"`, `stdoutTruncated=true`, `mb_check_encoding(...UTF-8)` true). The report-6 `--max` JSON-bound tests still pass (ASCII payloads unaffected). phpstan clean.
+
 DEVANA-KEY: src/Mcp/Commands/EvalPhp.php:161 | eval-byte-truncation-invalid-utf8
-DEVANA-SUMMARY: open | P3 | medium | EvalPhp truncates stdout/dump by bytes (substr) despite a documented "chars" limit, splitting multibyte UTF-8 and emitting invalid bytes into the MCP JSON output (repo's own normalizer uses mb_substr).
+DEVANA-SUMMARY: fixed | P3 | medium | EvalPhp truncated stdout/dump by bytes despite a documented "chars" limit, splitting multibyte UTF-8. Now uses mb_strlen/mb_substr at all three --max sites, matching DumpValueNormalizer.

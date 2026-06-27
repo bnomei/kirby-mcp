@@ -1481,6 +1481,38 @@ it('executes eval code when enabled and confirm=true', function (): void {
     }
 });
 
+it('truncates eval stdout by characters without splitting multibyte UTF-8', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(EvalPhp::ENV_ENABLE_EVAL);
+    putenv(EvalPhp::ENV_ENABLE_EVAL . '=1');
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 3,
+                'code' => "<?php echo 'aa\u{00e9}bb';",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['stdoutTruncated'])->toBeTrue();
+        // 3 characters, not 3 bytes: the 'é' (2 bytes) must not be split.
+        expect($payload['stdout'])->toBe("aa\u{00e9}");
+        expect(mb_check_encoding($payload['stdout'], 'UTF-8'))->toBeTrue();
+    } finally {
+        if ($previousEnv === false) {
+            putenv(EvalPhp::ENV_ENABLE_EVAL);
+        } else {
+            putenv(EvalPhp::ENV_ENABLE_EVAL . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
 it('keeps small JSON eval returns intact but bounds oversized ones by --max', function (): void {
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
     $previousEnv = getenv(EvalPhp::ENV_ENABLE_EVAL);
