@@ -33,6 +33,24 @@ it('classifies actual sensitive tools into runtime write execute and admin scope
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_runtime_install']))->toBe([HttpAuthScopes::ADMIN]);
 });
 
+it('requires runtime scope for kirby_run_cli_command targeting mcp:* wrappers', function (): void {
+    $policy = new HttpScopePolicy();
+
+    expect($policy->requiredScopes('tools/call', [
+        'name' => 'kirby_run_cli_command',
+        'arguments' => ['command' => 'mcp:render', 'arguments' => ['home']],
+    ]))->toBe([HttpAuthScopes::EXECUTE, HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('tools/call', [
+            'name' => 'kirby_run_cli_command',
+            'arguments' => ['command' => 'help'],
+        ]))->toBe([HttpAuthScopes::EXECUTE])
+        // mcp:*:update would also pick up WRITE via allowWrite, plus RUNTIME.
+        ->and($policy->requiredScopes('tools/call', [
+            'name' => 'kirby_run_cli_command',
+            'arguments' => ['command' => 'mcp:page:content', 'allowWrite' => false],
+        ]))->toBe([HttpAuthScopes::EXECUTE, HttpAuthScopes::RUNTIME]);
+});
+
 it('requires write scope for kirby_run_cli_command with allowWrite=true', function (): void {
     $policy = new HttpScopePolicy();
 

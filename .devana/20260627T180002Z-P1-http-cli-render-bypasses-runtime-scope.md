@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:64 | http-cli-render-bypasses-runtime-scope
 
 # HTTP `kirby_run_cli_command` can invoke `mcp:render` without `kirby-mcp:runtime` scope
@@ -52,7 +52,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed (extends the `toolCallScopes()` argument-aware logic added for `http-cli-allowwrite-bypasses-write-scope`). `HttpScopePolicy::toolCallScopes()` now also reads the `command` argument of `kirby_run_cli_command`: when it targets an `mcp:*` runtime wrapper (e.g. `mcp:render`, `mcp:page:content`), it adds `kirby-mcp:runtime` to the required scopes. An execute-only HTTP token can no longer render pages or read live CMS output through the generic CLI wrapper — it gets 403 like `kirby_render_page`/`kirby_read_*`. Added a `stringArgument()` helper and unit cases (`mcp:render` → `[EXECUTE, RUNTIME]`, `mcp:page:content` → `[EXECUTE, RUNTIME]`, non-mcp `help` → `[EXECUTE]`). phpstan clean. (eval-class `mcp:eval`/`mcp:query:dot` are separately blocked from the CLI wrapper entirely by `eval-confirm-cli-wrapper-bypass`.)
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:64 | http-cli-render-bypasses-runtime-scope
-DEVANA-SUMMARY: open | P1 | high | HTTP EXECUTE-scoped tokens can render pages via kirby_run_cli_command mcp:render while kirby_render_page requires RUNTIME scope.
+DEVANA-SUMMARY: fixed | P1 | high | HTTP EXECUTE-scoped tokens can render pages via kirby_run_cli_command mcp:render while kirby_render_page requires RUNTIME scope.

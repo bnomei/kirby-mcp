@@ -39,13 +39,20 @@ final class HttpScopePolicy
         $name = $this->stringParam($params, 'name');
         $scopes = $this->toolScopes($name);
 
-        // kirby_run_cli_command is EXECUTE-scoped, but allowWrite=true reaches
-        // write-capable CLI patterns (make:*, clear:*). Require the WRITE scope
-        // too in that case, so an execute-only token cannot mutate the project
-        // through the generic CLI wrapper (matching the kirby_update_* tools).
-        if ($name === 'kirby_run_cli_command' && $this->boolArgument($params, 'allowWrite') === true) {
-            if (!in_array(HttpAuthScopes::WRITE, $scopes, true)) {
+        if ($name === 'kirby_run_cli_command') {
+            // allowWrite=true reaches write-capable CLI patterns (make:*,
+            // clear:*), so require the WRITE scope too, matching kirby_update_*.
+            if ($this->boolArgument($params, 'allowWrite') === true && !in_array(HttpAuthScopes::WRITE, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::WRITE;
+            }
+
+            // mcp:* runtime wrappers (mcp:render, mcp:page:content, ...) hit the
+            // live CMS through the runtime, like kirby_render_page / kirby_read_*,
+            // so require RUNTIME — an execute-only token must not reach them via
+            // the generic CLI wrapper.
+            $command = $this->stringArgument($params, 'command');
+            if (is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
+                $scopes[] = HttpAuthScopes::RUNTIME;
             }
         }
 
@@ -189,5 +196,26 @@ final class HttpScopePolicy
         $value = $arguments[$name] ?? null;
 
         return is_bool($value) ? $value : null;
+    }
+
+    /**
+     * Read a string from the `tools/call` `arguments` object.
+     *
+     * @param array<string, mixed>|null $params
+     */
+    private function stringArgument(?array $params, string $name): ?string
+    {
+        $arguments = $params['arguments'] ?? null;
+        if ($arguments instanceof \stdClass) {
+            $arguments = (array) $arguments;
+        }
+
+        if (!is_array($arguments)) {
+            return null;
+        }
+
+        $value = $arguments[$name] ?? null;
+
+        return is_string($value) ? $value : null;
     }
 }
