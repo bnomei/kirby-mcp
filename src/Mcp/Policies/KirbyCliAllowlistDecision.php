@@ -11,11 +11,12 @@ final readonly class KirbyCliAllowlistDecision
         public ?string $matchedDeny,
         public ?string $matchedAllow,
         public ?string $matchedAllowWrite,
+        public ?string $matchedWriteCapable = null,
     ) {
     }
 
     /**
-     * @return array{matchedDeny:string|null, matchedAllow:string|null, matchedAllowWrite:string|null}
+     * @return array{matchedDeny:string|null, matchedAllow:string|null, matchedAllowWrite:string|null, matchedWriteCapable:string|null}
      */
     public function toArray(): array
     {
@@ -23,6 +24,7 @@ final readonly class KirbyCliAllowlistDecision
             'matchedDeny' => $this->matchedDeny,
             'matchedAllow' => $this->matchedAllow,
             'matchedAllowWrite' => $this->matchedAllowWrite,
+            'matchedWriteCapable' => $this->matchedWriteCapable,
         ];
     }
 
@@ -30,7 +32,7 @@ final readonly class KirbyCliAllowlistDecision
     {
         return $this->allowed === false
             && $this->matchedDeny === null
-            && $this->matchedAllow === null
-            && $this->matchedAllowWrite !== null;
+            && ($this->matchedAllow !== null || $this->matchedAllowWrite !== null)
+            && ($this->matchedAllowWrite !== null || $this->matchedWriteCapable !== null);
     }
 }

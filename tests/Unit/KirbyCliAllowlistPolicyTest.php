@@ -41,6 +41,46 @@ it('denies commands even if allowlisted when deny matches', function (): void {
     }
 });
 
+it('requires allowWrite=true for write-capable commands listed only in cli.allow', function (): void {
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-test-' . bin2hex(random_bytes(8));
+    $configDir = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp';
+    $configFile = $configDir . DIRECTORY_SEPARATOR . 'mcp.json';
+
+    mkdir($configDir, 0777, true);
+    file_put_contents($configFile, json_encode([
+        'cli' => [
+            'allow' => ['mcp:page:update'],
+        ],
+    ], JSON_THROW_ON_ERROR));
+
+    try {
+        $config = KirbyMcpConfig::load($projectRoot);
+        $policy = new KirbyCliAllowlistPolicy($config, defaultAllow: [], defaultAllowWrite: []);
+
+        $decision = $policy->evaluate('mcp:page:update', allowWrite: false);
+
+        expect($decision->allowed)->toBeFalse();
+        expect($decision->matchedAllow)->toBe('mcp:page:update');
+        expect($decision->matchedWriteCapable)->toBe('mcp:*:update');
+        expect($decision->requiresAllowWrite())->toBeTrue();
+
+        $allowed = $policy->evaluate('mcp:page:update', allowWrite: true);
+        expect($allowed->allowed)->toBeTrue();
+    } finally {
+        if (is_file($configFile)) {
+            @unlink($configFile);
+        }
+
+        if (is_dir($configDir)) {
+            @rmdir($configDir);
+        }
+
+        if (is_dir($projectRoot)) {
+            @rmdir($projectRoot);
+        }
+    }
+});
+
 it('requires allowWrite=true for write-capable allowWrite patterns', function (): void {
     $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-test-' . bin2hex(random_bytes(8));
     $configDir = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp';

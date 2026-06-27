@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Policies/KirbyCliAllowlistPolicy.php:76 | cli-allow-bypasses-write-guards
 
 # `cli.allow` patterns bypass `allowWrite` and HTTP write-scope guards
@@ -69,6 +69,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-25: open by Devana. Initial report written from static source inspection.
+- 2026-06-27: fixed. Added an intrinsic `WRITE_CAPABLE` classification (`make:*`, `clear:*`, `mcp:*:update`, `mcp:update`, `mcp:install`) to `KirbyCliAllowlistPolicy`. A command matching it (or an operator allowWrite pattern) now requires `allowWrite=true` AND a list match — a `cli.allow` entry alone no longer authorizes a write command. `KirbyCliAllowlistDecision` gained `matchedWriteCapable` and `requiresAllowWrite()` was corrected so the execute-scoped CLI tool returns "Command requires allowWrite=true." Added unit test for `cli.allow`-only `mcp:page:update`. Existing policy/CLI tests still pass; the 3 pre-existing `KirbyRunCliToolTest` failures are environment-only (fixture CMS not installed, CLI exit 255) and unchanged by this fix. phpstan clean.
 
 DEVANA-KEY: src/Mcp/Policies/KirbyCliAllowlistPolicy.php:76 | cli-allow-bypasses-write-guards
-DEVANA-SUMMARY: open | P1 | high | Whitelisting write commands in cli.allow lets kirby_run_cli_command mutate content without allowWrite, HTTP write scope, or payloadValidatedWithFieldSchemas.
+DEVANA-SUMMARY: fixed | P1 | high | Whitelisting write commands in cli.allow lets kirby_run_cli_command mutate content without allowWrite, HTTP write scope, or payloadValidatedWithFieldSchemas.
