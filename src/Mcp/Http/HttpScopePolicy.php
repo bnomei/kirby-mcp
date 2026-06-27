@@ -19,14 +19,56 @@ final class HttpScopePolicy
             'tools/list',
             'resources/list',
             'resources/templates/list',
-            'resources/read',
             'prompts/list',
             'prompts/get',
             'completion/complete' => [HttpAuthScopes::READ],
             'logging/setLevel' => [HttpAuthScopes::ADMIN],
             'tools/call' => $this->toolScopes($this->stringParam($params, 'name')),
+            'resources/read' => $this->resourceScopes($this->stringParam($params, 'uri')),
             default => [HttpAuthScopes::READ],
         };
+    }
+
+    /**
+     * Map a resource URI to the scope tier of its tool equivalent. Resources
+     * that read live CMS content, config values, or project blueprint data go
+     * through the Kirby runtime, so they must match the RUNTIME tier of
+     * `kirby_read_*` / `kirby_blueprints_loaded` instead of letting a read-only
+     * token exfiltrate them via `resources/read`. Static bundled docs (kb,
+     * glossary, panel reference, update-schema) stay READ.
+     *
+     * @return list<string>
+     */
+    public function resourceScopes(?string $uri): array
+    {
+        if ($uri === null || $uri === '') {
+            return [HttpAuthScopes::READ];
+        }
+
+        $normalized = strtolower(trim($uri));
+
+        // update-schema resources are static bundled docs even though they live
+        // under the blueprint/field namespaces; keep them READ.
+        if (str_contains($normalized, '/update-schema')) {
+            return [HttpAuthScopes::READ];
+        }
+
+        $runtimePrefixes = [
+            'kirby://page/content',
+            'kirby://site/content',
+            'kirby://file/content',
+            'kirby://user/content',
+            'kirby://config/',
+            'kirby://blueprint/',
+        ];
+
+        foreach ($runtimePrefixes as $prefix) {
+            if (str_starts_with($normalized, $prefix)) {
+                return [HttpAuthScopes::RUNTIME];
+            }
+        }
+
+        return [HttpAuthScopes::READ];
     }
 
     /**

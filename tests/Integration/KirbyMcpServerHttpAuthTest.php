@@ -201,6 +201,35 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
 
     expect($loggingCall->getStatusCode())->toBe(403)
         ->and((string) $loggingCall->getBody())->toContain(HttpAuthScopes::ADMIN);
+
+    // A read-only token must not exfiltrate live CMS content through
+    // resources/read, mirroring the runtime-scoped kirby_read_page_content tool.
+    $runtimeResourceRead = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 7, [
+                'uri' => 'kirby://page/content/home',
+            ])))
+    );
+
+    expect($runtimeResourceRead->getStatusCode())->toBe(403)
+        ->and($runtimeResourceRead->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $runtimeResourceRead->getBody())->toContain(HttpAuthScopes::RUNTIME);
+
+    // Static bundled docs remain readable with a read-only token.
+    $staticResourceRead = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 8, [
+                'uri' => 'kirby://kb',
+            ])))
+    );
+
+    expect($staticResourceRead->getStatusCode())->toBe(200);
 });
 
 it('allows a valid scoped bearer token to initialize and call read operations', function (): void {

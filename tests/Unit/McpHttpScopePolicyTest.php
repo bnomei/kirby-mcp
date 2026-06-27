@@ -33,6 +33,23 @@ it('classifies actual sensitive tools into runtime write execute and admin scope
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_runtime_install']))->toBe([HttpAuthScopes::ADMIN]);
 });
 
+it('gates runtime resource reads at runtime scope but keeps static docs at read', function (): void {
+    $policy = new HttpScopePolicy();
+
+    expect($policy->requiredScopes('resources/read', ['uri' => 'kirby://page/content/home']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://site/content']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://file/content/abc']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://user/content/admin@example.test']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://config/email']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://blueprint/cGFnZS9ub3Rl']))->toBe([HttpAuthScopes::RUNTIME])
+        // static bundled docs stay READ, including update-schema under blueprint/field namespaces
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://kb']))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://blueprint/text/update-schema']))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://field/blocks/update-schema']))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://glossary']))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('resources/read'))->toBe([HttpAuthScopes::READ]);
+});
+
 it('classifies HTTP GET and OPTIONS as read and DELETE as admin session operations', function (): void {
     $policy = new HttpScopePolicy();
 

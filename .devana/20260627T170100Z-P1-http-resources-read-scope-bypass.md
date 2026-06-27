@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:22 | http-resources-read-scope-bypass
 
 # HTTP `resources/read` bypasses runtime scope tier
@@ -51,6 +51,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed. `HttpScopePolicy::requiredScopes()` now routes `resources/read` through a new `resourceScopes($uri)` method instead of the blanket READ arm. Runtime CMS/config/blueprint reads (`kirby://page/content`, `kirby://site/content`, `kirby://file/content`, `kirby://user/content`, `kirby://config/`, `kirby://blueprint/`) require `kirby-mcp:runtime`, matching their `kirby_read_*` / `kirby_blueprints_loaded` tool equivalents. Static bundled docs (kb, glossary, panel reference, and the `*/update-schema` resources) stay READ. Added unit cases in `McpHttpScopePolicyTest` and an integration assertion in `KirbyMcpServerHttpAuthTest` (read-only token gets 403 on `kirby://page/content/home` but 200 on `kirby://kb`). phpstan clean. Note: `kirby://roots`/`info`/`composer` intentionally stay READ to match their READ tool equivalents (`kirby_info`).
 
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:22 | http-resources-read-scope-bypass
-DEVANA-SUMMARY: open | P1 | high | Read-scoped HTTP tokens can read live CMS content via resources/read while the equivalent tools require runtime scope.
+DEVANA-SUMMARY: fixed | P1 | high | Read-scoped HTTP tokens can read live CMS content via resources/read while the equivalent tools require runtime scope.
