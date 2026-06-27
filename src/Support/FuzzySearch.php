@@ -50,6 +50,13 @@ final class FuzzySearch
     {
         $dist = levenshtein(mb_strtolower($needle), mb_strtolower($haystack));
 
+        // levenshtein() returns -1 when either argument exceeds 255 bytes. That
+        // sentinel must not be read as "within distance" (since $maxDist >= 0),
+        // otherwise any word >= 256 bytes fuzzy-matches an arbitrary needle.
+        if ($dist < 0) {
+            return false;
+        }
+
         return $dist <= $maxDist;
     }
 }

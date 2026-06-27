@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P3 | high | security=no
+DEVANA-STATE: fixed | P3 | high | security=no
 DEVANA-KEY: src/Support/FuzzySearch.php:51 | fuzzysearch-levenshtein-false-positive
 
 # FuzzySearch matches any haystack word longer than 255 bytes (levenshtein -1 sentinel)
@@ -75,5 +75,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
 - 2026-06-27: open by Devana. Verified `FuzzySearch.php:49-53` lacks a `< 0`
   guard and callers keep `$maxDist >= 0`.
 
+- 2026-06-27: fixed. Added an `if ($dist < 0) { return false; }` guard in `FuzzySearch::fuzzyLevenshtein()` before the `$dist <= $maxDist` comparison. PHP's `levenshtein()` returns `-1` when either argument exceeds 255 bytes; that sentinel is no longer read as "within distance", so a document containing a ≥256-byte unbroken token no longer fuzzy-matches arbitrary needles. Added unit test asserting `fuzzyLevenshtein('zzz', str_repeat('a', 300))` and the corresponding `fuzzySearch` are both false. phpstan clean.
+
 DEVANA-KEY: src/Support/FuzzySearch.php:51 | fuzzysearch-levenshtein-false-positive
-DEVANA-SUMMARY: open | P3 | high | levenshtein() returns -1 for words over 255 bytes and the `-1 <= maxDist` test treats it as a match, so any document containing a long unbroken token fuzzy-matches arbitrary queries.
+DEVANA-SUMMARY: fixed | P3 | high | levenshtein() returned -1 for words over 255 bytes and the `-1 <= maxDist` test treated it as a match. Now guards the `-1` sentinel (return false), so long unbroken tokens no longer fuzzy-match arbitrary queries.
