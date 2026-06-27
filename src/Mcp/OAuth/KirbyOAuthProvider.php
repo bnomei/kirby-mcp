@@ -437,9 +437,15 @@ final class KirbyOAuthProvider
             }
         }
 
-        $record['revoked'] = true;
-        $record['revoked_at'] = time();
-        $this->store()->write('refresh-tokens', $tokenId, $record);
+        // Atomically consume the refresh token before issuing the rotated
+        // family, so two concurrent workers cannot both pass the revoked/expiry
+        // checks above and fork one token into two live token families. The
+        // loser of the race gets null here and is rejected. Validation above
+        // runs first so a malformed request (wrong client/scope) does not burn a
+        // still-valid refresh token.
+        if ($this->store()->take('refresh-tokens', $tokenId) === null) {
+            return $this->oauthError('invalid_grant', 'Refresh token is invalid or expired.', 400);
+        }
 
         return $this->tokenResponse((string) $client['client_id'], (string) $record['user_id'], $requestedScopes);
     }

@@ -547,6 +547,35 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($invalidRefreshResponse->code())->toBe(400)
                 ->and($invalidRefresh['error'] ?? null)->toBe('invalid_scope');
 
+            // A valid refresh-token grant rotates the token (single-use).
+            $refreshBody = http_build_query([
+                'grant_type' => 'refresh_token',
+                'client_id' => $client['client_id'],
+                'refresh_token' => $token['refresh_token'],
+            ], '', '&', PHP_QUERY_RFC3986);
+            $refreshRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream($refreshBody));
+            $refreshResponse = KirbyMcpOAuthRoute::handle($projectRoot, $refreshRequest);
+            $refreshed = kirbyMcpRouteDecodeJson($refreshResponse->body());
+            expect($refreshResponse->code())->toBe(200)
+                ->and($refreshed['refresh_token'] ?? null)->toBeString()
+                ->and($refreshed['refresh_token'] ?? null)->not()->toBe($token['refresh_token']);
+
+            // Replaying the now-consumed refresh token must fail (atomic
+            // single-use; no forked token family).
+            $refreshReplayRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream($refreshBody));
+            $refreshReplayResponse = KirbyMcpOAuthRoute::handle($projectRoot, $refreshReplayRequest);
+            $refreshReplay = kirbyMcpRouteDecodeJson($refreshReplayResponse->body());
+            expect($refreshReplayResponse->code())->toBe(400)
+                ->and($refreshReplay['error'] ?? null)->toBe('invalid_grant');
+
             $mcpRequest = $factory->createServerRequest('POST', 'https://example.test/mcp', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])

@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=yes
+DEVANA-STATE: fixed | P2 | medium | security=yes
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:386 | oauth-single-use-toctou-replay
 
 # OAuth auth-code / refresh-token single-use is non-atomic (TOCTOU double-spend)
@@ -103,5 +103,8 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
   `KirbyOAuthProvider.php:343-418` and `OAuthFileStore.php:30-72`; provider
   served as concurrent Kirby routes.
 
+- 2026-06-27: fixed (both halves now atomic). The authorization-code half was already fixed by `oauth-auth-code-redeem-race` (P1): `authorizationCodeToken()` consumes the code via `OAuthFileStore::take()` (atomic `rename`-based claim). This report's refresh-token half is now fixed too: `refreshToken()` validates the record (revoked/expiry/client/scope) via `read()` first — so a malformed request does not burn a still-valid token — then atomically consumes it with `take('refresh-tokens', $tokenId)` before issuing the rotated family. Two concurrent workers can no longer both pass the checks and fork one refresh token into two live families: only one `take()` wins; the loser gets `null` → `invalid_grant`. The consumed token is removed (single-use rotation); replay → `read()` null → `invalid_grant`. Added assertions to the OAuth flow integration test: a valid refresh grant returns a *new* refresh token, and replaying the consumed one → 400 `invalid_grant` (auth-code double-redeem already covered). phpstan clean; full OAuth route suite passes.
+  - Residual (acknowledged, from the report's "next step"): refresh-token *reuse detection with whole-family revocation* is not implemented — a replayed token is simply rejected, not used as a signal to revoke the rotated family. The atomic single-use guarantee (no fork) is met; family revocation on reuse is a follow-up enhancement.
+
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:386 | oauth-single-use-toctou-replay
-DEVANA-SUMMARY: open | P2 | medium | OAuth auth-code/refresh-token redemption reads-checks-then-mutates with no lock spanning the steps, so concurrent webserver workers can double-spend one code or fork a refresh token into two live token families.
+DEVANA-SUMMARY: fixed | P2 | medium | OAuth auth-code (via oauth-auth-code-redeem-race) and refresh-token redemption now atomically consume the record via OAuthFileStore::take() before issuing, so concurrent workers can no longer double-spend a code or fork a refresh token into two live families.
