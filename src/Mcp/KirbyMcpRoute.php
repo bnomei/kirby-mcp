@@ -49,7 +49,7 @@ final class KirbyMcpRoute
 
         if (
             $config->authMode === KirbyMcpHttpConfig::AUTH_MODE_SHARED_TOKEN
-            && self::isLoopbackRemoteAddress($request) === false
+            && self::isLoopbackRequest($request) === false
         ) {
             return self::error(503, 'HTTP shared-token auth is only allowed for loopback requests.');
         }
