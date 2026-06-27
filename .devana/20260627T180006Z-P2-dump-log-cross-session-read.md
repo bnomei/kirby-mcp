@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=yes
+DEVANA-STATE: fixed | P2 | medium | security=yes
 DEVANA-KEY: src/Mcp/Tools/DumpTools.php:51 | dump-log-cross-session-read
 
 # `kirby_dump_log_tail` reads project-wide dump log without session isolation
@@ -51,7 +51,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. `kirby_dump_log_tail` already defaulted an omitted `traceId` to the caller's session `DumpState::lastTraceId()`, but when that resolved to null (a session that had not rendered, or stdio with no trace) it called `DumpLogReader::tail(traceId: null)` which returns the entire shared `.kirby-mcp/dumps.jsonl` — every other session's `mcp_dump()` output. The tool now requires a scoping filter: if the resolved `traceId` is null AND no `path` is given, it returns `ok=true` with `count=0`, `events=[]`, and a `note` instructing the caller to pass a `traceId` (from `kirby_render_page`) or a `path`, instead of draining the cross-session log. Explicit `traceId` and explicit `path` reads are unchanged (intentional narrowing), and session-scoped tails (resolved via `lastTraceId`) still work exactly as before — the existing `it tails dump logs using session trace id when missing` test still passes. Updated the tool description to document the filter requirement. Added regression `it does not return cross-session dump events for an unfiltered tail` (unfiltered `limit=0` returns nothing; an explicit `path` filter still returns the matching event). phpstan clean. (The underlying log remains shared/un-partitioned by design; this closes the unfiltered-read leak. Per-event write-time masking is tracked separately in `dump-secret-masker-key-name-gap`.)
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Tools/DumpTools.php:51 | dump-log-cross-session-read
-DEVANA-SUMMARY: open | P2 | medium | kirby_dump_log_tail reads the shared project dumps.jsonl and limit=0 without traceId returns debug events from other MCP sessions.
+DEVANA-SUMMARY: fixed | P2 | medium | kirby_dump_log_tail reads the shared project dumps.jsonl and limit=0 without traceId returns debug events from other MCP sessions.
