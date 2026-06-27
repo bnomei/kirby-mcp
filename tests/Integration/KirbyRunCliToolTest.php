@@ -35,6 +35,29 @@ it('runs an allowlisted read-only Kirby CLI command', function (): void {
     expect($result['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
 });
 
+it('blocks eval-class runtime commands from the generic CLI wrapper', function (): void {
+    $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
+    expect($binary)->not()->toBeFalse();
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $binary);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    foreach ([
+        'mcp:eval' => 'kirby_eval',
+        'mcp:query:dot' => 'kirby_query_dot',
+    ] as $command => $dedicatedTool) {
+        $result = (new CliTools())->runCliCommand(
+            command: $command,
+            arguments: ['return 1;', '--confirm'],
+        );
+
+        expect($result['ok'])->toBeFalse();
+        expect($result['exitCode'])->toBeNull();
+        expect($result['message'])->toContain($dedicatedTool);
+        expect($result['message'])->toContain('confirmation/elicitation');
+    }
+});
+
 it('reports ok=false when the CLI command exits non-zero', function (): void {
     $stub = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-cli-stub-' . bin2hex(random_bytes(8)) . '.php';
     file_put_contents($stub, "<?php\nfwrite(STDERR, 'boom');\nexit(3);\n");

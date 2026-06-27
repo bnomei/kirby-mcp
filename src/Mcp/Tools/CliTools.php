@@ -24,6 +24,19 @@ final class CliTools
 {
     use StructuredToolResult;
 
+    /**
+     * Runtime commands that have a dedicated, separately-gated MCP tool and must
+     * not be reachable through the generic CLI wrapper. Running e.g. `mcp:eval`
+     * with a CLI `--confirm` flag here would bypass the MCP confirmation /
+     * elicitation gate enforced by `kirby_eval` / `kirby_query_dot`.
+     *
+     * @var array<string, string>
+     */
+    private const DEDICATED_TOOL_COMMANDS = [
+        RuntimeCommands::EVAL => 'kirby_eval',
+        RuntimeCommands::QUERY_DOT => 'kirby_query_dot',
+    ];
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -228,6 +241,38 @@ final class CliTools
             $config = KirbyMcpConfig::load($projectRoot);
 
             $deny = $config->cliDeny();
+
+            // Eval-class runtime commands have dedicated MCP tools that enforce
+            // confirmation/elicitation. Block them here so a CLI `--confirm`
+            // flag cannot bypass those gates even when cli.allow permits them.
+            $dedicatedTool = self::DEDICATED_TOOL_COMMANDS[$command] ?? null;
+            if ($dedicatedTool !== null) {
+                return [
+                    'ok' => false,
+                    'projectRoot' => $projectRoot,
+                    'host' => $host,
+                    'command' => $command,
+                    'arguments' => $normalizedArgs,
+                    'allowWrite' => $allowWrite,
+                    'config' => [
+                        'path' => $config->path,
+                        'error' => $config->error,
+                        'allow' => $config->cliAllow(),
+                        'allowWrite' => $config->cliAllowWrite(),
+                        'deny' => $deny,
+                    ],
+                    'policy' => [
+                        'matchedDeny' => null,
+                        'matchedAllow' => null,
+                        'matchedAllowWrite' => null,
+                    ],
+                    'message' => "Command '{$command}' must be run through the dedicated MCP tool `{$dedicatedTool}`, which enforces confirmation/elicitation. It is not available via kirby_run_cli_command.",
+                    'cli' => null,
+                    'mcpJson' => null,
+                    'mcpJsonError' => null,
+                ];
+            }
+
             $decision = (new KirbyCliAllowlistPolicy($config))->evaluate($command, $allowWrite);
 
             if ($decision->matchedDeny !== null) {

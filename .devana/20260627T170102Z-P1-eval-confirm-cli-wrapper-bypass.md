@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Tools/CliTools.php:289 | eval-confirm-cli-wrapper-bypass
 
 # `kirby_run_cli_command` bypasses eval elicitation with `--confirm`
@@ -56,7 +56,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
-- 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed. `CliTools::runCliInternal()` now rejects eval-class runtime commands (`mcp:eval`, `mcp:query:dot`) before the allowlist evaluation via a new `DEDICATED_TOOL_COMMANDS` map, returning `ok:false` with a message pointing to the gated dedicated tool (`kirby_eval` / `kirby_query_dot`). A CLI `--confirm` flag can no longer bypass the MCP confirmation/elicitation gate through the generic wrapper, regardless of `cli.allow`. The dedicated tools route through `RuntimeCommandRunner`, not `runCliCommand`, so they are unaffected. Added integration test `it('blocks eval-class runtime commands from the generic CLI wrapper')`. phpstan clean.
 
 DEVANA-KEY: src/Mcp/Tools/CliTools.php:289 | eval-confirm-cli-wrapper-bypass
-DEVANA-SUMMARY: open | P1 | high | kirby_run_cli_command can run mcp:eval with --confirm and bypass kirby_eval elicitation when cli.allow permits it.
+DEVANA-SUMMARY: fixed | P1 | high | kirby_run_cli_command can run mcp:eval with --confirm and bypass kirby_eval elicitation when cli.allow permits it.
