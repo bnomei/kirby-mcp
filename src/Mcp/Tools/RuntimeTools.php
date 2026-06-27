@@ -628,9 +628,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -869,9 +869,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -942,9 +942,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -1014,9 +1014,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -1896,6 +1896,24 @@ final class RuntimeTools
         }
 
         return $this->maybeStructuredResult($context, $response);
+    }
+
+    /**
+     * The read-content output schemas declare `content` as a (required) object,
+     * but `$model->content()->toArray()` is `[]` for a model with no fields,
+     * which JSON-encodes to `[]` (array). Force the empty case to an object so
+     * the emitted structuredContent validates against the advertised schema.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private static function contentAsObject(array $payload): array
+    {
+        if (($payload['content'] ?? null) === []) {
+            $payload['content'] = new \stdClass();
+        }
+
+        return $payload;
     }
 
     /**

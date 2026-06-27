@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P3 | medium | security=no
+DEVANA-STATE: fixed | P3 | medium | security=no
 DEVANA-KEY: src/Mcp/Tools/RuntimeTools.php:81 | content-outputschema-empty-array
 
 # Read-content tools advertise `content` as object but emit `[]` for empty content
@@ -78,5 +78,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
   producer at `FileContent.php:81`; `[]` survives the encode round-trip. SDK
   output-schema enforcement unverified (vendor absent).
 
+- 2026-06-27: fixed. Added a private `RuntimeTools::contentAsObject()` helper that replaces an empty-array `content` with an empty `stdClass`, and wired it into all four read-content methods (`readPageContent`, `readSiteContent`, `readFileContent`, `readUserContent`) right before `maybeStructuredResult()`. A content-less model now emits `"content":{}` (object) instead of `"content":[]` (array), matching the `content: {type:"object"}` (required) output schema for strict clients. The fix is applied at the consumer because an empty object does not survive the CLI marked-JSON `json_decode(..., true)` round-trip — forcing it at the producer would be re-flattened to `[]`. Non-empty content (assoc array) already encodes as an object and is untouched. Added unit test `RuntimeToolsContentObjectTest` (empty → `{}`, non-empty preserved, no-content-key untouched). phpstan clean.
+
 DEVANA-KEY: src/Mcp/Tools/RuntimeTools.php:81 | content-outputschema-empty-array
-DEVANA-SUMMARY: open | P3 | medium | Read-content tools declare `content` as a required object but emit `[]` (JSON array) for models with no content fields, violating the advertised outputSchema for strict clients.
+DEVANA-SUMMARY: fixed | P3 | medium | Read-content tools declared `content` as a required object but emitted `[]` for fields-less models. Now force empty content to `{}` (stdClass) in all four read methods before building structuredContent.
