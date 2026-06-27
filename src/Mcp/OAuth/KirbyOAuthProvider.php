@@ -769,7 +769,7 @@ final class KirbyOAuthProvider
                 continue;
             }
 
-            if ($scheme === 'http' && ($host === 'localhost' || $host === '127.0.0.1' || str_starts_with($host, '127.'))) {
+            if ($scheme === 'http' && $this->isLoopbackRedirectHost($host)) {
                 continue;
             }
 
@@ -777,6 +777,22 @@ final class KirbyOAuthProvider
         }
 
         return true;
+    }
+
+    /**
+     * Whether a redirect host is a real loopback target per RFC 8252. A bare
+     * `127.` prefix is not enough: `127.attacker.example` is a public DNS name,
+     * not a loopback address. Require `localhost`, IPv6 `::1`, or a valid IPv4
+     * literal in the 127.0.0.0/8 loopback range.
+     */
+    private function isLoopbackRedirectHost(string $host): bool
+    {
+        if ($host === 'localhost' || $host === '::1') {
+            return true;
+        }
+
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.');
     }
 
     /**
