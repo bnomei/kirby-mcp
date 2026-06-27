@@ -63,6 +63,44 @@ final readonly class OAuthFileStore
         return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * Atomically claim and remove a record. Only the first concurrent caller
+     * receives the data; callers that lose the race get null. `rename()` is
+     * atomic on POSIX filesystems, so exactly one process can move the file out
+     * — this makes single-use records (e.g. OAuth authorization codes) safe
+     * against concurrent read-then-delete races.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function take(string $bucket, string $id): ?array
+    {
+        $path = $this->path($bucket, $id);
+        if (!is_file($path)) {
+            return null;
+        }
+
+        $claim = $path . '.' . bin2hex(random_bytes(6)) . '.claim';
+        if (!@rename($path, $claim)) {
+            // The file vanished or another caller claimed it first.
+            return null;
+        }
+
+        $contents = @file_get_contents($claim);
+        @unlink($claim);
+
+        if (!is_string($contents)) {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
     public function delete(string $bucket, string $id): void
     {
         $path = $this->path($bucket, $id);

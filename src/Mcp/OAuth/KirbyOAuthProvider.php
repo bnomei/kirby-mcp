@@ -367,9 +367,10 @@ final class KirbyOAuthProvider
         }
 
         $codeId = hash('sha256', $code);
-        $authCode = $this->store()->read('auth-codes', $codeId);
+        // Atomically consume the code so two concurrent /token requests cannot
+        // both redeem it (single-use). The loser of the race gets null below.
+        $authCode = $this->store()->take('auth-codes', $codeId);
         if ($authCode === null || (int) ($authCode['expires_at'] ?? 0) < time()) {
-            $this->store()->delete('auth-codes', $codeId);
             return $this->oauthError('invalid_grant', 'Authorization code is invalid or expired.', 400);
         }
 
@@ -385,8 +386,7 @@ final class KirbyOAuthProvider
             return $this->oauthError('invalid_grant', 'PKCE verification failed.', 400);
         }
 
-        $this->store()->delete('auth-codes', $codeId);
-
+        // Code already consumed atomically by take() above.
         return $this->tokenResponse(
             (string) $client['client_id'],
             (string) $authCode['user_id'],

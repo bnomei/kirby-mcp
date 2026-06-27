@@ -520,6 +520,18 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
                 ->and($token['refresh_token'] ?? null)->toBeString()
                 ->and($token['scope'] ?? null)->toBe('kirby-mcp:read kirby-mcp:runtime');
 
+            // Authorization codes are single-use: redeeming the same code again
+            // must fail (the code was atomically consumed on first redemption).
+            $replayRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream($tokenBody));
+            $replayResponse = KirbyMcpOAuthRoute::handle($projectRoot, $replayRequest);
+            $replay = kirbyMcpRouteDecodeJson($replayResponse->body());
+            expect($replayResponse->code())->toBe(400)
+                ->and($replay['error'] ?? null)->toBe('invalid_grant');
+
             $invalidRefreshRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])

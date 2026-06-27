@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:343 | oauth-auth-code-redeem-race
 
 # OAuth authorization codes can be redeemed twice concurrently
@@ -48,6 +48,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed. Added `OAuthFileStore::take()`, an atomic claim-and-remove that `rename()`s the record file to a unique `.claim` path before reading it. `rename()` is atomic on POSIX filesystems, so exactly one concurrent caller succeeds; the loser gets `null`. `authorizationCodeToken()` now consumes the auth code via `take('auth-codes', $codeId)` up front instead of read → validate → delete, so two concurrent `/token` requests can no longer both pass validation. Removed the now-redundant trailing `delete`. Added unit test `OAuthFileStoreTest` (take returns a record once then null; null for missing) and a double-redeem assertion in the OAuth flow integration test (second redemption → 400 `invalid_grant`). phpstan clean.
 
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:343 | oauth-auth-code-redeem-race
-DEVANA-SUMMARY: open | P1 | high | Concurrent OAuth code redemption can issue multiple token sets because read and delete are not atomic.
+DEVANA-SUMMARY: fixed | P1 | high | Concurrent OAuth code redemption can issue multiple token sets because read and delete are not atomic.
