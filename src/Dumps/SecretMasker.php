@@ -137,6 +137,17 @@ final class SecretMasker
             $result = [];
             foreach ($value as $key => $item) {
                 $maskedKey = is_string($key) ? $this->mask($key) : $key;
+
+                // Key-name-aware redaction: a non-empty string value stored under
+                // a sensitive key (password, secret, token, api_key, ...) is a
+                // secret regardless of whether its value matches a vendor token
+                // pattern, so redact it. Non-string scalars (e.g. `auth => true`
+                // flags) pass through to avoid over-masking.
+                if (is_string($key) && self::isSensitiveKey($key) && is_string($item) && trim($item) !== '') {
+                    $result[$maskedKey] = $this->mask;
+                    continue;
+                }
+
                 $result[$maskedKey] = $this->maskRecursive($item);
             }
             return $result;
@@ -144,6 +155,44 @@ final class SecretMasker
 
         // Scalars and other types pass through unchanged
         return $value;
+    }
+
+    /**
+     * Whether an array key denotes a secret-bearing field. Descriptive words
+     * match by substring; short ambiguous words match the whole key only (so
+     * `author` does not match `auth`, `monkey` does not match `key`).
+     */
+    private static function isSensitiveKey(string $key): bool
+    {
+        $key = strtolower(trim($key));
+        if ($key === '') {
+            return false;
+        }
+
+        $exact = ['key', 'auth', 'pwd', 'dsn', 'salt', 'credentials', 'authorization'];
+        if (in_array($key, $exact, true)) {
+            return true;
+        }
+
+        $substrings = [
+            'password',
+            'passwd',
+            'passphrase',
+            'secret',
+            'token',
+            'apikey',
+            'api_key',
+            'credential',
+            'privatekey',
+            'private_key',
+        ];
+        foreach ($substrings as $needle) {
+            if (str_contains($key, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

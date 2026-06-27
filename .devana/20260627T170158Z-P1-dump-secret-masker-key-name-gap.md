@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | medium | security=yes
+DEVANA-STATE: fixed | P1 | medium | security=yes
 DEVANA-KEY: src/Dumps/SecretMasker.php:126 | dump-secret-masker-key-name-gap
 
 # SecretMasker leaks secret values stored under sensitive keys in structured dumps
@@ -105,5 +105,7 @@ After working this report, preserve the original finding body. Update line 2
   key-name rule; `Password Field` regex matches only inline `key:"value"`;
   `DumpLogWriter.append` applies `maskRecursive` to normalized structured data.
 
+- 2026-06-27: fixed. `SecretMasker::maskRecursive()` now applies key-name-aware redaction: a non-empty **string** value stored under a sensitive key is replaced with the mask regardless of whether its value matches a vendor token regex. `isSensitiveKey()` matches descriptive words by substring (password/passwd/passphrase/secret/token/apikey/api_key/credential/privatekey/private_key) and short ambiguous words by whole-key only (key/auth/pwd/dsn/salt/credentials/authorization), so `author` does not match `auth` and `monkey` does not match `key`. Non-string scalars pass through, so boolean flags like `auth => true` are not over-masked. Honors the existing disable switch (empty patterns → no redaction). Added unit tests for `['password' => 'plainvalue']`, `APP_SECRET`/`access_token`/`apiKey`, the `auth => true` flag, and the disabled case. SecretMasker + dump-log pipeline tests pass. phpstan clean.
+
 DEVANA-KEY: src/Dumps/SecretMasker.php:126 | dump-secret-masker-key-name-gap
-DEVANA-SUMMARY: open | P1 | medium | SecretMasker redacts only format-matching values, so a plaintext secret stored under a sensitive key (e.g. password) flows unmasked into the dump log and kirby_dump_log_tail output.
+DEVANA-SUMMARY: fixed | P1 | medium | SecretMasker redacted only format-matching values, so a plaintext secret stored under a sensitive key (e.g. password) flowed unmasked into the dump log and kirby_dump_log_tail output. Now redacts string values under sensitive keys by key name.
