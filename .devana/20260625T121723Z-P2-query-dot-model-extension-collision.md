@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Commands/QueryDot.php:205 | query-dot-model-extension-collision
 
 # Query model resolver treats dotted page ids as files
@@ -59,6 +59,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-25: open by Devana. Initial report written from static source inspection.
+- 2026-06-27: fixed. `QueryDot::resolveModel()` now tries `$kirby->page()` before the `looksLikeFile()` extension heuristic, so dotted page slugs (e.g. `release-2.0`) resolve as pages, matching `PageResolver` and the read tools. Falls back to `$kirby->file()` only when no page matches. Added unit test `QueryDotResolveModelTest` (reflection on the private resolver) covering the dotted-page case and the genuine file fallback. phpstan clean.
 
 DEVANA-KEY: src/Mcp/Commands/QueryDot.php:205 | query-dot-model-extension-collision
-DEVANA-SUMMARY: open | P2 | medium | QueryDot treats any dotted basename as a file id, so page slugs like release-2.0 fail or resolve to the wrong model.
+DEVANA-SUMMARY: fixed | P2 | medium | QueryDot treats any dotted basename as a file id, so page slugs like release-2.0 fail or resolve to the wrong model.
