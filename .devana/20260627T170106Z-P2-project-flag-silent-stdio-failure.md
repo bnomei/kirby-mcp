@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: bin/kirby-mcp:98 | project-flag-silent-stdio-failure
 
 # `--project` detection failure starts stdio server silently on wrong root
@@ -43,6 +43,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed. `bin/kirby-mcp` no longer silently swallows a failed `--project` auto-detect. When `$projectFlagProvided === true` and no composer-based Kirby root is found (and no explicit `--project=/path` was given, which sets the env earlier), it now writes a clear error to stderr and `exit(1)` before starting the stdio server — matching the fail-closed behavior of `install`/`http`. Writing to stderr is safe here because the server never starts, so the stdio protocol stream is not corrupted. Added integration test `it('fails closed when --project is given but no project root can be detected')` (runs the bin with `--project` from an empty temp cwd, `KIRBY_MCP_PROJECT_ROOT` unset → exit 1 + stderr message). Full `KirbyMcpBinCommandsTest` suite (10 tests) passes.
 
 DEVANA-KEY: bin/kirby-mcp:98 | project-flag-silent-stdio-failure
-DEVANA-SUMMARY: open | P2 | medium | Failed --project auto-detect silently starts stdio MCP against cwd instead of erroring like other subcommands.
+DEVANA-SUMMARY: fixed | P2 | medium | Failed --project auto-detect silently starts stdio MCP against cwd instead of erroring like other subcommands.

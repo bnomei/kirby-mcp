@@ -96,9 +96,14 @@ if ($globalMode !== true && is_string($projectRoot) && $projectRoot !== '') {
     if (is_string($detected) && $detected !== '') {
         putenv('KIRBY_MCP_PROJECT_ROOT=' . $detected);
     } elseif ($projectFlagProvided === true) {
-        // The user explicitly asked for project auto-detection with `--project`
-        // but we could not find a composer-based Kirby project root.
-        // Avoid writing to stdout/stderr because this is a stdio protocol server.
+        // The user explicitly asked to bind a project with `--project` but no
+        // composer-based Kirby project root could be detected. Fail closed with
+        // a clear error instead of silently starting the stdio server against
+        // the current working directory (which would operate on the wrong tree).
+        // The server never starts, so writing to stderr does not corrupt the
+        // stdio protocol stream.
+        fwrite(STDERR, "Kirby MCP: --project was provided but no Kirby project root could be detected. Pass --project=/path/to/kirby-project, or fix the client's project configuration before reconnecting.\n");
+        exit(1);
     }
 }
 
