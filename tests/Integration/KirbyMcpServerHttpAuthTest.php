@@ -116,6 +116,36 @@ it('rejects disallowed Origin before auth and protocol handling', function (): v
         ->and((string) $response->getBody())->toContain('Origin is not allowed.');
 });
 
+it('requires write scope for kirby_run_cli_command with allowWrite even on an execute token', function (): void {
+    $factory = new HttpFactory();
+    $handler = kirbyMcpHttpAuthHandler(new SharedTokenValidator('exec-token', [HttpAuthScopes::READ, HttpAuthScopes::EXECUTE]));
+
+    $initialize = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer exec-token')
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('initialize', 1)))
+    );
+    $sessionId = $initialize->getHeaderLine('Mcp-Session-Id');
+
+    // allowWrite=true reaches write-capable CLI patterns, so an execute-only
+    // token (no write) must be denied.
+    $writeCli = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer exec-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('tools/call', 2, [
+                'name' => 'kirby_run_cli_command',
+                'arguments' => ['command' => 'clear:cache', 'allowWrite' => true],
+            ])))
+    );
+
+    expect($writeCli->getStatusCode())->toBe(403)
+        ->and($writeCli->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $writeCli->getBody())->toContain(HttpAuthScopes::WRITE);
+});
+
 it('keeps tools discoverable but rejects calls when the bearer token lacks operation scope', function (): void {
     $factory = new HttpFactory();
     $handler = kirbyMcpHttpAuthHandler(new SharedTokenValidator('read-token', [HttpAuthScopes::READ]));

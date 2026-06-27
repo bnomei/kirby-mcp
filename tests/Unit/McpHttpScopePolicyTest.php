@@ -33,6 +33,21 @@ it('classifies actual sensitive tools into runtime write execute and admin scope
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_runtime_install']))->toBe([HttpAuthScopes::ADMIN]);
 });
 
+it('requires write scope for kirby_run_cli_command with allowWrite=true', function (): void {
+    $policy = new HttpScopePolicy();
+
+    expect($policy->requiredScopes('tools/call', ['name' => 'kirby_run_cli_command']))
+        ->toBe([HttpAuthScopes::EXECUTE])
+        ->and($policy->requiredScopes('tools/call', [
+            'name' => 'kirby_run_cli_command',
+            'arguments' => ['command' => 'help', 'allowWrite' => false],
+        ]))->toBe([HttpAuthScopes::EXECUTE])
+        ->and($policy->requiredScopes('tools/call', [
+            'name' => 'kirby_run_cli_command',
+            'arguments' => ['command' => 'clear:cache', 'allowWrite' => true],
+        ]))->toBe([HttpAuthScopes::EXECUTE, HttpAuthScopes::WRITE]);
+});
+
 it('gates runtime resource reads at runtime scope but keeps static docs at read', function (): void {
     $policy = new HttpScopePolicy();
 

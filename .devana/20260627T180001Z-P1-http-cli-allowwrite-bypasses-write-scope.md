@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:64 | http-cli-allowwrite-bypasses-write-scope
 
 # HTTP `kirby_run_cli_command` `allowWrite` bypasses `kirby-mcp:write` scope
@@ -57,7 +57,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. `HttpScopePolicy` now routes `tools/call` through a new `toolCallScopes($params)` that inspects the call arguments, not just the tool name. For `kirby_run_cli_command` with `arguments.allowWrite === true` it adds `kirby-mcp:write` to the required scopes (alongside `EXECUTE`), so an execute-only HTTP token can no longer reach write-capable CLI patterns (`make:*`, `clear:*`) — it gets 403 `insufficient_scope` like the dedicated `kirby_update_*` tools. A new `boolArgument()` helper reads booleans from the `arguments` object (array or stdClass). Added unit cases in `McpHttpScopePolicyTest` (no args / allowWrite=false → `[EXECUTE]`; allowWrite=true → `[EXECUTE, WRITE]`) and an integration test in `KirbyMcpServerHttpAuthTest` (read+execute token, no write → 403 on `clear:cache` allowWrite=true). phpstan clean. Note: this is the HTTP-scope layer; the orthogonal `cli.allow`/allowWrite policy gaps are covered by `cli-allow-bypasses-write-guards`.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Http/HttpScopePolicy.php:64 | http-cli-allowwrite-bypasses-write-scope
-DEVANA-SUMMARY: open | P1 | high | HTTP tokens with EXECUTE but not WRITE can mutate the project via kirby_run_cli_command when allowWrite=true matches built-in make:* / clear:* patterns.
+DEVANA-SUMMARY: fixed | P1 | high | HTTP tokens with EXECUTE but not WRITE can mutate the project via kirby_run_cli_command when allowWrite=true matches built-in make:* / clear:* patterns.

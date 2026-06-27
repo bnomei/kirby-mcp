@@ -23,10 +23,33 @@ final class HttpScopePolicy
             'prompts/get',
             'completion/complete' => [HttpAuthScopes::READ],
             'logging/setLevel' => [HttpAuthScopes::ADMIN],
-            'tools/call' => $this->toolScopes($this->stringParam($params, 'name')),
+            'tools/call' => $this->toolCallScopes($params),
             'resources/read' => $this->resourceScopes($this->stringParam($params, 'uri')),
             default => [HttpAuthScopes::READ],
         };
+    }
+
+    /**
+     * @param array<string, mixed>|null $params
+     *
+     * @return list<string>
+     */
+    public function toolCallScopes(?array $params): array
+    {
+        $name = $this->stringParam($params, 'name');
+        $scopes = $this->toolScopes($name);
+
+        // kirby_run_cli_command is EXECUTE-scoped, but allowWrite=true reaches
+        // write-capable CLI patterns (make:*, clear:*). Require the WRITE scope
+        // too in that case, so an execute-only token cannot mutate the project
+        // through the generic CLI wrapper (matching the kirby_update_* tools).
+        if ($name === 'kirby_run_cli_command' && $this->boolArgument($params, 'allowWrite') === true) {
+            if (!in_array(HttpAuthScopes::WRITE, $scopes, true)) {
+                $scopes[] = HttpAuthScopes::WRITE;
+            }
+        }
+
+        return $scopes;
     }
 
     /**
@@ -145,5 +168,26 @@ final class HttpScopePolicy
         $value = $params[$name] ?? null;
 
         return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Read a boolean from the `tools/call` `arguments` object.
+     *
+     * @param array<string, mixed>|null $params
+     */
+    private function boolArgument(?array $params, string $name): ?bool
+    {
+        $arguments = $params['arguments'] ?? null;
+        if ($arguments instanceof \stdClass) {
+            $arguments = (array) $arguments;
+        }
+
+        if (!is_array($arguments)) {
+            return null;
+        }
+
+        $value = $arguments[$name] ?? null;
+
+        return is_bool($value) ? $value : null;
     }
 }
