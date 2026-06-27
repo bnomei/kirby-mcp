@@ -190,7 +190,17 @@ final class KirbyOAuthProvider
         }
 
         $scopes = $this->finalizeScopesForClient((string) ($params['scope'] ?? ''), $client);
-        if ($this->needsConsent($user->id(), (string) $client['client_id'], $scopes)) {
+
+        // Mitigate authorize session fixation: when the flow is resumed from a
+        // server-stored login session (`?session=`), the authorize params came
+        // from whoever created that session, not necessarily the user who just
+        // logged in. Always show explicit consent with the immutable client
+        // metadata in that case, even under `consent: auto`/remembered consent,
+        // so a victim cannot silently issue a code to an attacker's redirect_uri.
+        $requireConsent = $this->isResumedFromLoginSession()
+            || $this->needsConsent($user->id(), (string) $client['client_id'], $scopes);
+
+        if ($requireConsent) {
             if ($this->request->getMethod() === 'POST') {
                 return $this->completeConsent($params, $user->id(), (string) $client['client_id'], $scopes);
             }
@@ -549,6 +559,29 @@ final class KirbyOAuthProvider
     /**
      * @return array<string, mixed>
      */
+    /**
+     * Whether this authorize request is being resumed from a server-stored
+     * login session (the `?session=` carried through the provider login flow).
+     */
+    private function isResumedFromLoginSession(): bool
+    {
+        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
+
+        return $sessionId !== null && $this->readSession($sessionId) !== null;
+    }
+
+    /**
+     * Delete the stored login session, if any, so it cannot be replayed once the
+     * authorize flow has consumed it.
+     */
+    private function consumeLoginSession(): void
+    {
+        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
+        if ($sessionId !== null) {
+            $this->store()->delete('sessions', $sessionId);
+        }
+    }
+
     private function authorizationParams(): array
     {
         $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
@@ -630,6 +663,7 @@ final class KirbyOAuthProvider
         }
 
         $this->rememberConsent($userId, $clientId, $scopes);
+        $this->consumeLoginSession();
 
         return $this->redirectWithCode($params, $userId, $scopes);
     }

@@ -559,6 +559,96 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
     }
 });
 
+it('forces explicit consent when an authorize flow is resumed from a login session', function (): void {
+    $projectRoot = cmsPath();
+    $oauthStorage = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'oauth';
+    kirbyMcpRouteRemoveDirectory($oauthStorage);
+
+    $previousApp = App::instance(null, true);
+    $previousErrorHandlers = captureErrorHandlers();
+    $previousWhoops = App::$enableWhoops;
+    App::$enableWhoops = false;
+    $app = new App([
+        'roots' => [
+            'index' => $projectRoot,
+        ],
+    ]);
+    ensureUser($app, 'mcp-oauth-fixation@example.com');
+
+    try {
+        kirbyMcpRouteWithHttpEnv([
+            'KIRBY_MCP_HTTP_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_AUTH_MODE' => 'oauth',
+            'KIRBY_MCP_HTTP_OAUTH_PROVIDER_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT' => 'auto',
+            'KIRBY_MCP_HTTP_SCOPES' => 'kirby-mcp:read,kirby-mcp:runtime',
+        ], function () use ($projectRoot, $app): void {
+            $factory = new HttpFactory();
+
+            $registerRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/register', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($factory->createStream(json_encode([
+                    'client_name' => 'Evil Connector',
+                    'redirect_uris' => ['https://claude.ai/api/mcp/auth_callback'],
+                    'token_endpoint_auth_method' => 'none',
+                    'scope' => 'kirby-mcp:read kirby-mcp:runtime',
+                ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
+            $client = kirbyMcpRouteDecodeJson(KirbyMcpOAuthRoute::handle($projectRoot, $registerRequest)->body());
+
+            $verifier = str_repeat('a', 43);
+            $challenge = OAuthKeySet::base64Url(hash('sha256', $verifier, true));
+            $authorizeQuery = http_build_query([
+                'response_type' => 'code',
+                'client_id' => $client['client_id'],
+                'redirect_uri' => 'https://claude.ai/api/mcp/auth_callback',
+                'scope' => 'kirby-mcp:read kirby-mcp:runtime',
+                'state' => 'state-fix',
+                'resource' => 'https://example.test/mcp',
+                'code_challenge' => $challenge,
+                'code_challenge_method' => 'S256',
+            ], '', '&', PHP_QUERY_RFC3986);
+
+            // Step 1: an unauthenticated authorize request stores the params and
+            // redirects to login with a session id (the attacker-seeded session).
+            $app->impersonate(null);
+            $unauthRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ]);
+            $unauthResponse = KirbyMcpOAuthRoute::handle($projectRoot, $unauthRequest);
+            expect($unauthResponse->code())->toBe(302);
+            $loginLocation = kirbyMcpRouteLocation($unauthResponse);
+            parse_str((string) parse_url($loginLocation, PHP_URL_QUERY), $loginQuery);
+            $sessionId = $loginQuery['session'] ?? null;
+            expect($sessionId)->toBeString();
+
+            // Step 2: the victim logs in and the flow resumes via ?session=.
+            // Even with consent=auto, an explicit consent screen must be shown
+            // (no silent 302 code redirect to the attacker's redirect_uri).
+            $app->impersonate('mcp-oauth-fixation@example.com');
+            $resumeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . http_build_query([
+                'session' => $sessionId,
+            ], '', '&', PHP_QUERY_RFC3986), [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ]);
+            $resumeResponse = KirbyMcpOAuthRoute::handle($projectRoot, $resumeRequest);
+
+            expect($resumeResponse->code())->toBe(200);
+            expect($resumeResponse->body())->toContain('Authorize Evil Connector');
+        });
+    } finally {
+        kirbyMcpRouteCommitSession($app);
+        $app->impersonate(null);
+        if ($previousApp instanceof App) {
+            App::instance($previousApp);
+        }
+        App::$enableWhoops = $previousWhoops;
+        restoreErrorHandlers($previousErrorHandlers);
+        kirbyMcpRouteRemoveDirectory($oauthStorage);
+    }
+});
+
 it('denies OAuth authorization for Panel users below the configured role', function (): void {
     $projectRoot = cmsPath();
     $oauthStorage = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'oauth';
