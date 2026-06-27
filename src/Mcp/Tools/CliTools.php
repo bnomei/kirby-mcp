@@ -135,8 +135,20 @@ final class CliTools
             $success = ($exitCode === 0) && ($timedOut === false);
         }
 
+        // Align the primary `ok` signal with CLI completion: a non-zero exit
+        // code or timeout is a failure, even though dispatch succeeded. When the
+        // outcome is indeterminate (success === null) keep ok true.
+        $ok = $success !== false;
+
+        $message = is_string($result['message'] ?? null) ? $result['message'] : 'Command executed.';
+        if ($ok === false) {
+            $message = $timedOut === true
+                ? 'Command timed out.'
+                : 'Command failed (non-zero exit code).';
+        }
+
         return $this->maybeStructuredResult($context, [
-            'ok' => true,
+            'ok' => $ok,
             'projectRoot' => $result['projectRoot'],
             'host' => $result['host'],
             'command' => $result['command'],
@@ -144,7 +156,7 @@ final class CliTools
             'allowWrite' => (bool) ($result['allowWrite'] ?? $allowWrite),
             'config' => $result['config'],
             'policy' => $result['policy'],
-            'message' => is_string($result['message'] ?? null) ? $result['message'] : 'Command executed.',
+            'message' => $message,
             'success' => $success,
             'exitCode' => is_int($exitCode) ? $exitCode : null,
             'stdout' => is_string($stdout) ? $stdout : null,

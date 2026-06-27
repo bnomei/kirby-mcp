@@ -35,6 +35,27 @@ it('runs an allowlisted read-only Kirby CLI command', function (): void {
     expect($result['stdout'])->toMatch('/\\b\\d+\\.\\d+\\.\\d+\\b/');
 });
 
+it('reports ok=false when the CLI command exits non-zero', function (): void {
+    $stub = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-cli-stub-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($stub, "<?php\nfwrite(STDERR, 'boom');\nexit(3);\n");
+
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $stub);
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    try {
+        $result = (new CliTools())->runCliCommand(command: 'version');
+
+        expect($result['ok'])->toBeFalse();
+        expect($result['success'])->toBeFalse();
+        expect($result['exitCode'])->toBe(3);
+        expect($result['timedOut'])->toBeFalse();
+        expect($result['message'])->toContain('non-zero exit');
+    } finally {
+        putenv(KirbyCliRunner::ENV_KIRBY_BIN);
+        @unlink($stub);
+    }
+});
+
 it('blocks write-capable commands unless allowWrite=true', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
     expect($binary)->not()->toBeFalse();

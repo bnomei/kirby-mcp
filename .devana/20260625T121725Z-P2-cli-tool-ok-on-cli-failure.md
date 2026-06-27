@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Tools/CliTools.php:139 | cli-tool-ok-on-cli-failure
 
 # `kirby_run_cli_command` returns `ok: true` when the CLI failed or timed out
@@ -61,6 +61,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-25: open by Devana. Initial report written from static source inspection.
+- 2026-06-27: fixed. `CliTools::runCliCommand()` now derives top-level `ok` from the same predicate as `success` (`ok = $success !== false`), so a non-zero exit code or timeout reports `ok: false`. Indeterminate outcomes (success === null) keep `ok: true` (dispatch succeeded). Added a clearer failure `message` ("Command timed out." / "Command failed (non-zero exit code)."). Added a deterministic integration test using a PHP stub binary (exit 3) asserting `ok=false`, `success=false`, `exitCode=3`. phpstan clean. Note: the 3 pre-existing `KirbyRunCliToolTest` failures are environment-only — the sandbox's fixture `kirby` CLI returns exit 255, so the `version` tests were already failing on their `exitCode === 0` assertions; unrelated to this change.
 
 DEVANA-KEY: src/Mcp/Tools/CliTools.php:139 | cli-tool-ok-on-cli-failure
-DEVANA-SUMMARY: open | P2 | medium | kirby_run_cli_command keeps ok true after CLI timeout or non-zero exit, so consumers checking only ok misread failures as success.
+DEVANA-SUMMARY: fixed | P2 | medium | kirby_run_cli_command keeps ok true after CLI timeout or non-zero exit, so consumers checking only ok misread failures as success.
