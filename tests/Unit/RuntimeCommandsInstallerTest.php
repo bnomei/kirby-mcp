@@ -54,6 +54,35 @@ it('records install errors when a destination directory cannot be created', func
         expect($result->errors)->not()->toBeEmpty();
         expect($result->errors[0])->toHaveKey('path');
         expect($result->errors[0]['path'])->toContain($commandsRoot . DIRECTORY_SEPARATOR . 'mcp');
+
+        // A partial/total install failure must surface an unambiguous ok=false
+        // so MCP clients (kirby_runtime_install) do not treat it as success.
+        expect($result->ok())->toBeFalse();
+        expect($result->toArray()['ok'])->toBeFalse();
+    } finally {
+        removeRuntimeInstallerDir($projectRoot);
+    }
+});
+
+it('reports ok=true and exposes the flag in toArray when every file installs', function (): void {
+    $projectRoot = runtimeInstallerTempDir('project-ok');
+    $commandsRoot = $projectRoot . DIRECTORY_SEPARATOR . 'commands';
+
+    try {
+        $result = (new RuntimeCommandsInstaller())->install(
+            projectRoot: $projectRoot,
+            force: true,
+            commandsRootOverride: $commandsRoot,
+        );
+
+        expect($result->installed)->not()->toBeEmpty();
+        expect($result->errors)->toBeEmpty();
+        expect($result->ok())->toBeTrue();
+
+        $array = $result->toArray();
+        expect($array['ok'])->toBeTrue();
+        // The ok flag is first so clients reading the structured result see it.
+        expect(array_key_first($array))->toBe('ok');
     } finally {
         removeRuntimeInstallerDir($projectRoot);
     }

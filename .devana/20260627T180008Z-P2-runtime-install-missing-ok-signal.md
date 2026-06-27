@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Tools/RuntimeTools.php:373 | runtime-install-missing-ok-signal
 
 # `kirby_runtime_install` omits `ok: false` when install records partial errors
@@ -54,7 +54,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. `RuntimeCommandsInstallResult::toArray()` now includes a top-level `ok` boolean (as the first key) derived from a new `ok()` method (`errors === []`). Since `kirby_runtime_install` forwards `toArray()` verbatim, the MCP tool now exposes an unambiguous success/failure signal: a partial or total install failure (e.g. `site/commands/mcp` exists as a file, blocking a target path) returns `ok: false` alongside the `errors` array, so agents that key on `ok` no longer treat a broken install as success and proceed to `kirby_render_page`. Aligned `bin/kirby-mcp` to compute its payload `ok` via `$installResult->ok() && $configResult['error'] === null` (single source of truth for the per-file part; bin additionally factors the config-install step). The added key is additive — integration setups that read `$install['commandsRoot']` are unaffected. Extended `RuntimeCommandsInstallerTest`: the blocked-install case now asserts `ok()`/`toArray()['ok']` are false, plus a new happy-path test asserting `ok()` true and `ok` is the first key. phpstan clean on `src`/`tests` (the pre-existing `bin/kirby-mcp` undefined-`$argv`/literal-comparison warnings are outside the analyzed paths and predate this change).
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Tools/RuntimeTools.php:373 | runtime-install-missing-ok-signal
-DEVANA-SUMMARY: open | P2 | medium | kirby_runtime_install returns errors[] without ok:false, so partial install failures look like success to MCP clients that expect an ok flag.
+DEVANA-SUMMARY: fixed | P2 | medium | kirby_runtime_install returns errors[] without ok:false, so partial install failures look like success to MCP clients that expect an ok flag.

@@ -236,7 +236,7 @@ if ($subcommand === 'install' || $subcommand === 'update') {
     }
 
     $payload = [
-        'ok' => $installResult->errors === [] && $configResult['error'] === null,
+        'ok' => $installResult->ok() && $configResult['error'] === null,
         'command' => $subcommand,
         'projectRoot' => $installResult->projectRoot,
         'commandsRoot' => $installResult->commandsRoot,

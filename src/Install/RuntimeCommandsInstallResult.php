@@ -21,7 +21,18 @@ final readonly class RuntimeCommandsInstallResult
     }
 
     /**
+     * The install is non-transactional (per-file), so it can finish with some
+     * `installed` paths and a non-empty `errors` list. Success means every
+     * targeted file was written: no per-file errors.
+     */
+    public function ok(): bool
+    {
+        return $this->errors === [];
+    }
+
+    /**
      * @return array{
+     *   ok: bool,
      *   projectRoot: string,
      *   commandsRoot: string,
      *   installed: array<int, string>,
@@ -32,6 +43,7 @@ final readonly class RuntimeCommandsInstallResult
     public function toArray(): array
     {
         return [
+            'ok' => $this->ok(),
             'projectRoot' => $this->projectRoot,
             'commandsRoot' => $this->commandsRoot,
             'installed' => $this->installed,
