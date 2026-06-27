@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P1 | high | security=yes
+DEVANA-STATE: fixed | P1 | high | security=yes
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:350 | oauth-code-survives-invalid-grant
 
 # OAuth authorization codes remain redeemable after client, redirect, or PKCE mismatch
@@ -54,7 +54,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed (resolved by the `oauth-auth-code-redeem-race` fix). `authorizationCodeToken()` now consumes the authorization code atomically via `OAuthFileStore::take()` (rename-based POSIX-atomic claim) as the very first step — BEFORE any `client_id`, `redirect_uri`, or PKCE validation. Because the code record is removed the instant it is read, every failure path (wrong client, wrong redirect, failed PKCE) returns `invalid_grant` with the code already gone; it cannot be retried or redeemed afterwards. This closes both the failed-validation-survival window described here and the concurrent double-success race. Added a regression block to the Integration OAuth flow test (`it serves the built-in OAuth provider flow ...`): a fresh code redeemed with a wrong `code_verifier` returns `invalid_grant`, and a follow-up attempt on the same code with the *correct* verifier also returns `invalid_grant` — proving the failed attempt burned the code. Full `KirbyMcpRouteTest` suite passes (21 tests / 134 assertions); phpstan clean.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:350 | oauth-code-survives-invalid-grant
-DEVANA-SUMMARY: open | P1 | high | OAuth authorization codes are not deleted on client, redirect, or PKCE mismatch, so invalid_grant responses still leave codes redeemable until expiry.
+DEVANA-SUMMARY: fixed | P1 | high | OAuth authorization codes are not deleted on client, redirect, or PKCE mismatch, so invalid_grant responses still leave codes redeemable until expiry.

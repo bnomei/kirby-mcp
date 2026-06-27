@@ -532,6 +532,66 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($replayResponse->code())->toBe(400)
                 ->and($replay['error'] ?? null)->toBe('invalid_grant');
 
+            // A failed redemption (wrong PKCE verifier) must still burn the code:
+            // the code is consumed atomically before client/redirect/PKCE
+            // validation, so a subsequent attempt with the *correct* verifier
+            // cannot recover it. This blocks PKCE/client brute-force replay.
+            $burnAuthorizeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ]);
+            $burnAuthorizeResponse = KirbyMcpOAuthRoute::handle($projectRoot, $burnAuthorizeRequest);
+            expect($burnAuthorizeResponse->code())->toBe(200);
+            expect(preg_match('/name="csrf" value="([^"]*)"/', $burnAuthorizeResponse->body(), $burnMatches))->toBe(1);
+
+            $burnApproveRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream(http_build_query([
+                    'csrf' => html_entity_decode($burnMatches[1], ENT_QUOTES, 'UTF-8'),
+                    'approve' => '1',
+                ], '', '&', PHP_QUERY_RFC3986)));
+            $burnApproveResponse = KirbyMcpOAuthRoute::handle($projectRoot, $burnApproveRequest);
+            expect($burnApproveResponse->code())->toBe(302);
+            parse_str((string) parse_url(kirbyMcpRouteLocation($burnApproveResponse), PHP_URL_QUERY), $burnQuery);
+            expect($burnQuery['code'] ?? null)->toBeString();
+
+            $wrongVerifierBody = http_build_query([
+                'grant_type' => 'authorization_code',
+                'client_id' => $client['client_id'],
+                'code' => $burnQuery['code'],
+                'redirect_uri' => 'https://claude.ai/api/mcp/auth_callback',
+                'code_verifier' => str_repeat('b', 43),
+            ], '', '&', PHP_QUERY_RFC3986);
+            $wrongVerifierRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream($wrongVerifierBody));
+            $wrongVerifierResponse = KirbyMcpOAuthRoute::handle($projectRoot, $wrongVerifierRequest);
+            $wrongVerifier = kirbyMcpRouteDecodeJson($wrongVerifierResponse->body());
+            expect($wrongVerifierResponse->code())->toBe(400)
+                ->and($wrongVerifier['error'] ?? null)->toBe('invalid_grant');
+
+            // Now retry the SAME code with the CORRECT verifier — it must fail,
+            // proving the failed attempt already consumed the code.
+            $burnRetryBody = http_build_query([
+                'grant_type' => 'authorization_code',
+                'client_id' => $client['client_id'],
+                'code' => $burnQuery['code'],
+                'redirect_uri' => 'https://claude.ai/api/mcp/auth_callback',
+                'code_verifier' => $verifier,
+            ], '', '&', PHP_QUERY_RFC3986);
+            $burnRetryRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
+                ->withBody($factory->createStream($burnRetryBody));
+            $burnRetryResponse = KirbyMcpOAuthRoute::handle($projectRoot, $burnRetryRequest);
+            $burnRetry = kirbyMcpRouteDecodeJson($burnRetryResponse->body());
+            expect($burnRetryResponse->code())->toBe(400)
+                ->and($burnRetry['error'] ?? null)->toBe('invalid_grant');
+
             $invalidRefreshRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])
