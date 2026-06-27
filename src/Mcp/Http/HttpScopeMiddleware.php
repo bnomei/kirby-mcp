@@ -51,6 +51,14 @@ final readonly class HttpScopeMiddleware implements MiddlewareInterface
             return [HttpAuthScopes::READ];
         }
 
+        // A syntactically valid JSON body can still decode to a scalar or null
+        // (e.g. `null`, `5`, `"x"`), which is not a JsonException. Guard before
+        // array_is_list() (typed `array`) so strict_types does not raise an
+        // uncaught TypeError; treat non-array bodies as the READ floor.
+        if (!is_array($payload)) {
+            return [HttpAuthScopes::READ];
+        }
+
         $messages = array_is_list($payload) ? $payload : [$payload];
         $required = [];
         foreach ($messages as $message) {

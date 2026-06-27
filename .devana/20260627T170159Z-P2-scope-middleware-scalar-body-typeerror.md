@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | high | security=no
+DEVANA-STATE: fixed | P2 | high | security=no
 DEVANA-KEY: src/Mcp/Http/HttpScopeMiddleware.php:54 | scope-middleware-scalar-body-typeerror
 
 # Valid JSON-scalar request body throws TypeError in HTTP scope middleware
@@ -97,5 +97,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
 - 2026-06-27: open by Devana. Verified statically against
   `HttpScopeMiddleware.php:40-54` (strict_types, unguarded `array_is_list`).
 
+- 2026-06-27: fixed. Added an `if (!is_array($payload)) { return [HttpAuthScopes::READ]; }` guard between the `json_decode` and `array_is_list($payload)` in `HttpScopeMiddleware::requiredPostScopes()`. A syntactically valid JSON-scalar/null body (`null`, `5`, `true`, `"x"`) no longer reaches the typed `array_is_list()` under `strict_types`, so it can't raise an uncaught `TypeError` — it falls back to the READ scope floor like other odd bodies. Added unit test `HttpScopeMiddlewareTest` exercising `process()` with all four scalar body shapes (each reaches the handler → 200 for a read-scoped token). phpstan clean.
+
 DEVANA-KEY: src/Mcp/Http/HttpScopeMiddleware.php:54 | scope-middleware-scalar-body-typeerror
-DEVANA-SUMMARY: open | P2 | high | A valid JSON-scalar POST body (e.g. `null`) reaches array_is_list() unguarded under strict_types, raising an uncaught TypeError that can 500 the Kirby route or crash the standalone HTTP listener.
+DEVANA-SUMMARY: fixed | P2 | high | A valid JSON-scalar POST body (e.g. `null`) reached array_is_list() unguarded under strict_types, raising an uncaught TypeError. Now guarded with is_array() before array_is_list(), falling back to READ scope.
