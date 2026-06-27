@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Commands/EvalPhp.php:167 | eval-max-skips-json-return
 
 # `EvalPhp` `--max` does not bound JSON-serializable return values
@@ -64,6 +64,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-25: open by Devana. Initial report written from static source inspection.
+- 2026-06-27: fixed. `EvalPhp::run()` now length-checks the encoded JSON before emitting it: when `strlen($encoded) > maxChars`, the full structure is no longer decoded into `return.json`; instead the truncated encoded string is emitted via the existing `return.dump` channel with `dumpTruncated=true`. The `var_export` fallback guard was tightened to `resultJson === null && resultDump === null` so it does not overwrite the bounded JSON dump. Updated the existing `max=3` runtime-command test (it had codified the unbounded behavior) and added `it('keeps small JSON eval returns intact but bounds oversized ones by --max')`. phpstan clean.
 
 DEVANA-KEY: src/Mcp/Commands/EvalPhp.php:167 | eval-max-skips-json-return
-DEVANA-SUMMARY: open | P2 | medium | EvalPhp truncates stdout and dump output but not JSON-serializable return values, so --max can be bypassed for large structured results.
+DEVANA-SUMMARY: fixed | P2 | medium | EvalPhp truncates stdout and dump output but not JSON-serializable return values, so --max can be bypassed for large structured results.

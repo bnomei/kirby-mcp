@@ -172,14 +172,21 @@ final class EvalPhp extends RuntimeCommand
         }
 
         if (is_string($encoded)) {
-            try {
-                $resultJson = json_decode($encoded, true, flags: JSON_THROW_ON_ERROR);
-            } catch (\JsonException) {
-                $resultJson = null;
+            if ($maxChars > 0 && strlen($encoded) > $maxChars) {
+                // Oversized JSON-serializable return: bound it like the dump
+                // fallback instead of leaking the full structure past --max.
+                $resultDump = substr($encoded, 0, $maxChars);
+                $resultDumpTruncated = true;
+            } else {
+                try {
+                    $resultJson = json_decode($encoded, true, flags: JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    $resultJson = null;
+                }
             }
         }
 
-        if ($resultJson === null) {
+        if ($resultJson === null && $resultDump === null) {
             $dump = null;
             try {
                 $dump = var_export($resultValue, true);

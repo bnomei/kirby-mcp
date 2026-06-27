@@ -1405,7 +1405,12 @@ it('executes eval code when enabled and confirm=true', function (): void {
         expect($payload['ok'])->toBeTrue();
         expect($payload['stdout'])->toBe('xxx');
         expect($payload['stdoutTruncated'])->toBeTrue();
-        expect($payload['return']['json'] ?? null)->toBe(['value' => 123]);
+        // JSON-serializable returns are bounded by --max too: the 13-char
+        // encoded array exceeds max=3, so it is truncated into the dump channel
+        // instead of leaking the full structure (devana: eval-max-skips-json-return).
+        expect($payload['return']['json'] ?? null)->toBeNull();
+        expect($payload['return']['dump'] ?? null)->toBe('{"v');
+        expect($payload['return']['dumpTruncated'] ?? null)->toBeTrue();
         expect($payload['return']['type'] ?? null)->toBe('array');
         expect($payload['code'] ?? null)->toBe("echo str_repeat('x', 5); return ['value' => 123];");
 
@@ -1420,6 +1425,53 @@ it('executes eval code when enabled and confirm=true', function (): void {
 
         expect($missing['ok'])->toBeFalse();
         expect($missing['error']['message'] ?? null)->toBe('Missing eval code argument.');
+    } finally {
+        if ($previousEnv === false) {
+            putenv(EvalPhp::ENV_ENABLE_EVAL);
+        } else {
+            putenv(EvalPhp::ENV_ENABLE_EVAL . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('keeps small JSON eval returns intact but bounds oversized ones by --max', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(EvalPhp::ENV_ENABLE_EVAL);
+    putenv(EvalPhp::ENV_ENABLE_EVAL . '=1');
+
+    try {
+        $small = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 20000,
+                'code' => "<?php return ['value' => 123];",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($small['ok'])->toBeTrue();
+        expect($small['return']['json'] ?? null)->toBe(['value' => 123]);
+        expect($small['return']['dump'] ?? null)->toBeNull();
+        expect($small['return']['dumpTruncated'] ?? null)->toBeFalse();
+
+        $large = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 50,
+                'code' => "<?php return array_fill(0, 100, 'abcdef');",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($large['ok'])->toBeTrue();
+        // A large JSON-serializable return must not bypass --max.
+        expect($large['return']['json'] ?? null)->toBeNull();
+        expect($large['return']['dumpTruncated'] ?? null)->toBeTrue();
+        expect(strlen((string) ($large['return']['dump'] ?? '')))->toBe(50);
     } finally {
         if ($previousEnv === false) {
             putenv(EvalPhp::ENV_ENABLE_EVAL);
