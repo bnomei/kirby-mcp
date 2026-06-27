@@ -19,7 +19,7 @@ it('extracts the framed JSON payload', function (): void {
 
 it('extracts content that contains the END marker as a substring', function (): void {
     $payload = ['ok' => true, 'content' => ['text' => 'before __KIRBY_MCP_JSON_END__ after']];
-    $stdout = markedStdout(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    $stdout = markedStdout(json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
 
     $result = McpMarkedJsonExtractor::extract($stdout);
 
