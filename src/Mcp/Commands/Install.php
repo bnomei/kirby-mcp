@@ -42,10 +42,7 @@ final class Install extends RuntimeCommand
 
         $force = $cli->arg('force') === true;
 
-        $commandsRoot = $kirby->root('commands');
-        if (!is_string($commandsRoot) || $commandsRoot === '') {
-            $commandsRoot = rtrim($cli->dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-        }
+        $commandsRoot = self::resolveCommandsRoot($cli);
 
         $projectRoot = $cli->dir();
 

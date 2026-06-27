@@ -36,6 +36,32 @@ abstract class RuntimeCommand
     }
 
     /**
+     * Resolves the commands root that runtime command templates must be
+     * installed into. This MUST match the root the rest of the MCP stack
+     * probes (`KirbyRoots::commandsRoot()` → `commands.local` first, then
+     * `commands`), otherwise `kirby mcp:install`/`mcp:update` would write to a
+     * different tree than `kirby_runtime_status`/`kirby_runtime_install`
+     * inspect, leaving runtime-backed tools perpetually `needsRuntimeInstall`.
+     *
+     * `commands.local` is a getkirby/cli root that defaults to the Kirby
+     * `commands` root but may be remapped via CLI roots config; preferring it
+     * keeps the CLI entry points aligned with custom layouts.
+     */
+    protected static function resolveCommandsRoot(CLI $cli): string
+    {
+        $commandsRoot = $cli->root('commands.local');
+        if (!is_string($commandsRoot) || $commandsRoot === '') {
+            $commandsRoot = $cli->root('commands');
+        }
+
+        if (!is_string($commandsRoot) || $commandsRoot === '') {
+            $commandsRoot = rtrim($cli->dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
+        }
+
+        return $commandsRoot;
+    }
+
+    /**
      * @param array<string, mixed> $payload
      */
     protected static function emit(CLI $cli, array $payload): void

@@ -69,12 +69,13 @@ final class RuntimeCommandIntegrationCli extends CLI
         private array $commands = [],
         private array $definitions = [],
         private string $cliVersion = '0.0.0-test',
+        array $cliRoots = [],
     ) {
         $this->kirby = $kirby;
         $this->cwd = $cwd ?? cmsPath();
         $this->climate = $climate ?? new RuntimeCommandIntegrationClimate();
         $this->options = [];
-        $this->roots = [];
+        $this->roots = $cliRoots;
     }
 
     public function arg(string $name): mixed
@@ -1725,6 +1726,42 @@ it('installs runtime commands into a temp commands root', function (): void {
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
         removeRuntimeCommandsDir($commandsRoot);
+    }
+});
+
+it('installs runtime commands into commands.local when it diverges from commands', function (): void {
+    // The MCP runtime stack (KirbyRoots::commandsRoot()) probes commands.local
+    // first, then commands. mcp:install/mcp:update must target the same root,
+    // otherwise install writes to commands while kirby_runtime_status checks
+    // commands.local and reports needsRuntimeInstall forever.
+    $localRoot = runtimeCommandsTempDir('install-local');
+    $plainRoot = runtimeCommandsTempDir('install-plain');
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp($plainRoot);
+    $climate = new RuntimeCommandIntegrationClimate();
+
+    try {
+        $cli = new RuntimeCommandIntegrationCli(
+            args: ['force' => true],
+            kirby: $app,
+            cwd: cmsPath(),
+            climate: $climate,
+            cliRoots: ['commands.local' => $localRoot, 'commands' => $plainRoot],
+        );
+
+        Install::run($cli);
+
+        $blueprint = DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php';
+        // Written to commands.local (the root the runtime stack probes)...
+        expect(is_file($localRoot . $blueprint))->toBeTrue();
+        // ...not the plain commands root.
+        expect(is_file($plainRoot . $blueprint))->toBeFalse();
+
+        $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $climate->messages));
+        expect($combined)->toContain('Target: ' . rtrim($localRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+        removeRuntimeCommandsDir($localRoot);
+        removeRuntimeCommandsDir($plainRoot);
     }
 });
 

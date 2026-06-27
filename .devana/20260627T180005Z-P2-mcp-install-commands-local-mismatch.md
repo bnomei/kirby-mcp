@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | high | security=no
+DEVANA-STATE: fixed | P2 | high | security=no
 DEVANA-KEY: src/Mcp/Commands/Install.php:45 | mcp-install-commands-local-mismatch
 
 # `kirby mcp:install` targets `commands` root while MCP stack prefers `commands.local`
@@ -56,7 +56,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. `Install::run()` and `Update::run()` no longer hardcode `$kirby->root('commands')`; both now call a shared `RuntimeCommand::resolveCommandsRoot($cli)` helper that resolves `$cli->root('commands.local')` first and falls back to `$cli->root('commands')` (then the `site/commands` default). `commands.local` is a getkirby/cli root that defaults to the Kirby `commands` root but can be remapped via CLI roots config — this is exactly the precedence `KirbyRoots::commandsRoot()` (and therefore `KirbyRootsInspector`, `kirby_runtime_install`, `kirby_runtime_status`, `RuntimeCommandRunner`) uses. So `kirby mcp:install`/`mcp:update` now write to the same tree the MCP runtime probes; custom `commands.local` layouts no longer report `needsRuntimeInstall: true` after a successful install. Default projects (no separate `commands.local`) are unaffected because the CLI root defaults to `commands`. Added integration test `it installs runtime commands into commands.local when it diverges from commands` (writes land in `commands.local`, not the plain `commands` root, and the printed `Target:` matches). Existing install/update tests still pass (11 tests / 50 assertions); phpstan clean.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Commands/Install.php:45 | mcp-install-commands-local-mismatch
-DEVANA-SUMMARY: open | P2 | high | kirby mcp:install/update write to root(commands) but MCP runtime checks commands.local first, causing perpetual needsRuntimeInstall on custom roots.
+DEVANA-SUMMARY: fixed | P2 | high | kirby mcp:install/update write to root(commands) but MCP runtime checks commands.local first, causing perpetual needsRuntimeInstall on custom roots.
