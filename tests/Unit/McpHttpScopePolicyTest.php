@@ -44,7 +44,6 @@ it('requires runtime scope for kirby_run_cli_command targeting mcp:* wrappers', 
             'name' => 'kirby_run_cli_command',
             'arguments' => ['command' => 'help'],
         ]))->toBe([HttpAuthScopes::EXECUTE])
-        // mcp:*:update would also pick up WRITE via allowWrite, plus RUNTIME.
         ->and($policy->requiredScopes('tools/call', [
             'name' => 'kirby_run_cli_command',
             'arguments' => ['command' => 'mcp:page:content', 'allowWrite' => false],
@@ -75,7 +74,6 @@ it('gates runtime resource reads at runtime scope but keeps static docs at read'
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://user/content/admin@example.test']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://config/email']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://blueprint/cGFnZS9ub3Rl']))->toBe([HttpAuthScopes::RUNTIME])
-        // static bundled docs stay READ, including update-schema under blueprint/field namespaces
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://kb']))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://blueprint/text/update-schema']))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://field/blocks/update-schema']))->toBe([HttpAuthScopes::READ])

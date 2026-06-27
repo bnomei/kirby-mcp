@@ -324,7 +324,6 @@ it('redacts sensitive config option values in config:get', function (): void {
         expect($apiKey['redacted'] ?? null)->toBeTrue();
         expect($apiKey['value'])->toBe('[REDACTED]');
 
-        // Non-sensitive option paths are returned verbatim.
         $plain = runRuntimeCommand(function () use ($app): void {
             $cli = new RuntimeCommandIntegrationCli([
                 'path' => 'vendorname.pluginname.someoption',
@@ -658,9 +657,6 @@ it('rejects non-decimal pagination limits instead of disabling pagination', func
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
 
     try {
-        // "0x10"/"1e2" look numeric but cast to 0 (= no limit) under the old
-        // is_numeric+(int) parse, silently returning the entire index. They must
-        // now error instead of disabling pagination.
         foreach (['0x10', '1e2', '10.5', 'sixteen'] as $bad) {
             $payload = runRuntimeCommand(function () use ($app, $bad): void {
                 $cli = new RuntimeCommandIntegrationCli([
@@ -674,7 +670,6 @@ it('rejects non-decimal pagination limits instead of disabling pagination', func
             expect($payload['error']['message'] ?? '')->toBe('--limit must be a base-10 integer.');
         }
 
-        // A bad cursor is rejected the same way.
         $cursorPayload = runRuntimeCommand(function () use ($app): void {
             $cli = new RuntimeCommandIntegrationCli([
                 'cursor' => '0x1',
@@ -686,7 +681,6 @@ it('rejects non-decimal pagination limits instead of disabling pagination', func
         expect($cursorPayload['ok'])->toBeFalse();
         expect($cursorPayload['error']['message'] ?? '')->toBe('--cursor must be a base-10 integer.');
 
-        // Plain decimal strings still parse correctly.
         $ok = runRuntimeCommand(function () use ($app): void {
             $cli = new RuntimeCommandIntegrationCli([
                 'limit' => '1',
@@ -1500,9 +1494,6 @@ it('executes eval code when enabled and confirm=true', function (): void {
         expect($payload['ok'])->toBeTrue();
         expect($payload['stdout'])->toBe('xxx');
         expect($payload['stdoutTruncated'])->toBeTrue();
-        // JSON-serializable returns are bounded by --max too: the 13-char
-        // encoded array exceeds max=3, so it is truncated into the dump channel
-        // instead of leaking the full structure (devana: eval-max-skips-json-return).
         expect($payload['return']['json'] ?? null)->toBeNull();
         expect($payload['return']['dump'] ?? null)->toBe('{"v');
         expect($payload['return']['dumpTruncated'] ?? null)->toBeTrue();
@@ -1549,7 +1540,6 @@ it('truncates eval stdout by characters without splitting multibyte UTF-8', func
 
         expect($payload['ok'])->toBeTrue();
         expect($payload['stdoutTruncated'])->toBeTrue();
-        // 3 characters, not 3 bytes: the 'é' (2 bytes) must not be split.
         expect($payload['stdout'])->toBe("aa\u{00e9}");
         expect(mb_check_encoding($payload['stdout'], 'UTF-8'))->toBeTrue();
     } finally {
@@ -1595,7 +1585,6 @@ it('keeps small JSON eval returns intact but bounds oversized ones by --max', fu
         });
 
         expect($large['ok'])->toBeTrue();
-        // A large JSON-serializable return must not bypass --max.
         expect($large['return']['json'] ?? null)->toBeNull();
         expect($large['return']['dumpTruncated'] ?? null)->toBeTrue();
         expect(strlen((string) ($large['return']['dump'] ?? '')))->toBe(50);
@@ -1779,10 +1768,6 @@ it('installs runtime commands into a temp commands root', function (): void {
 });
 
 it('installs runtime commands into commands.local when it diverges from commands', function (): void {
-    // The MCP runtime stack (KirbyRoots::commandsRoot()) probes commands.local
-    // first, then commands. mcp:install/mcp:update must target the same root,
-    // otherwise install writes to commands while kirby_runtime_status checks
-    // commands.local and reports needsRuntimeInstall forever.
     $localRoot = runtimeCommandsTempDir('install-local');
     $plainRoot = runtimeCommandsTempDir('install-plain');
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp($plainRoot);
@@ -1800,9 +1785,7 @@ it('installs runtime commands into commands.local when it diverges from commands
         Install::run($cli);
 
         $blueprint = DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php';
-        // Written to commands.local (the root the runtime stack probes)...
         expect(is_file($localRoot . $blueprint))->toBeTrue();
-        // ...not the plain commands root.
         expect(is_file($plainRoot . $blueprint))->toBeFalse();
 
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $climate->messages));

@@ -40,16 +40,10 @@ final class HttpScopePolicy
         $scopes = $this->toolScopes($name);
 
         if ($name === 'kirby_run_cli_command') {
-            // allowWrite=true reaches write-capable CLI patterns (make:*,
-            // clear:*), so require the WRITE scope too, matching kirby_update_*.
             if ($this->boolArgument($params, 'allowWrite') === true && !in_array(HttpAuthScopes::WRITE, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::WRITE;
             }
 
-            // mcp:* runtime wrappers (mcp:render, mcp:page:content, ...) hit the
-            // live CMS through the runtime, like kirby_render_page / kirby_read_*,
-            // so require RUNTIME — an execute-only token must not reach them via
-            // the generic CLI wrapper.
             $command = $this->stringArgument($params, 'command');
             if (is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::RUNTIME;
@@ -59,16 +53,7 @@ final class HttpScopePolicy
         return $scopes;
     }
 
-    /**
-     * Map a resource URI to the scope tier of its tool equivalent. Resources
-     * that read live CMS content, config values, or project blueprint data go
-     * through the Kirby runtime, so they must match the RUNTIME tier of
-     * `kirby_read_*` / `kirby_blueprints_loaded` instead of letting a read-only
-     * token exfiltrate them via `resources/read`. Static bundled docs (kb,
-     * glossary, panel reference, update-schema) stay READ.
-     *
-     * @return list<string>
-     */
+    /** @return list<string> */
     public function resourceScopes(?string $uri): array
     {
         if ($uri === null || $uri === '') {
@@ -77,8 +62,6 @@ final class HttpScopePolicy
 
         $normalized = strtolower(trim($uri));
 
-        // update-schema resources are static bundled docs even though they live
-        // under the blueprint/field namespaces; keep them READ.
         if (str_contains($normalized, '/update-schema')) {
             return [HttpAuthScopes::READ];
         }
@@ -177,11 +160,7 @@ final class HttpScopePolicy
         return is_string($value) ? $value : null;
     }
 
-    /**
-     * Read a boolean from the `tools/call` `arguments` object.
-     *
-     * @param array<string, mixed>|null $params
-     */
+    /** @param array<string, mixed>|null $params */
     private function boolArgument(?array $params, string $name): ?bool
     {
         $arguments = $params['arguments'] ?? null;
@@ -198,11 +177,7 @@ final class HttpScopePolicy
         return is_bool($value) ? $value : null;
     }
 
-    /**
-     * Read a string from the `tools/call` `arguments` object.
-     *
-     * @param array<string, mixed>|null $params
-     */
+    /** @param array<string, mixed>|null $params */
     private function stringArgument(?array $params, string $name): ?string
     {
         $arguments = $params['arguments'] ?? null;

@@ -69,8 +69,6 @@ final class SessionTools
 
         try {
             if (ServerProfile::isGlobalReference($this->profile)) {
-                // Mark init only on the successful path so a failed init does
-                // not unlock the rest of the tool surface for the session.
                 SessionState::markInitCalled($session);
 
                 return $this->globalReferenceInit();

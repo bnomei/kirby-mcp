@@ -1898,15 +1898,7 @@ final class RuntimeTools
         return $this->maybeStructuredResult($context, $response);
     }
 
-    /**
-     * The read-content output schemas declare `content` as a (required) object,
-     * but `$model->content()->toArray()` is `[]` for a model with no fields,
-     * which JSON-encodes to `[]` (array). Force the empty case to an object so
-     * the emitted structuredContent validates against the advertised schema.
-     *
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
-     */
+    /** @param array<string, mixed> $payload */
     private static function contentAsObject(array $payload): array
     {
         if (($payload['content'] ?? null) === []) {

@@ -541,8 +541,6 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
                 ->and($token['refresh_token'] ?? null)->toBeString()
                 ->and($token['scope'] ?? null)->toBe('kirby-mcp:read kirby-mcp:runtime');
 
-            // Authorization codes are single-use: redeeming the same code again
-            // must fail (the code was atomically consumed on first redemption).
             $replayRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])
@@ -553,10 +551,6 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($replayResponse->code())->toBe(400)
                 ->and($replay['error'] ?? null)->toBe('invalid_grant');
 
-            // A failed redemption (wrong PKCE verifier) must still burn the code:
-            // the code is consumed atomically before client/redirect/PKCE
-            // validation, so a subsequent attempt with the *correct* verifier
-            // cannot recover it. This blocks PKCE/client brute-force replay.
             $burnAuthorizeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
                 'REMOTE_ADDR' => '203.0.113.10',
             ]);
@@ -594,8 +588,6 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($wrongVerifierResponse->code())->toBe(400)
                 ->and($wrongVerifier['error'] ?? null)->toBe('invalid_grant');
 
-            // Now retry the SAME code with the CORRECT verifier — it must fail,
-            // proving the failed attempt already consumed the code.
             $burnRetryBody = http_build_query([
                 'grant_type' => 'authorization_code',
                 'client_id' => $client['client_id'],
@@ -628,7 +620,6 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($invalidRefreshResponse->code())->toBe(400)
                 ->and($invalidRefresh['error'] ?? null)->toBe('invalid_scope');
 
-            // A valid refresh-token grant rotates the token (single-use).
             $refreshBody = http_build_query([
                 'grant_type' => 'refresh_token',
                 'client_id' => $client['client_id'],
@@ -645,8 +636,6 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
                 ->and($refreshed['refresh_token'] ?? null)->toBeString()
                 ->and($refreshed['refresh_token'] ?? null)->not()->toBe($token['refresh_token']);
 
-            // Replaying the now-consumed refresh token must fail (atomic
-            // single-use; no forked token family).
             $refreshReplayRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/token', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])
@@ -732,8 +721,6 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
                 'code_challenge_method' => 'S256',
             ], '', '&', PHP_QUERY_RFC3986);
 
-            // Step 1: an unauthenticated authorize request stores the params and
-            // redirects to login with a session id (the attacker-seeded session).
             $app->impersonate(null);
             $unauthRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
                 'REMOTE_ADDR' => '203.0.113.10',
@@ -745,9 +732,6 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
             $sessionId = $loginQuery['session'] ?? null;
             expect($sessionId)->toBeString();
 
-            // Step 2: the victim logs in and the flow resumes via ?session=.
-            // Even with consent=auto, an explicit consent screen must be shown
-            // (no silent 302 code redirect to the attacker's redirect_uri).
             $app->impersonate('mcp-oauth-fixation@example.com');
             $resumeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . http_build_query([
                 'session' => $sessionId,
@@ -840,7 +824,6 @@ it('denies OAuth authorization for Panel users below the configured role', funct
             ]);
             $authorizeResponse = KirbyMcpOAuthRoute::handle($projectRoot, $authorizeRequest);
 
-            // A non-admin Panel user must not be able to authorize / mint tokens.
             expect($authorizeResponse->code())->toBe(302);
             $location = kirbyMcpRouteLocation($authorizeResponse);
             expect($location)->toStartWith('https://claude.ai/api/mcp/auth_callback?');
@@ -850,9 +833,6 @@ it('denies OAuth authorization for Panel users below the configured role', funct
                 ->and($redirectQuery)->not()->toHaveKey('code');
         });
     } finally {
-        // Delete the editor without the closure form of impersonate(): the
-        // closure restores the *previous* impersonated user afterwards, which
-        // would be the editor we just deleted.
         $app->impersonate('kirby');
         $app->user('mcp-oauth-editor@example.com')?->delete();
         $app->impersonate(null);

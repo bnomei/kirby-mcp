@@ -22,7 +22,6 @@ it('does not return cross-session dump events for an unfiltered tail', function 
 
     mkdir($configDir, 0777, true);
 
-    // A session that has not rendered — no session-scoped traceId.
     $session = new Session(new InMemorySessionStore(60));
 
     try {
@@ -38,7 +37,6 @@ it('does not return cross-session dump events for an unfiltered tail', function 
         $tools = new DumpTools();
         $context = new RequestContext($session, new CallToolRequest('kirby_dump_log_tail', []));
 
-        // No traceId, no path, limit=0 ("all") must NOT drain the shared log.
         $result = $tools->dumpLogTail(limit: 0, context: $context);
         $payload = $result->structuredContent ?? null;
 
@@ -49,7 +47,6 @@ it('does not return cross-session dump events for an unfiltered tail', function 
         expect($payload['events'])->toBe([]);
         expect($payload['note'] ?? null)->toBeString();
 
-        // An explicit path filter is still honored (intentional narrowing).
         $byPath = $tools->dumpLogTail(path: '/secret', context: $context);
         $byPathPayload = $byPath->structuredContent ?? null;
         expect($byPathPayload['count'])->toBe(1);

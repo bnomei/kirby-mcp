@@ -173,8 +173,6 @@ final class KirbyOAuthProvider
             return $this->error(400, 'Unknown OAuth client.');
         }
 
-        // Gate authorization on the configured Panel role (default: admin) so a
-        // low-privilege account cannot mint MCP tokens just by logging in.
         if ($this->userMayAuthorize($user) === false) {
             $redirectUri = $this->redirectUri($params, $client);
             if ($redirectUri === null) {
@@ -191,12 +189,6 @@ final class KirbyOAuthProvider
 
         $scopes = $this->finalizeScopesForClient((string) ($params['scope'] ?? ''), $client);
 
-        // Mitigate authorize session fixation: when the flow is resumed from a
-        // server-stored login session (`?session=`), the authorize params came
-        // from whoever created that session, not necessarily the user who just
-        // logged in. Always show explicit consent with the immutable client
-        // metadata in that case, even under `consent: auto`/remembered consent,
-        // so a victim cannot silently issue a code to an attacker's redirect_uri.
         $requireConsent = $this->isResumedFromLoginSession()
             || $this->needsConsent($user->id(), (string) $client['client_id'], $scopes);
 
@@ -367,8 +359,6 @@ final class KirbyOAuthProvider
         }
 
         $codeId = hash('sha256', $code);
-        // Atomically consume the code so two concurrent /token requests cannot
-        // both redeem it (single-use). The loser of the race gets null below.
         $authCode = $this->store()->take('auth-codes', $codeId);
         if ($authCode === null || (int) ($authCode['expires_at'] ?? 0) < time()) {
             return $this->oauthError('invalid_grant', 'Authorization code is invalid or expired.', 400);
@@ -386,7 +376,6 @@ final class KirbyOAuthProvider
             return $this->oauthError('invalid_grant', 'PKCE verification failed.', 400);
         }
 
-        // Code already consumed atomically by take() above.
         return $this->tokenResponse(
             (string) $client['client_id'],
             (string) $authCode['user_id'],
@@ -437,12 +426,6 @@ final class KirbyOAuthProvider
             }
         }
 
-        // Atomically consume the refresh token before issuing the rotated
-        // family, so two concurrent workers cannot both pass the revoked/expiry
-        // checks above and fork one token into two live token families. The
-        // loser of the race gets null here and is rejected. Validation above
-        // runs first so a malformed request (wrong client/scope) does not burn a
-        // still-valid refresh token.
         if ($this->store()->take('refresh-tokens', $tokenId) === null) {
             return $this->oauthError('invalid_grant', 'Refresh token is invalid or expired.', 400);
         }
@@ -562,13 +545,6 @@ final class KirbyOAuthProvider
         return hash_equals($challenge, $actual);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    /**
-     * Whether this authorize request is being resumed from a server-stored
-     * login session (the `?session=` carried through the provider login flow).
-     */
     private function isResumedFromLoginSession(): bool
     {
         $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
@@ -576,10 +552,6 @@ final class KirbyOAuthProvider
         return $sessionId !== null && $this->readSession($sessionId) !== null;
     }
 
-    /**
-     * Delete the stored login session, if any, so it cannot be replayed once the
-     * authorize flow has consumed it.
-     */
     private function consumeLoginSession(): void
     {
         $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
@@ -785,12 +757,6 @@ final class KirbyOAuthProvider
         return true;
     }
 
-    /**
-     * Whether a redirect host is a real loopback target per RFC 8252. A bare
-     * `127.` prefix is not enough: `127.attacker.example` is a public DNS name,
-     * not a loopback address. Require `localhost`, IPv6 `::1`, or a valid IPv4
-     * literal in the 127.0.0.0/8 loopback range.
-     */
     private function isLoopbackRedirectHost(string $host): bool
     {
         if ($host === 'localhost' || $host === '::1') {
@@ -822,11 +788,6 @@ final class KirbyOAuthProvider
         return array_values(array_intersect($requested, $this->allowedScopes()));
     }
 
-    /**
-     * Whether the authenticated Panel user is permitted to authorize MCP OAuth
-     * clients, per the configured `oauthProvider.role` (default: admin). `*`
-     * allows any authenticated user.
-     */
     private function userMayAuthorize(\Kirby\Cms\User $user): bool
     {
         $role = strtolower(trim($this->config->oauthProvider->role));

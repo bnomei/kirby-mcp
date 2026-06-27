@@ -11,11 +11,6 @@ final readonly class KirbyMcpOAuthProviderConfig
     public const DEFAULT_CONSENT = 'snippet';
     public const DEFAULT_CONSENT_SNIPPET = 'kirby-mcp/oauth-consent';
 
-    /**
-     * Panel role required to authorize MCP OAuth clients. Defaults to `admin`
-     * so a low-privilege Panel account cannot mint tokens simply by logging in.
-     * Use `*` to allow any authenticated Panel user (loopback/dev only).
-     */
     public const DEFAULT_ROLE = 'admin';
 
     /**

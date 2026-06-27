@@ -157,10 +157,6 @@ final class EvalPhp extends RuntimeCommand
             restore_error_handler();
         }
 
-        // Truncate by characters (mb_*), not bytes, so we never split a
-        // multibyte UTF-8 sequence and emit invalid bytes into the MCP JSON
-        // sink. `--max` is documented in characters; this matches
-        // DumpValueNormalizer's mb_substr-based truncation.
         if ($maxChars > 0 && mb_strlen($stdout) > $maxChars) {
             $stdout = mb_substr($stdout, 0, $maxChars);
             $stdoutTruncated = true;
@@ -177,8 +173,6 @@ final class EvalPhp extends RuntimeCommand
 
         if (is_string($encoded)) {
             if ($maxChars > 0 && mb_strlen($encoded) > $maxChars) {
-                // Oversized JSON-serializable return: bound it like the dump
-                // fallback instead of leaking the full structure past --max.
                 $resultDump = mb_substr($encoded, 0, $maxChars);
                 $resultDumpTruncated = true;
             } else {

@@ -67,14 +67,6 @@ final class DumpTools
             $traceId = is_string($traceId) && trim($traceId) !== '' ? trim($traceId) : DumpState::lastTraceId($context?->getSession());
             $normalizedPath = is_string($path) && trim($path) !== '' ? trim($path) : null;
 
-            // The dump log (`.kirby-mcp/dumps.jsonl`) is shared per project and
-            // is written by every render/request regardless of which MCP session
-            // triggered it. Reading it with no filter would return another
-            // client's debug output (possibly PII, tokens, config snippets) on
-            // shared HTTP deployments or multi-agent stdio. Require a filter:
-            // a `traceId` (from kirby_render_page, or this session's last render)
-            // or an explicit `path`. A session that has not rendered yet resolves
-            // to no traceId and must scope its query rather than draining the log.
             if ($traceId === null && $normalizedPath === null) {
                 $payload = [
                     'ok' => true,

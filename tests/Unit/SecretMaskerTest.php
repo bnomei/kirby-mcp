@@ -209,7 +209,7 @@ it('redacts plaintext values stored under sensitive keys regardless of format', 
     $input = [
         'db' => [
             'user' => 'root',
-            'password' => 'S3cretDbPass!',      // does not match any vendor token regex
+            'password' => 'S3cretDbPass!',
         ],
         'env' => [
             'APP_SECRET' => 'plain-non-token-value',
@@ -217,9 +217,9 @@ it('redacts plaintext values stored under sensitive keys regardless of format', 
             'apiKey' => 'just-some-string',
         ],
         'flags' => [
-            'auth' => true,                       // boolean flag must NOT be redacted
-            'author' => 'Jane Doe',               // not a sensitive key
-            'token_count' => 42,                  // non-string scalar passes through
+            'auth' => true,
+            'author' => 'Jane Doe',
+            'token_count' => 42,
         ],
     ];
 

@@ -24,14 +24,7 @@ final class CliTools
 {
     use StructuredToolResult;
 
-    /**
-     * Runtime commands that have a dedicated, separately-gated MCP tool and must
-     * not be reachable through the generic CLI wrapper. Running e.g. `mcp:eval`
-     * with a CLI `--confirm` flag here would bypass the MCP confirmation /
-     * elicitation gate enforced by `kirby_eval` / `kirby_query_dot`.
-     *
-     * @var array<string, string>
-     */
+    /** @var array<string, string> */
     private const DEDICATED_TOOL_COMMANDS = [
         RuntimeCommands::EVAL => 'kirby_eval',
         RuntimeCommands::QUERY_DOT => 'kirby_query_dot',
@@ -148,9 +141,6 @@ final class CliTools
             $success = ($exitCode === 0) && ($timedOut === false);
         }
 
-        // Align the primary `ok` signal with CLI completion: a non-zero exit
-        // code or timeout is a failure, even though dispatch succeeded. When the
-        // outcome is indeterminate (success === null) keep ok true.
         $ok = $success !== false;
 
         $message = is_string($result['message'] ?? null) ? $result['message'] : 'Command executed.';
@@ -242,9 +232,6 @@ final class CliTools
 
             $deny = $config->cliDeny();
 
-            // Eval-class runtime commands have dedicated MCP tools that enforce
-            // confirmation/elicitation. Block them here so a CLI `--confirm`
-            // flag cannot bypass those gates even when cli.allow permits them.
             $dedicatedTool = self::DEDICATED_TOOL_COMMANDS[$command] ?? null;
             if ($dedicatedTool !== null) {
                 return [

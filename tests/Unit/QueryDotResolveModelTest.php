@@ -49,9 +49,6 @@ function queryDotResolveModel(App $app, string $modelArg): mixed
 {
     $method = new ReflectionMethod(QueryDot::class, 'resolveModel');
 
-    // Kirby's Uuid bootstrap may register global error/exception handlers;
-    // capture the baseline and restore it so the test does not leak handler
-    // state (PHPUnit flags leaked handlers as risky).
     $errorHandlers = captureErrorHandlers();
     $baselineExceptionHandler = peekExceptionHandler();
 

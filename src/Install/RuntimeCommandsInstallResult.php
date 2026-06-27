@@ -20,11 +20,6 @@ final readonly class RuntimeCommandsInstallResult
     ) {
     }
 
-    /**
-     * The install is non-transactional (per-file), so it can finish with some
-     * `installed` paths and a non-empty `errors` list. Success means every
-     * targeted file was written: no per-file errors.
-     */
     public function ok(): bool
     {
         return $this->errors === [];

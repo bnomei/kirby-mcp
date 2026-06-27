@@ -34,14 +34,7 @@ final class KirbyCliAllowlistPolicy
         'clear:*',
     ];
 
-    /**
-     * Commands that mutate state and therefore always require allowWrite=true,
-     * even when an operator lists them in cli.allow. Keeps the execute-scoped
-     * CLI tool from reopening write paths that bypass allowWrite, HTTP write
-     * scope, and schema attestation guards.
-     *
-     * @var array<int, string>
-     */
+    /** @var array<int, string> */
     public const WRITE_CAPABLE = [
         'make:*',
         'clear:*',
@@ -91,10 +84,6 @@ final class KirbyCliAllowlistPolicy
         $matchedAllowWrite = $this->firstMatchingPattern($command, $this->allowWrite);
         $matchedWriteCapable = $this->firstMatchingPattern($command, self::WRITE_CAPABLE);
 
-        // A command is write-capable when it matches the intrinsic write list or
-        // an operator-configured allowWrite pattern. Write-capable commands must
-        // be listed (allow or allowWrite) AND invoked with allowWrite=true.
-        // Read-only commands keep the original allow/allowWrite semantics.
         if ($matchedWriteCapable !== null || $matchedAllowWrite !== null) {
             $allowed = $allowWrite === true && ($matchedAllow !== null || $matchedAllowWrite !== null);
         } else {

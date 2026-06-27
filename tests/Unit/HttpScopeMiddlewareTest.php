@@ -19,7 +19,7 @@ function httpScopeMiddleware(): HttpScopeMiddleware
 
 function httpScopeOkHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class () implements RequestHandlerInterface {
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
             return (new HttpFactory())->createResponse(200);
@@ -35,7 +35,6 @@ it('treats a valid JSON-scalar POST body as the read floor without erroring', fu
 
     $response = httpScopeMiddleware()->process($request, httpScopeOkHandler());
 
-    // A read-scoped token must reach the handler (200), not trigger a TypeError.
     expect($response->getStatusCode())->toBe(200);
 })->with([
     'null literal' => ['null'],

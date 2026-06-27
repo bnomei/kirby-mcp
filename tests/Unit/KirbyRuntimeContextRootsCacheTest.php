@@ -23,14 +23,11 @@ it('does not cache a failed roots inspection and retries on the next call', func
     KirbyRuntimeContext::clearRootsCache();
 
     try {
-        // Transient failure: empty roots, must NOT be cached.
         putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $failStub);
         $first = (new KirbyRuntimeContext())->rootsInspection();
         expect($first->cliResult->exitCode)->not()->toBe(0);
         expect($first->roots->toArray())->toBe([]);
 
-        // CLI recovers: the next call within TTL must re-run (not serve the
-        // cached failure) and return the project's real custom roots.
         putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $okStub);
         $second = (new KirbyRuntimeContext())->rootsInspection();
         expect($second->cliResult->exitCode)->toBe(0);

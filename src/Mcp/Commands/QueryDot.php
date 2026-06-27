@@ -202,9 +202,6 @@ final class QueryDot extends RuntimeCommand
             return $kirby->user($modelArg);
         }
 
-        // Prefer page resolution so dotted page slugs (e.g. release-2.0, whose
-        // naive "extension" is "0") are not misread as file ids. Only fall back
-        // to the file path heuristic when no matching page exists.
         $page = $kirby->page($modelArg);
         if ($page instanceof Page) {
             return $page;

@@ -128,8 +128,6 @@ it('requires write scope for kirby_run_cli_command with allowWrite even on an ex
     );
     $sessionId = $initialize->getHeaderLine('Mcp-Session-Id');
 
-    // allowWrite=true reaches write-capable CLI patterns, so an execute-only
-    // token (no write) must be denied.
     $writeCli = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')
@@ -232,8 +230,6 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
     expect($loggingCall->getStatusCode())->toBe(403)
         ->and((string) $loggingCall->getBody())->toContain(HttpAuthScopes::ADMIN);
 
-    // A read-only token must not exfiltrate live CMS content through
-    // resources/read, mirroring the runtime-scoped kirby_read_page_content tool.
     $runtimeResourceRead = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')
@@ -248,7 +244,6 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
         ->and($runtimeResourceRead->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
         ->and((string) $runtimeResourceRead->getBody())->toContain(HttpAuthScopes::RUNTIME);
 
-    // Static bundled docs remain readable with a read-only token.
     $staticResourceRead = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')

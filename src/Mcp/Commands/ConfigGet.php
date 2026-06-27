@@ -12,11 +12,7 @@ final class ConfigGet extends RuntimeCommand
 {
     private const REDACTED = '[REDACTED]';
 
-    /**
-     * Path segments that match by substring (descriptive secret words).
-     *
-     * @var array<int, string>
-     */
+    /** @var array<int, string> */
     private const SENSITIVE_SUBSTRINGS = [
         'password',
         'passwd',
@@ -30,12 +26,7 @@ final class ConfigGet extends RuntimeCommand
         'private_key',
     ];
 
-    /**
-     * Short, ambiguous segments that match only as a whole path segment to
-     * avoid false positives (e.g. `monkey` must not match `key`).
-     *
-     * @var array<int, string>
-     */
+    /** @var array<int, string> */
     private const SENSITIVE_SEGMENTS = [
         'key',
         'auth',
@@ -96,9 +87,6 @@ final class ConfigGet extends RuntimeCommand
             $value = $kirby->option($path);
             $string = self::stringifyValue($value);
 
-            // Redact values for sensitive option paths (passwords, API keys,
-            // tokens, secrets, ...) so config reads cannot leak credentials to
-            // MCP clients/logs, regardless of transport or auth scope.
             $redacted = false;
             if (self::isSensitiveOptionPath($path) && $string !== '' && $string !== 'null') {
                 $string = self::REDACTED;

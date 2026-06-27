@@ -7,7 +7,6 @@ use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 
 function markedStdout(string $jsonBody): string
 {
-    // Mirrors RuntimeCommand::emit(): each marker on its own line.
     return JsonMarkers::START . "\n" . $jsonBody . "\n" . JsonMarkers::END . "\n";
 }
 
@@ -28,7 +27,6 @@ it('extracts content that contains the END marker as a substring', function (): 
 });
 
 it('extracts content containing the END marker even with single-line framing', function (): void {
-    // Some emitters frame markers inline without their own lines.
     $body = json_encode(['ok' => true, 'text' => 'x __KIRBY_MCP_JSON_END__ y'], JSON_UNESCAPED_SLASHES);
     $stdout = JsonMarkers::START . $body . JsonMarkers::END;
 
