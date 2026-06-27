@@ -106,12 +106,21 @@ final class KirbyRuntimeContext implements RuntimeContextInterface
             $indexPhpMtime = is_int($mtime) ? $mtime : null;
         }
 
-        self::$rootsInspectionCache[$cacheKey] = new KirbyRootsInspectionCacheEntry(
-            inspection: $inspection,
-            inspectedAt: time(),
-            indexPhpPath: $indexPhpPath,
-            indexPhpMtime: $indexPhpMtime,
-        );
+        // Cache only successful inspections (mirrors the `ok === true` gate in
+        // CliResources). A transient `kirby roots` failure returns empty roots;
+        // caching it would poison roots resolution for the whole TTL even after
+        // the CLI recovers, so skip the write and let the next call retry.
+        $succeeded = $inspection->cliResult->exitCode === 0
+            && trim($inspection->cliResult->stdout) !== '';
+
+        if ($succeeded) {
+            self::$rootsInspectionCache[$cacheKey] = new KirbyRootsInspectionCacheEntry(
+                inspection: $inspection,
+                inspectedAt: time(),
+                indexPhpPath: $indexPhpPath,
+                indexPhpMtime: $indexPhpMtime,
+            );
+        }
 
         return $inspection;
     }

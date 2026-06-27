@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | high | security=no
+DEVANA-STATE: fixed | P2 | high | security=no
 DEVANA-KEY: src/Mcp/Support/KirbyRuntimeContext.php:109 | roots-inspection-caches-failure
 
 # Failed/empty Kirby roots inspection is cached as authoritative success
@@ -100,5 +100,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
   unconditionally; early-return at 76-78 confirmed unreachable-to-heal for
   failures.
 
+- 2026-06-27: fixed. `KirbyRuntimeContext::rootsInspection()` now gates the cache write on inspection success (`$inspection->cliResult->exitCode === 0 && trim(stdout) !== ''`), mirroring the `ok === true` gate in `CliResources`. A transient `kirby roots` failure (timeout / non-zero exit / empty stdout) returns empty roots but is no longer written to `self::$rootsInspectionCache`, so the next call re-runs the CLI and self-heals instead of serving the poisoned empty result for the whole TTL. Added unit test `KirbyRuntimeContextRootsCacheTest` using stub `ENV_KIRBY_BIN` binaries (failing exit-1 stub → empty + not cached; then a succeeding stub emitting a custom `index` root → re-runs and returns `/custom/index/root`). Verified the test fails on the pre-fix code and passes after. phpstan clean.
+
 DEVANA-KEY: src/Mcp/Support/KirbyRuntimeContext.php:109 | roots-inspection-caches-failure
-DEVANA-SUMMARY: open | P2 | high | A transient `kirby roots` failure returns empty roots that are cached unconditionally for the TTL, so all roots-dependent operations use wrong/default paths for projects with custom roots until cache expiry.
+DEVANA-SUMMARY: fixed | P2 | high | A transient `kirby roots` failure returned empty roots that were cached unconditionally for the TTL, so roots-dependent operations used wrong/default paths for custom-root projects until expiry. Now caches only successful inspections.
