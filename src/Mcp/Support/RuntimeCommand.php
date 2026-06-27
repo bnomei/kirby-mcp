@@ -62,6 +62,64 @@ abstract class RuntimeCommand
     }
 
     /**
+     * Strictly parses a pagination argument (`--cursor`/`--limit`) as a
+     * base-10 integer.
+     *
+     * The previous `is_numeric($raw) ? (int) $raw : 0` pattern was unsafe: a
+     * present-but-non-decimal value such as `0x10` or `1e2` is either rejected
+     * by `is_numeric()` or mis-cast by `(int)`, collapsing to `0` — which these
+     * commands interpret as "no pagination limit". A caller intending a bounded
+     * page silently receives the entire index. This accepts only `^[+-]?\d+$`,
+     * returns the integer for valid input, `$default` for an absent/empty arg,
+     * and `false` for a present-but-invalid value (the caller emits an error).
+     */
+    protected static function parsePaginationArg(mixed $raw, int $default = 0): int|false
+    {
+        if ($raw === null) {
+            return $default;
+        }
+
+        if (is_int($raw)) {
+            return $raw;
+        }
+
+        if (is_string($raw)) {
+            $trimmed = trim($raw);
+            if ($trimmed === '') {
+                return $default;
+            }
+
+            if (preg_match('/^[+-]?\d+$/', $trimmed) === 1) {
+                return (int) $trimmed;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolves a non-negative pagination argument or emits an error payload and
+     * returns null. Negative values clamp to 0 (consistent with the documented
+     * "0 means no limit" / "0-based offset" semantics).
+     */
+    protected static function paginationArgOrEmitError(CLI $cli, string $arg): ?int
+    {
+        $value = self::parsePaginationArg($cli->arg($arg));
+        if ($value === false) {
+            static::emit($cli, [
+                'ok' => false,
+                'error' => static::errorArray(new \InvalidArgumentException(
+                    sprintf('--%s must be a base-10 integer.', $arg),
+                )),
+            ]);
+
+            return null;
+        }
+
+        return $value < 0 ? 0 : $value;
+    }
+
+    /**
      * @param array<string, mixed> $payload
      */
     protected static function emit(CLI $cli, array $payload): void

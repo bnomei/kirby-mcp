@@ -654,6 +654,55 @@ it('paginates collections with limit', function (): void {
     }
 });
 
+it('rejects non-decimal pagination limits instead of disabling pagination', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        // "0x10"/"1e2" look numeric but cast to 0 (= no limit) under the old
+        // is_numeric+(int) parse, silently returning the entire index. They must
+        // now error instead of disabling pagination.
+        foreach (['0x10', '1e2', '10.5', 'sixteen'] as $bad) {
+            $payload = runRuntimeCommand(function () use ($app, $bad): void {
+                $cli = new RuntimeCommandIntegrationCli([
+                    'limit' => $bad,
+                ], $app);
+
+                Collections::run($cli);
+            });
+
+            expect($payload['ok'])->toBeFalse();
+            expect($payload['error']['message'] ?? '')->toBe('--limit must be a base-10 integer.');
+        }
+
+        // A bad cursor is rejected the same way.
+        $cursorPayload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'cursor' => '0x1',
+            ], $app);
+
+            Collections::run($cli);
+        });
+
+        expect($cursorPayload['ok'])->toBeFalse();
+        expect($cursorPayload['error']['message'] ?? '')->toBe('--cursor must be a base-10 integer.');
+
+        // Plain decimal strings still parse correctly.
+        $ok = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'limit' => '1',
+            ], $app);
+
+            Collections::run($cli);
+        });
+
+        expect($ok['ok'])->toBeTrue();
+        expect($ok['pagination']['limit'])->toBe(1);
+        expect($ok['pagination']['returned'])->toBe(1);
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
 it('lists controller ids via the controllers command', function (): void {
     [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
 

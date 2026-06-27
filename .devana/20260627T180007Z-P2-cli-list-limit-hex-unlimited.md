@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Commands/Collections.php:76 | cli-list-limit-hex-unlimited
 
 # Runtime list commands treat hex numeric limits as zero (unlimited pagination)
@@ -55,7 +55,9 @@ After working this report, preserve the original finding body. Update line 2 `DE
 
 ## Status Notes
 
+- 2026-06-27: fixed. All eight runtime index commands (`Collections`, `Controllers`, `Routes`, `Snippets`, `Models`, `Templates`, `Plugins`, `Blueprints`) parsed `--cursor`/`--limit` with `is_numeric($raw) ? (int) $raw : 0`, which collapses present-but-non-decimal values to `0` (= "no limit"): `0x10` is rejected by `is_numeric()` in PHP 8 (→ 0) and `1e2` casts via `(int)` to `1`, so a caller intending a bounded page silently receives the entire index (memory/context blowup on large projects). Added `RuntimeCommand::parsePaginationArg()` (accepts only `^[+-]?\d+$`, returns the int, `$default` for absent/empty, `false` for present-but-invalid) and `RuntimeCommand::paginationArgOrEmitError()` (resolves a non-negative value, clamps negatives to 0, or emits `ok=false` with `--<arg> must be a base-10 integer.` and returns null). Replaced the unsafe block in all eight commands with these helpers — they now fail closed on a malformed limit/cursor instead of returning an unbounded result set. Valid decimal strings and ints (the test harness passes ints) still parse correctly; absent args still default to 0. Added integration test `it rejects non-decimal pagination limits instead of disabling pagination` (`0x10`,`1e2`,`10.5`,`sixteen`,bad cursor `0x1` → error; `"1"` → limit 1). Existing list/pagination tests (19) still pass; phpstan clean.
+
 - 2026-06-27: open by Devana. Initial report written from static source inspection.
 
 DEVANA-KEY: src/Mcp/Commands/Collections.php:76 | cli-list-limit-hex-unlimited
-DEVANA-SUMMARY: open | P2 | medium | is_numeric plus int cast treats hex limit strings like 0x10 as zero, disabling pagination on runtime index CLI commands.
+DEVANA-SUMMARY: fixed | P2 | medium | is_numeric plus int cast treats hex limit strings like 0x10 as zero, disabling pagination on runtime index CLI commands.

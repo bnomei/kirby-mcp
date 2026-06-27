@@ -122,16 +122,14 @@ final class Blueprints extends RuntimeCommand
 
             $overriddenOnly = $cli->arg('overriddenOnly') === true;
 
-            $cursorRaw = $cli->arg('cursor');
-            $cursor = is_numeric($cursorRaw) ? (int) $cursorRaw : 0;
-            if ($cursor < 0) {
-                $cursor = 0;
+            $cursor = self::paginationArgOrEmitError($cli, 'cursor');
+            if ($cursor === null) {
+                return;
             }
 
-            $limitRaw = $cli->arg('limit');
-            $limit = is_numeric($limitRaw) ? (int) $limitRaw : 0;
-            if ($limit < 0) {
-                $limit = 0;
+            $limit = self::paginationArgOrEmitError($cli, 'limit');
+            if ($limit === null) {
+                return;
             }
 
             $filteredIds = [];
