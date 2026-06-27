@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Cli/McpMarkedJsonExtractor.php:25 | marked-json-end-marker-collision
 
 # Runtime content tools break when content contains the JSON-END marker
@@ -144,5 +144,7 @@ unless the same finding moved. Add dated notes below.
   of `$cli->json()` were not inspected; the bug holds regardless because the
   truncated slice is structurally incomplete JSON.
 
+- 2026-06-27: fixed. `McpMarkedJsonExtractor::extract()` no longer matches the *first* END marker via raw `strpos`. It now anchors on the *last line that is exactly* the END marker (`/^__KIRBY_MCP_JSON_END__\r?$/m`), with a `strrpos` (last-occurrence) fallback for inline framing. Because `CLI::json()` uses `JSON_PRETTY_PRINT` (newlines inside string values are escaped), a content-embedded marker is never alone on a physical line, so it can never be selected as the terminator. Selecting the last occurrence also fixes the single-line framing case. Added `tests/Unit/McpMarkedJsonExtractorTest.php` covering content that contains the END marker (both own-line and inline framing); existing `RuntimeCommandRunnerTest` cases still pass. phpstan clean.
+
 DEVANA-KEY: src/Cli/McpMarkedJsonExtractor.php:25 | marked-json-end-marker-collision
-DEVANA-SUMMARY: open | P2 | medium | Content containing the literal `__KIRBY_MCP_JSON_END__` collides with the unescaped result-framing marker, so the runtime content tools truncate their own JSON and return ok:false for valid pages; a low-trust content author can weaponize it to hide content from MCP.
+DEVANA-SUMMARY: fixed | P2 | medium | Content containing the literal `__KIRBY_MCP_JSON_END__` collided with the unescaped result-framing marker, so the runtime content tools truncated their own JSON and returned ok:false for valid pages. Extractor now anchors on the last standalone-line END marker (with last-occurrence fallback), which content can never forge.
