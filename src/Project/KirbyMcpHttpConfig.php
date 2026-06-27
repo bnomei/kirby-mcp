@@ -40,10 +40,12 @@ final readonly class KirbyMcpHttpConfig
     {
         $host = strtolower(trim($this->host));
 
-        return $host === 'localhost'
-            || $host === '127.0.0.1'
-            || $host === '::1'
-            || str_starts_with($host, '127.');
+        if ($host === 'localhost' || $host === '::1') {
+            return true;
+        }
+
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.');
     }
 
     /**

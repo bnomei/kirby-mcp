@@ -276,6 +276,27 @@ it('rejects shared-token public requests forwarded from local reverse proxies', 
     });
 });
 
+it('rejects shared-token reverse-proxy requests with deceptive 127-prefixed public hosts', function (): void {
+    kirbyMcpRouteWithHttpEnv([
+        'KIRBY_MCP_HTTP_ENABLED' => '1',
+        'KIRBY_MCP_HTTP_AUTH_MODE' => 'shared-token',
+        'KIRBY_MCP_HTTP_TOKEN' => 'local-secret',
+    ], function (): void {
+        $factory = new HttpFactory();
+        $request = $factory->createServerRequest('POST', 'https://127.0.0.1.evil.com/mcp', [
+            'REMOTE_ADDR' => '127.0.0.1',
+        ])
+            ->withHeader('Authorization', 'Bearer local-secret')
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody($factory->createStream(kirbyMcpRouteInitializePayload()));
+
+        $response = KirbyMcpRoute::handle(cmsPath(), $request);
+
+        expect($response->code())->toBe(503);
+        expect($response->body())->toContain('HTTP shared-token auth is only allowed for loopback requests.');
+    });
+});
+
 it('ignores low-level listener host and port validation for Kirby route requests', function (): void {
     kirbyMcpRouteWithHttpEnv([
         'KIRBY_MCP_HTTP_ENABLED' => '1',

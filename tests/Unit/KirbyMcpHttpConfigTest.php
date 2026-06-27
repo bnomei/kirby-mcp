@@ -174,6 +174,29 @@ it('rejects shared-token HTTP on non-loopback binds', function (): void {
     }
 });
 
+it('rejects shared-token HTTP on deceptive 127-prefixed public hostnames', function (): void {
+    $root = kirbyMcpHttpConfigTempRoot([
+        'http' => [
+            'enabled' => true,
+            'host' => '127.0.0.1.evil.com',
+            'auth' => [
+                'mode' => 'shared-token',
+                'token' => 'local-secret',
+            ],
+        ],
+    ]);
+
+    try {
+        kirbyMcpHttpConfigWithEnv([], function () use ($root): void {
+            expect(KirbyMcpConfig::load($root)->http()->validationErrors())
+                ->toContain('HTTP shared-token auth is only allowed for loopback hosts.')
+                ->toContain('Non-loopback HTTP binds require OAuth auth.');
+        });
+    } finally {
+        kirbyMcpHttpConfigRemoveRoot($root);
+    }
+});
+
 it('rejects wildcard allowed origins', function (): void {
     $root = kirbyMcpHttpConfigTempRoot([
         'http' => [

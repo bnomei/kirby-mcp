@@ -161,9 +161,7 @@ final class KirbyMcpRoute
 
         $remoteAddress = strtolower(trim($remoteAddress, " \t\n\r\0\x0B[]"));
 
-        return $remoteAddress === '::1'
-            || $remoteAddress === '127.0.0.1'
-            || str_starts_with($remoteAddress, '127.');
+        return self::isLoopbackHost($remoteAddress);
     }
 
     private static function isLoopbackRequest(ServerRequestInterface $request): bool
@@ -176,10 +174,12 @@ final class KirbyMcpRoute
     {
         $host = strtolower(trim($host, " \t\n\r\0\x0B[]"));
 
-        return $host === 'localhost'
-            || $host === '::1'
-            || $host === '127.0.0.1'
-            || str_starts_with($host, '127.');
+        if ($host === 'localhost' || $host === '::1') {
+            return true;
+        }
+
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.');
     }
 
     private static function isHttpsRequest(ServerRequestInterface $request): bool

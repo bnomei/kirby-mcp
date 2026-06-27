@@ -521,7 +521,7 @@ Use `shared-token` only for local development from the same machine:
 }
 ```
 
-The Kirby route rejects shared-token requests unless PHP reports `REMOTE_ADDR` as loopback.
+The Kirby route rejects shared-token requests unless PHP reports `REMOTE_ADDR` as loopback and the request host is a real loopback host (`localhost`, `::1`, or a valid IPv4 literal in `127.0.0.0/8`).
 
 #### Remote bearer token (recommended)
 
@@ -698,7 +698,7 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 - `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - `kirby_query_dot` is enabled by default; disable via `.kirby-mcp/mcp.json` (`{"query":{"enabled":false}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - HTTP transport is disabled by default and must never be exposed without Bearer-token authorization.
-- HTTP shared-token auth is limited to local development. Keep the token outside source control; the Kirby route rejects shared-token requests when `REMOTE_ADDR` is not loopback.
+- HTTP shared-token auth is limited to local development. Keep the token outside source control; the Kirby route rejects shared-token requests when `REMOTE_ADDR` is not loopback or the request host is not a real loopback host.
 - HTTP remote-token auth is explicit public bearer-token auth for header-capable clients. Store hashes in config, keep raw tokens in environment/secret storage, require HTTPS for non-loopback route requests, and scope tokens tightly.
 - OAuth remains the preferred production path for clients that need an interactive auth flow, including Claude Desktop and Claude.ai custom connectors. The optional built-in provider is disabled by default and writes only to `.kirby-mcp/oauth`.
 - HTTP validates `Origin` before MCP protocol handling and rejects missing, malformed, expired, invalid, or insufficient-scope tokens before tool/resource side effects.
@@ -772,7 +772,7 @@ Kirby host selection:
 | `eval.enabled`                      | `bool`     | `false`                   | Enable `kirby_eval` / `kirby mcp:eval` (still requires explicit confirmation per call).                                                                                                                      |
 | `query.enabled`                     | `bool`     | `true`                    | Enable `kirby_query_dot` / `kirby mcp:query:dot` (still requires explicit confirmation per call).                                                                                                            |
 | `http.enabled`                      | `bool`     | `false`                   | Enable the optional Streamable HTTP MCP transport. Stdio remains the default when this is false or unset.                                                                                                    |
-| `http.host`                         | `string`   | `127.0.0.1`               | Bind host for the low-level HTTP listener/config check. The Kirby route adapter does not use this field and rejects shared-token auth unless `REMOTE_ADDR` is loopback.                                      |
+| `http.host`                         | `string`   | `127.0.0.1`               | Bind host for the low-level HTTP listener/config check. Shared-token mode requires a real loopback host; the Kirby route adapter separately rejects shared-token auth unless both `REMOTE_ADDR` and the request host are loopback. |
 | `http.port`                         | `int`      | `8765`                    | Bind port for the low-level HTTP listener/config check. The Kirby route adapter does not use this field.                                                                                                     |
 | `http.path`                         | `string`   | `/mcp`                    | Single MCP endpoint path for Streamable HTTP requests. Match this with the copied Kirby route pattern.                                                                                                       |
 | `http.allowedOrigins`               | `string[]` | `[]`                      | Allowed browser origins for HTTP mode. Configure the exact client origins you expect.                                                                                                                        |
