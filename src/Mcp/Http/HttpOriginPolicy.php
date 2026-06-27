@@ -56,9 +56,15 @@ final readonly class HttpOriginPolicy
 
         $host = strtolower(trim($host, '[]'));
 
-        return $host === 'localhost'
-            || $host === '::1'
-            || $host === '127.0.0.1'
-            || str_starts_with($host, '127.');
+        if ($host === 'localhost' || $host === '::1') {
+            return true;
+        }
+
+        // Must be a real loopback IP, not a hostname that merely begins with
+        // "127." — e.g. `127.0.0.1.evil.com` is an attacker-controlled DNS name
+        // (DNS-rebinding), not a loopback address. Require a valid IPv4 literal
+        // in the 127.0.0.0/8 range.
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.');
     }
 }

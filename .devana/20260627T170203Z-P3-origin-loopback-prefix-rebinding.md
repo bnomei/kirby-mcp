@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P3 | high | security=yes
+DEVANA-STATE: fixed | P3 | high | security=yes
 DEVANA-KEY: src/Mcp/Http/HttpOriginPolicy.php:62 | origin-loopback-prefix-rebinding
 
 # Loopback Origin allowlist uses `127.` prefix match (DNS-rebinding bypass)
@@ -92,5 +92,7 @@ Preserve the finding body; update line 2 and the `DEVANA-SUMMARY:` prefix.
 - 2026-06-27: open by Devana. Verified `HttpOriginPolicy.php:62` prefix match;
   same pattern in `KirbyOAuthProvider.php:722`.
 
+- 2026-06-27: fixed. `HttpOriginPolicy::isLoopbackOrigin()` now matches `localhost`/`::1` exactly and otherwise requires the host to be a valid IPv4 literal (`FILTER_VALIDATE_IP | FILTER_FLAG_IPV4`) in the 127.0.0.0/8 range, instead of `str_starts_with($host, '127.')`. DNS-rebinding hostnames like `127.0.0.1.evil.com` and `127.evil.com:8080` no longer pass the default loopback Origin allowlist. The OAuth `redirect_uri` variant noted in this report was already fixed under `oauth-redirect-127-prefix` (P2) with the same IPv4-literal approach. Extended `McpHttpAuthTest` with a real-loopback case (`127.0.0.5`) and the two rebinding hostnames (both rejected). phpstan clean. (`KirbyOAuthProvider::isLoopbackRequest` checks `REMOTE_ADDR`, the unspoofable socket peer, so it was correctly left as-is. The HTTP listener bind-host check `KirbyMcpHttpConfig::isLoopbackHost` is tracked by `origin-policy-127-prefix`.)
+
 DEVANA-KEY: src/Mcp/Http/HttpOriginPolicy.php:62 | origin-loopback-prefix-rebinding
-DEVANA-SUMMARY: open | P3 | high | The default loopback Origin check uses str_starts_with($host,'127.'), so attacker hostnames like 127.0.0.1.evil.com pass, defeating DNS-rebinding protection (same flaw in OAuth redirect_uri validation).
+DEVANA-SUMMARY: fixed | P3 | high | The default loopback Origin check used str_starts_with($host,'127.'), so attacker hostnames like 127.0.0.1.evil.com passed. Now requires a valid IPv4 literal in 127.0.0.0/8 (OAuth redirect_uri variant fixed separately).

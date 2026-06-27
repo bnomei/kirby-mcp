@@ -50,8 +50,12 @@ it('allows absent and default loopback Origin headers and rejects public origins
         ->and($defaultPolicy->allows(''))->toBeTrue()
         ->and($defaultPolicy->allows('http://localhost:3000'))->toBeTrue()
         ->and($defaultPolicy->allows('http://127.0.0.1:5173'))->toBeTrue()
+        ->and($defaultPolicy->allows('http://127.0.0.5:5173'))->toBeTrue()
         ->and($defaultPolicy->allows('http://[::1]:5173'))->toBeTrue()
-        ->and($defaultPolicy->allows('http://example.test'))->toBeFalse();
+        ->and($defaultPolicy->allows('http://example.test'))->toBeFalse()
+        // DNS-rebinding hostnames that merely begin with "127." are not loopback.
+        ->and($defaultPolicy->allows('http://127.0.0.1.evil.com'))->toBeFalse()
+        ->and($defaultPolicy->allows('http://127.evil.com:8080'))->toBeFalse();
 });
 
 it('honors explicit Origin allowlists', function (): void {
