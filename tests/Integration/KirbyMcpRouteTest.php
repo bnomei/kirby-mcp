@@ -559,6 +559,101 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
     }
 });
 
+it('denies OAuth authorization for Panel users below the configured role', function (): void {
+    $projectRoot = cmsPath();
+    $oauthStorage = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'oauth';
+    kirbyMcpRouteRemoveDirectory($oauthStorage);
+
+    $previousApp = App::instance(null, true);
+    $previousErrorHandlers = captureErrorHandlers();
+    $previousWhoops = App::$enableWhoops;
+    App::$enableWhoops = false;
+    $app = new App([
+        'roots' => [
+            'index' => $projectRoot,
+        ],
+        'blueprints' => [
+            'users/editor' => ['name' => 'editor', 'title' => 'Editor'],
+        ],
+    ]);
+
+    $app->impersonate('kirby', function () use ($app): void {
+        if ($app->user('mcp-oauth-editor@example.com') === null) {
+            $app->users()->create([
+                'email' => 'mcp-oauth-editor@example.com',
+                'password' => 'test1234',
+                'role' => 'editor',
+            ]);
+        }
+    });
+    $app->impersonate('mcp-oauth-editor@example.com');
+
+    try {
+        kirbyMcpRouteWithHttpEnv([
+            'KIRBY_MCP_HTTP_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_AUTH_MODE' => 'oauth',
+            'KIRBY_MCP_HTTP_OAUTH_PROVIDER_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_SCOPES' => 'kirby-mcp:read,kirby-mcp:runtime',
+        ], function () use ($projectRoot): void {
+            $factory = new HttpFactory();
+
+            $registerRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/register', [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ])
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($factory->createStream(json_encode([
+                    'client_name' => 'Claude Desktop',
+                    'redirect_uris' => ['https://claude.ai/api/mcp/auth_callback'],
+                    'token_endpoint_auth_method' => 'none',
+                    'scope' => 'kirby-mcp:read kirby-mcp:runtime',
+                ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
+            $registerResponse = KirbyMcpOAuthRoute::handle($projectRoot, $registerRequest);
+            $client = kirbyMcpRouteDecodeJson($registerResponse->body());
+            expect($registerResponse->code())->toBe(201);
+
+            $verifier = str_repeat('a', 43);
+            $challenge = OAuthKeySet::base64Url(hash('sha256', $verifier, true));
+            $authorizeQuery = http_build_query([
+                'response_type' => 'code',
+                'client_id' => $client['client_id'],
+                'redirect_uri' => 'https://claude.ai/api/mcp/auth_callback',
+                'scope' => 'kirby-mcp:read kirby-mcp:runtime',
+                'state' => 'state-deny',
+                'resource' => 'https://example.test/mcp',
+                'code_challenge' => $challenge,
+                'code_challenge_method' => 'S256',
+            ], '', '&', PHP_QUERY_RFC3986);
+            $authorizeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . $authorizeQuery, [
+                'REMOTE_ADDR' => '203.0.113.10',
+            ]);
+            $authorizeResponse = KirbyMcpOAuthRoute::handle($projectRoot, $authorizeRequest);
+
+            // A non-admin Panel user must not be able to authorize / mint tokens.
+            expect($authorizeResponse->code())->toBe(302);
+            $location = kirbyMcpRouteLocation($authorizeResponse);
+            expect($location)->toStartWith('https://claude.ai/api/mcp/auth_callback?');
+            parse_str((string) parse_url($location, PHP_URL_QUERY), $redirectQuery);
+            expect($redirectQuery['error'] ?? null)->toBe('access_denied')
+                ->and($redirectQuery['state'] ?? null)->toBe('state-deny')
+                ->and($redirectQuery)->not()->toHaveKey('code');
+        });
+    } finally {
+        // Delete the editor without the closure form of impersonate(): the
+        // closure restores the *previous* impersonated user afterwards, which
+        // would be the editor we just deleted.
+        $app->impersonate('kirby');
+        $app->user('mcp-oauth-editor@example.com')?->delete();
+        $app->impersonate(null);
+        kirbyMcpRouteCommitSession($app);
+        if ($previousApp instanceof App) {
+            App::instance($previousApp);
+        }
+        App::$enableWhoops = $previousWhoops;
+        restoreErrorHandlers($previousErrorHandlers);
+        kirbyMcpRouteRemoveDirectory($oauthStorage);
+    }
+});
+
 it('preserves OAuth query params when explicit consent posts back for a logged-in user', function (): void {
     $projectRoot = cmsPath();
     $oauthStorage = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'oauth';

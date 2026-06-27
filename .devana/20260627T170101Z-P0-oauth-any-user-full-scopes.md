@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P0 | high | security=yes
+DEVANA-STATE: fixed | P0 | high | security=yes
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:176 | oauth-any-user-full-scopes
 
 # Built-in OAuth issues full MCP scopes to any Panel user
@@ -49,6 +49,8 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-27: open by Devana. Initial report written from static source inspection across all nine trails (`--all`).
+- 2026-06-27: fixed (primary control: role gate). Added a configurable `oauthProvider.role` option (default `admin`, env `KIRBY_MCP_HTTP_OAUTH_PROVIDER_ROLE`, config key `role`, `*` = any authenticated user). `KirbyOAuthProvider::authorize()` now calls `userMayAuthorize($user)` after resolving the client and, if the logged-in Panel user lacks the required role, redirects to the registered redirect_uri with `error=access_denied` (no code issued). This directly closes the "any Panel user can mint full-scope tokens" headline: a low-privilege account can no longer authorize. `userMayAuthorize` honors `*`, treats `admin` via `User::isAdmin()`, else exact role-name match. Tests: new integration test `it('denies OAuth authorization for Panel users below the configured role')` (editor user → 302 `access_denied`, no `code`); config-parse + secure-default (`admin`) assertions in `KirbyMcpHttpConfigTest`. README options table + example updated. phpstan clean; existing OAuth flow tests (admin user) still pass.
+  - Residual (not changed, lower-risk defense-in-depth from the report): empty authorize `scope` still defaults to the client/allowed ceiling (`allowedScopes()` → `HttpAuthScopes::all()` when `http.scopes` is unset), and unauthenticated DCR remains enabled. These are now gated behind the admin-role authorization requirement; operators who want a tighter ceiling should set `http.scopes` explicitly. Left as a follow-up to avoid breaking existing default-full-scope deployments.
 
 DEVANA-KEY: src/Mcp/OAuth/KirbyOAuthProvider.php:176 | oauth-any-user-full-scopes
-DEVANA-SUMMARY: open | P0 | high | Any Panel user can authorize OAuth clients for all MCP scopes when scope is omitted and http.scopes is unset.
+DEVANA-SUMMARY: fixed | P0 | high | Any Panel user can authorize OAuth clients for all MCP scopes when scope is omitted and http.scopes is unset.

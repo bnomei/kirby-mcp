@@ -591,7 +591,8 @@ required for the built-in Claude flow.
     "oauthProvider": {
       "enabled": true,
       "path": "/mcp/oauth",
-      "consent": "snippet"
+      "consent": "snippet",
+      "role": "admin"
     }
   }
 }
@@ -786,6 +787,7 @@ Kirby host selection:
 | `http.oauthProvider.path`           | `string`   | `/mcp/oauth`              | Built-in OAuth provider route prefix. Match this with the fourth argument to `KirbyMcpRoutes::routes()` if you customize it.                                                                                 |
 | `http.oauthProvider.consent`        | `string`   | `snippet`                 | Consent mode: `snippet`, `always`, `remember`, or `auto`. `auto` skips explicit consent for logged-in Kirby users and should only be used for trusted private deployments.                                   |
 | `http.oauthProvider.consentSnippet` | `string`   | `kirby-mcp/oauth-consent` | Kirby snippet used when `consent` is `snippet`.                                                                                                                                                              |
+| `http.oauthProvider.role`           | `string`   | `admin`                   | Panel role required to authorize MCP OAuth clients. A logged-in user without this role is denied (`access_denied`), so low-privilege accounts cannot mint tokens. Use `*` to allow any authenticated Panel user (loopback/dev only). |
 
 Environment variables:
 

@@ -12,6 +12,13 @@ final readonly class KirbyMcpOAuthProviderConfig
     public const DEFAULT_CONSENT_SNIPPET = 'kirby-mcp/oauth-consent';
 
     /**
+     * Panel role required to authorize MCP OAuth clients. Defaults to `admin`
+     * so a low-privilege Panel account cannot mint tokens simply by logging in.
+     * Use `*` to allow any authenticated Panel user (loopback/dev only).
+     */
+    public const DEFAULT_ROLE = 'admin';
+
+    /**
      * @param 'auto'|'remember'|'always'|'snippet' $consent
      */
     public function __construct(
@@ -19,6 +26,7 @@ final readonly class KirbyMcpOAuthProviderConfig
         public string $path = self::DEFAULT_PATH,
         public string $consent = self::DEFAULT_CONSENT,
         public string $consentSnippet = self::DEFAULT_CONSENT_SNIPPET,
+        public string $role = self::DEFAULT_ROLE,
     ) {
     }
 
@@ -39,6 +47,10 @@ final readonly class KirbyMcpOAuthProviderConfig
 
         if (trim($this->consentSnippet) === '') {
             $errors[] = 'HTTP OAuth provider consent snippet must not be empty.';
+        }
+
+        if (trim($this->role) === '') {
+            $errors[] = 'HTTP OAuth provider role must not be empty.';
         }
 
         return $errors;

@@ -173,6 +173,22 @@ final class KirbyOAuthProvider
             return $this->error(400, 'Unknown OAuth client.');
         }
 
+        // Gate authorization on the configured Panel role (default: admin) so a
+        // low-privilege account cannot mint MCP tokens just by logging in.
+        if ($this->userMayAuthorize($user) === false) {
+            $redirectUri = $this->redirectUri($params, $client);
+            if ($redirectUri === null) {
+                return $this->error(403, 'OAuth authorization is restricted to authorized Panel roles.');
+            }
+
+            return $this->redirectError(
+                $redirectUri,
+                $this->stringValue($params['state'] ?? null),
+                'access_denied',
+                'Your Panel account is not permitted to authorize MCP clients.'
+            );
+        }
+
         $scopes = $this->finalizeScopesForClient((string) ($params['scope'] ?? ''), $client);
         if ($this->needsConsent($user->id(), (string) $client['client_id'], $scopes)) {
             if ($this->request->getMethod() === 'POST') {
@@ -748,6 +764,25 @@ final class KirbyOAuthProvider
         }
 
         return array_values(array_intersect($requested, $this->allowedScopes()));
+    }
+
+    /**
+     * Whether the authenticated Panel user is permitted to authorize MCP OAuth
+     * clients, per the configured `oauthProvider.role` (default: admin). `*`
+     * allows any authenticated user.
+     */
+    private function userMayAuthorize(\Kirby\Cms\User $user): bool
+    {
+        $role = strtolower(trim($this->config->oauthProvider->role));
+        if ($role === '' || $role === '*') {
+            return true;
+        }
+
+        if ($role === 'admin' && $user->isAdmin() === true) {
+            return true;
+        }
+
+        return strtolower($user->role()->name()) === $role;
     }
 
     /**
