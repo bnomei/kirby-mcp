@@ -1,5 +1,5 @@
 DEVANA-FINDING: v1
-DEVANA-STATE: open | P2 | medium | security=no
+DEVANA-STATE: fixed | P2 | medium | security=no
 DEVANA-KEY: src/Mcp/Tools/SessionTools.php:68 | kirby-init-premature-session-flag
 
 # `kirby_init` marks the session initialized before validation succeeds
@@ -62,6 +62,7 @@ After working this report, preserve the original finding body. Update line 2 `DE
 ## Status Notes
 
 - 2026-06-25: open by Devana. Initial report written from static source inspection.
+- 2026-06-27: fixed. Moved `SessionState::markInitCalled()` out of the method entry and onto the two successful return paths (global-reference branch and the project-mode return). A failed `kirby_init` (e.g. project without `getkirby/cms`) now throws without marking the session initialized, so `RequireInitForToolsHandler` keeps blocking other tools. Added unit test `it('does not mark the session initialized when project init fails validation')`. phpstan clean.
 
 DEVANA-KEY: src/Mcp/Tools/SessionTools.php:68 | kirby-init-premature-session-flag
-DEVANA-SUMMARY: open | P2 | medium | kirby_init sets the session init flag before validation, so a failed init still unlocks other MCP tools in the same session.
+DEVANA-SUMMARY: fixed | P2 | medium | kirby_init sets the session init flag before validation, so a failed init still unlocks other MCP tools in the same session.
