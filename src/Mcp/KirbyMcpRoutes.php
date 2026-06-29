@@ -40,7 +40,7 @@ final class KirbyMcpRoutes
             [
                 'pattern' => self::patternFromPath($path),
                 'method' => 'GET|POST|DELETE|OPTIONS',
-                'action' => static fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
+                'action' => fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
                 'name' => 'kirby-mcp.mcp',
             ],
         ];
@@ -63,43 +63,43 @@ final class KirbyMcpRoutes
             [
                 'pattern' => self::patternFromPath('/.well-known/oauth-authorization-server'),
                 'method' => 'GET',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-authorization-server',
             ],
             [
                 'pattern' => self::patternFromPath('/.well-known/openid-configuration'),
                 'method' => 'GET',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.openid-configuration',
             ],
             [
                 'pattern' => self::patternFromPath($oauthPath . '/register'),
                 'method' => 'POST',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-register',
             ],
             [
                 'pattern' => self::patternFromPath($oauthPath . '/authorize'),
                 'method' => 'GET|POST',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-authorize',
             ],
             [
                 'pattern' => self::patternFromPath($oauthPath . '/token'),
                 'method' => 'POST',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-token',
             ],
             [
                 'pattern' => self::patternFromPath($oauthPath . '/jwks.json'),
                 'method' => 'GET',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-jwks',
             ],
             [
                 'pattern' => self::patternFromPath($oauthPath . '/login'),
                 'method' => 'GET|POST',
-                'action' => static fn () => KirbyMcpOAuthRoute::handle($projectRoot),
+                'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
                 'name' => 'kirby-mcp.oauth-login',
             ],
         ];
@@ -116,7 +116,7 @@ final class KirbyMcpRoutes
             [
                 'pattern' => self::patternFromPath(ProtectedResourceMetadata::DEFAULT_METADATA_PATH),
                 'method' => 'GET',
-                'action' => static fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
+                'action' => fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
                 'name' => 'kirby-mcp.oauth-protected-resource',
             ],
         ];

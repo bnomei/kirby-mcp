@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\KirbyMcpRoutes;
+use Kirby\Http\Response;
+use Kirby\Http\Route as KirbyRoute;
 
 it('builds the copied Kirby route bundle for HTTP MCP', function (): void {
     $routes = KirbyMcpRoutes::routes();
@@ -30,6 +32,26 @@ it('builds the copied Kirby route bundle for HTTP MCP', function (): void {
         ->and($routes[7]['method'])->toBe('GET')
         ->and($routes[8]['pattern'])->toBe('mcp/oauth/login')
         ->and($routes[8]['method'])->toBe('GET|POST');
+});
+
+it('returns route actions that Kirby can bind to its route instance', function (): void {
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-routes-' . bin2hex(random_bytes(6));
+    mkdir($projectRoot, 0777, true);
+
+    foreach (KirbyMcpRoutes::routes() as $route) {
+        expect($route['action'])->toBeInstanceOf(Closure::class)
+            ->and((new ReflectionFunction($route['action']))->isStatic())->toBeFalse();
+    }
+
+    try {
+        foreach (KirbyMcpRoutes::routes(projectRoot: $projectRoot) as $route) {
+            $kirbyRoute = new KirbyRoute($route['pattern'], $route['method'], $route['action'], ['name' => $route['name']]);
+
+            expect($kirbyRoute->action()->call($kirbyRoute))->toBeInstanceOf(Response::class);
+        }
+    } finally {
+        @rmdir($projectRoot);
+    }
 });
 
 it('maps custom MCP URL paths to Kirby route patterns', function (): void {
