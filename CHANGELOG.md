@@ -5,6 +5,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-29
+
+- Hardened HTTP MCP scope enforcement for runtime resources, blueprint reads, `mcp:*` CLI wrapper calls, write-capable CLI calls, and read-only remote-token defaults.
+- Hardened shared-token and OAuth route handling with stricter loopback host validation, role-gated OAuth authorization, forced consent for resumed login sessions, and single-use authorization/refresh tokens.
+- Redacted sensitive config and dump values more consistently, and required `kirby_dump_log_tail` calls to include a trace or path filter before reading shared dump logs.
+- Fixed runtime command and CLI wrapper status reporting, including `kirby_run_cli_command` failure `ok` values, `kirby_runtime_install` success flags, and commands-root resolution for runtime install/update.
+- Fixed runtime parsing and output edge cases for marked JSON framing, dotted page slugs in `kirby_query_dot`, malformed pagination limits, eval truncation, empty content payload schemas, failed roots inspection caching, and failed `--project` detection.
+
 ## [1.9.0] - 2026-06-16
 
 - Added projectless global reference mode via `kirby-mcp --global` for always-available Kirby KB, glossary, reference docs, update schemas, official docs search, and plugin directory research.
