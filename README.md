@@ -795,6 +795,7 @@ Environment variables:
 | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `KIRBY_MCP_PROJECT_ROOT`                        | Project root (overrides auto-detection).                                             |
 | `KIRBY_MCP_KIRBY_BIN`                           | Path to `vendor/bin/kirby` (overrides binary resolution).                            |
+| `KIRBY_MCP_PHP_BINARY`                           | PHP binary for wrapped Kirby CLI calls; useful when `PHP_BINARY` points to PHP-FPM.  |
 | `KIRBY_MCP_HOST` / `KIRBY_HOST`                 | Kirby host override (takes precedence over config).                                  |
 | `KIRBY_MCP_DUMPS_ENABLED`                       | Override `dumps.enabled` (`1/0`, `true/false`, `on/off`).                            |
 | `KIRBY_MCP_ENABLE_EVAL`                         | Enable eval override (takes precedence over config; still needs confirmation).       |
@@ -824,6 +825,7 @@ Environment variables:
 - “Unable to determine Kirby project root”: run from the Kirby project root or pass `--project=/absolute/path` (or set `KIRBY_MCP_PROJECT_ROOT`).
 - Runtime-only tools fail: run `vendor/bin/kirby-mcp install` and check `kirby_runtime_status`.
 - CLI command blocked: add patterns to `.kirby-mcp/mcp.json` (`cli.allow` / `cli.allowWrite`) or block with `cli.deny`.
+- Runtime CLI commands fail behind PHP-FPM with exit code 126: set `KIRBY_MCP_PHP_BINARY` to the PHP CLI binary path, e.g. `/opt/php-x.x/bin/php`.
 - Host-specific config not applied: set `KIRBY_MCP_HOST`/`KIRBY_HOST` or configure `{"kirby":{"host":"..."}}`.
 - Docs resources are slow/failing: confirm network access or adjust `docs.ttlSeconds` (set to `0` to disable caching).
 - No dump output: ensure `dumps.enabled=true`, a `.kirby-mcp/dumps.jsonl` exists, and use the correct `traceId` with `kirby_dump_log_tail`.

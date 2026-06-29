@@ -10,6 +10,7 @@ use Symfony\Component\Process\Process;
 final class KirbyCliRunner
 {
     public const ENV_KIRBY_BIN = 'KIRBY_MCP_KIRBY_BIN';
+    public const ENV_PHP_BINARY = 'KIRBY_MCP_PHP_BINARY';
 
     /**
      * @param array<int, string> $args Kirby CLI arguments (e.g. ["list"], ["make:blueprint", "post"])
@@ -31,7 +32,7 @@ final class KirbyCliRunner
         $prepend = __DIR__ . DIRECTORY_SEPARATOR . 'kirby-cli-prepend.php';
         $command = array_merge([$binary], $args);
         if (is_file($prepend)) {
-            $command = array_merge([PHP_BINARY, '-d', 'auto_prepend_file=' . $prepend, $binary], $args);
+            $command = array_merge([$this->phpBinary(), '-d', 'auto_prepend_file=' . $prepend, $binary], $args);
         }
 
         $process = new Process(
@@ -62,6 +63,26 @@ final class KirbyCliRunner
                 timedOut: true,
             );
         }
+    }
+
+    private function phpBinary(): string
+    {
+        $envOverride = getenv(self::ENV_PHP_BINARY);
+        if (!is_string($envOverride)) {
+            return PHP_BINARY;
+        }
+
+        $phpBinary = trim($envOverride);
+        if ($phpBinary === '') {
+            return PHP_BINARY;
+        }
+
+        $quote = $phpBinary[0];
+        if (($quote === '"' || $quote === "'") && str_ends_with($phpBinary, $quote)) {
+            $phpBinary = trim(substr($phpBinary, 1, -1));
+        }
+
+        return $phpBinary !== '' ? $phpBinary : PHP_BINARY;
     }
 
     private function resolveBinary(string $projectRoot): ?string

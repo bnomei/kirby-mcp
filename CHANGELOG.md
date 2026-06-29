@@ -5,6 +5,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+- Added `KIRBY_MCP_PHP_BINARY` to override the PHP executable used when Kirby CLI calls are wrapped with MCP's prepend file, useful for PHP-FPM deployments where `PHP_BINARY` is not the CLI binary.
+
 ## [1.10.0] - 2026-06-29
 
 - Hardened HTTP MCP scope enforcement for runtime resources, blueprint reads, `mcp:*` CLI wrapper calls, write-capable CLI calls, and read-only remote-token defaults.
