@@ -173,8 +173,26 @@ final class KirbyOAuthProvider
             return $this->error(400, 'Unknown OAuth client.');
         }
 
+        if ($this->userMayAuthorize($user) === false) {
+            $redirectUri = $this->redirectUri($params, $client);
+            if ($redirectUri === null) {
+                return $this->error(403, 'OAuth authorization is restricted to authorized Panel roles.');
+            }
+
+            return $this->redirectError(
+                $redirectUri,
+                $this->stringValue($params['state'] ?? null),
+                'access_denied',
+                'Your Panel account is not permitted to authorize MCP clients.'
+            );
+        }
+
         $scopes = $this->finalizeScopesForClient((string) ($params['scope'] ?? ''), $client);
-        if ($this->needsConsent($user->id(), (string) $client['client_id'], $scopes)) {
+
+        $requireConsent = $this->isResumedFromLoginSession()
+            || $this->needsConsent($user->id(), (string) $client['client_id'], $scopes);
+
+        if ($requireConsent) {
             if ($this->request->getMethod() === 'POST') {
                 return $this->completeConsent($params, $user->id(), (string) $client['client_id'], $scopes);
             }
@@ -341,9 +359,8 @@ final class KirbyOAuthProvider
         }
 
         $codeId = hash('sha256', $code);
-        $authCode = $this->store()->read('auth-codes', $codeId);
+        $authCode = $this->store()->take('auth-codes', $codeId);
         if ($authCode === null || (int) ($authCode['expires_at'] ?? 0) < time()) {
-            $this->store()->delete('auth-codes', $codeId);
             return $this->oauthError('invalid_grant', 'Authorization code is invalid or expired.', 400);
         }
 
@@ -358,8 +375,6 @@ final class KirbyOAuthProvider
         if (!$this->verifyPkce($authCode, $this->stringValue($data['code_verifier'] ?? null))) {
             return $this->oauthError('invalid_grant', 'PKCE verification failed.', 400);
         }
-
-        $this->store()->delete('auth-codes', $codeId);
 
         return $this->tokenResponse(
             (string) $client['client_id'],
@@ -411,9 +426,9 @@ final class KirbyOAuthProvider
             }
         }
 
-        $record['revoked'] = true;
-        $record['revoked_at'] = time();
-        $this->store()->write('refresh-tokens', $tokenId, $record);
+        if ($this->store()->take('refresh-tokens', $tokenId) === null) {
+            return $this->oauthError('invalid_grant', 'Refresh token is invalid or expired.', 400);
+        }
 
         return $this->tokenResponse((string) $client['client_id'], (string) $record['user_id'], $requestedScopes);
     }
@@ -530,9 +545,21 @@ final class KirbyOAuthProvider
         return hash_equals($challenge, $actual);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    private function isResumedFromLoginSession(): bool
+    {
+        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
+
+        return $sessionId !== null && $this->readSession($sessionId) !== null;
+    }
+
+    private function consumeLoginSession(): void
+    {
+        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
+        if ($sessionId !== null) {
+            $this->store()->delete('sessions', $sessionId);
+        }
+    }
+
     private function authorizationParams(): array
     {
         $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
@@ -614,6 +641,7 @@ final class KirbyOAuthProvider
         }
 
         $this->rememberConsent($userId, $clientId, $scopes);
+        $this->consumeLoginSession();
 
         return $this->redirectWithCode($params, $userId, $scopes);
     }
@@ -719,7 +747,7 @@ final class KirbyOAuthProvider
                 continue;
             }
 
-            if ($scheme === 'http' && ($host === 'localhost' || $host === '127.0.0.1' || str_starts_with($host, '127.'))) {
+            if ($scheme === 'http' && $this->isLoopbackRedirectHost($host)) {
                 continue;
             }
 
@@ -727,6 +755,16 @@ final class KirbyOAuthProvider
         }
 
         return true;
+    }
+
+    private function isLoopbackRedirectHost(string $host): bool
+    {
+        if ($host === 'localhost' || $host === '::1') {
+            return true;
+        }
+
+        return filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.');
     }
 
     /**
@@ -748,6 +786,20 @@ final class KirbyOAuthProvider
         }
 
         return array_values(array_intersect($requested, $this->allowedScopes()));
+    }
+
+    private function userMayAuthorize(\Kirby\Cms\User $user): bool
+    {
+        $role = strtolower(trim($this->config->oauthProvider->role));
+        if ($role === '' || $role === '*') {
+            return true;
+        }
+
+        if ($role === 'admin' && $user->isAdmin() === true) {
+            return true;
+        }
+
+        return strtolower($user->role()->name()) === $role;
     }
 
     /**

@@ -35,6 +35,61 @@ abstract class RuntimeCommand
         return $kirby;
     }
 
+    protected static function resolveCommandsRoot(CLI $cli): string
+    {
+        $commandsRoot = $cli->root('commands.local');
+        if (!is_string($commandsRoot) || $commandsRoot === '') {
+            $commandsRoot = $cli->root('commands');
+        }
+
+        if (!is_string($commandsRoot) || $commandsRoot === '') {
+            $commandsRoot = rtrim($cli->dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
+        }
+
+        return $commandsRoot;
+    }
+
+    protected static function parsePaginationArg(mixed $raw, int $default = 0): int|false
+    {
+        if ($raw === null) {
+            return $default;
+        }
+
+        if (is_int($raw)) {
+            return $raw;
+        }
+
+        if (is_string($raw)) {
+            $trimmed = trim($raw);
+            if ($trimmed === '') {
+                return $default;
+            }
+
+            if (preg_match('/^[+-]?\d+$/', $trimmed) === 1) {
+                return (int) $trimmed;
+            }
+        }
+
+        return false;
+    }
+
+    protected static function paginationArgOrEmitError(CLI $cli, string $arg): ?int
+    {
+        $value = self::parsePaginationArg($cli->arg($arg));
+        if ($value === false) {
+            static::emit($cli, [
+                'ok' => false,
+                'error' => static::errorArray(new \InvalidArgumentException(
+                    sprintf('--%s must be a base-10 integer.', $arg),
+                )),
+            ]);
+
+            return null;
+        }
+
+        return $value < 0 ? 0 : $value;
+    }
+
     /**
      * @param array<string, mixed> $payload
      */

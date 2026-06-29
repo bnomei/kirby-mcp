@@ -202,11 +202,16 @@ final class QueryDot extends RuntimeCommand
             return $kirby->user($modelArg);
         }
 
+        $page = $kirby->page($modelArg);
+        if ($page instanceof Page) {
+            return $page;
+        }
+
         if (self::looksLikeFile($modelArg)) {
             return $kirby->file($modelArg);
         }
 
-        return $kirby->page($modelArg);
+        return null;
     }
 
     /**

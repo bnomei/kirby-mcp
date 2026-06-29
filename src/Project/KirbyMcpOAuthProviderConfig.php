@@ -11,6 +11,8 @@ final readonly class KirbyMcpOAuthProviderConfig
     public const DEFAULT_CONSENT = 'snippet';
     public const DEFAULT_CONSENT_SNIPPET = 'kirby-mcp/oauth-consent';
 
+    public const DEFAULT_ROLE = 'admin';
+
     /**
      * @param 'auto'|'remember'|'always'|'snippet' $consent
      */
@@ -19,6 +21,7 @@ final readonly class KirbyMcpOAuthProviderConfig
         public string $path = self::DEFAULT_PATH,
         public string $consent = self::DEFAULT_CONSENT,
         public string $consentSnippet = self::DEFAULT_CONSENT_SNIPPET,
+        public string $role = self::DEFAULT_ROLE,
     ) {
     }
 
@@ -39,6 +42,10 @@ final readonly class KirbyMcpOAuthProviderConfig
 
         if (trim($this->consentSnippet) === '') {
             $errors[] = 'HTTP OAuth provider consent snippet must not be empty.';
+        }
+
+        if (trim($this->role) === '') {
+            $errors[] = 'HTTP OAuth provider role must not be empty.';
         }
 
         return $errors;

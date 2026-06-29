@@ -34,10 +34,7 @@ final class Update extends RuntimeCommand
             return;
         }
 
-        $commandsRoot = $kirby->root('commands');
-        if (!is_string($commandsRoot) || $commandsRoot === '') {
-            $commandsRoot = rtrim($cli->dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'commands';
-        }
+        $commandsRoot = self::resolveCommandsRoot($cli);
 
         $packageRoot = dirname(__DIR__, 2);
         $sourceRoot = rtrim($packageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'commands';

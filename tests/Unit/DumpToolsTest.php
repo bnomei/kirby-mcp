@@ -12,6 +12,67 @@ use Mcp\Server\RequestContext;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
 
+it('does not return cross-session dump events for an unfiltered tail', function (): void {
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-test-' . bin2hex(random_bytes(8));
+    $configDir = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp';
+    $logFile = $configDir . DIRECTORY_SEPARATOR . 'dumps.jsonl';
+
+    $originalRoot = getenv(ProjectContext::ENV_PROJECT_ROOT);
+    putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);
+
+    mkdir($configDir, 0777, true);
+
+    $session = new Session(new InMemorySessionStore(60));
+
+    try {
+        DumpLogWriter::append([
+            'type' => 'dump',
+            't' => 1.0,
+            'traceId' => 'trace-other',
+            'id' => 'a',
+            'path' => '/secret',
+            'values' => ['another sessions debug output'],
+        ], $projectRoot);
+
+        $tools = new DumpTools();
+        $context = new RequestContext($session, new CallToolRequest('kirby_dump_log_tail', []));
+
+        $result = $tools->dumpLogTail(limit: 0, context: $context);
+        $payload = $result->structuredContent ?? null;
+
+        expect($payload)->toBeArray();
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['traceId'])->toBeNull();
+        expect($payload['count'])->toBe(0);
+        expect($payload['events'])->toBe([]);
+        expect($payload['note'] ?? null)->toBeString();
+
+        $byPath = $tools->dumpLogTail(path: '/secret', context: $context);
+        $byPathPayload = $byPath->structuredContent ?? null;
+        expect($byPathPayload['count'])->toBe(1);
+    } finally {
+        DumpState::reset($session);
+
+        if (is_file($logFile)) {
+            @unlink($logFile);
+        }
+
+        if (is_dir($configDir)) {
+            @rmdir($configDir);
+        }
+
+        if (is_dir($projectRoot)) {
+            @rmdir($projectRoot);
+        }
+
+        if ($originalRoot === false) {
+            putenv(ProjectContext::ENV_PROJECT_ROOT);
+        } else {
+            putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $originalRoot);
+        }
+    }
+});
+
 it('tails dump logs using session trace id when missing', function (): void {
     $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-test-' . bin2hex(random_bytes(8));
     $configDir = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp';

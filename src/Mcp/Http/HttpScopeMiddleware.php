@@ -51,6 +51,10 @@ final readonly class HttpScopeMiddleware implements MiddlewareInterface
             return [HttpAuthScopes::READ];
         }
 
+        if (!is_array($payload)) {
+            return [HttpAuthScopes::READ];
+        }
+
         $messages = array_is_list($payload) ? $payload : [$payload];
         $required = [];
         foreach ($messages as $message) {

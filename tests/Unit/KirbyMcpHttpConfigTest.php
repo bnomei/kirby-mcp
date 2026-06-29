@@ -86,6 +86,7 @@ it('keeps HTTP disabled by default with loopback /mcp defaults', function (): vo
             ->and($config->port)->toBe(8765)
             ->and($config->path)->toBe('/mcp')
             ->and($config->oauthProvider->consent)->toBe('snippet')
+            ->and($config->oauthProvider->role)->toBe('admin')
             ->and($config->validationErrors())->toBe([]);
     });
 });
@@ -155,6 +156,29 @@ it('rejects shared-token HTTP on non-loopback binds', function (): void {
         'http' => [
             'enabled' => true,
             'host' => '0.0.0.0',
+            'auth' => [
+                'mode' => 'shared-token',
+                'token' => 'local-secret',
+            ],
+        ],
+    ]);
+
+    try {
+        kirbyMcpHttpConfigWithEnv([], function () use ($root): void {
+            expect(KirbyMcpConfig::load($root)->http()->validationErrors())
+                ->toContain('HTTP shared-token auth is only allowed for loopback hosts.')
+                ->toContain('Non-loopback HTTP binds require OAuth auth.');
+        });
+    } finally {
+        kirbyMcpHttpConfigRemoveRoot($root);
+    }
+});
+
+it('rejects shared-token HTTP on deceptive 127-prefixed public hostnames', function (): void {
+    $root = kirbyMcpHttpConfigTempRoot([
+        'http' => [
+            'enabled' => true,
+            'host' => '127.0.0.1.evil.com',
             'auth' => [
                 'mode' => 'shared-token',
                 'token' => 'local-secret',
@@ -321,6 +345,7 @@ it('accepts built-in OAuth provider config without external issuer metadata', fu
                 'path' => '/mcp/oauth',
                 'consent' => 'remember',
                 'consentSnippet' => 'custom/oauth-consent',
+                'role' => 'editor',
             ],
         ],
     ]);
@@ -333,7 +358,8 @@ it('accepts built-in OAuth provider config without external issuer metadata', fu
                 ->and($config->oauthProvider->enabled)->toBeTrue()
                 ->and($config->oauthProvider->path)->toBe('/mcp/oauth')
                 ->and($config->oauthProvider->consent)->toBe('remember')
-                ->and($config->oauthProvider->consentSnippet)->toBe('custom/oauth-consent');
+                ->and($config->oauthProvider->consentSnippet)->toBe('custom/oauth-consent')
+                ->and($config->oauthProvider->role)->toBe('editor');
         });
     } finally {
         kirbyMcpHttpConfigRemoveRoot($root);

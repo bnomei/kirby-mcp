@@ -137,13 +137,51 @@ final class SecretMasker
             $result = [];
             foreach ($value as $key => $item) {
                 $maskedKey = is_string($key) ? $this->mask($key) : $key;
+
+                if (is_string($key) && self::isSensitiveKey($key) && is_string($item) && trim($item) !== '') {
+                    $result[$maskedKey] = $this->mask;
+                    continue;
+                }
+
                 $result[$maskedKey] = $this->maskRecursive($item);
             }
             return $result;
         }
 
-        // Scalars and other types pass through unchanged
         return $value;
+    }
+
+    private static function isSensitiveKey(string $key): bool
+    {
+        $key = strtolower(trim($key));
+        if ($key === '') {
+            return false;
+        }
+
+        $exact = ['key', 'auth', 'pwd', 'dsn', 'salt', 'credentials', 'authorization'];
+        if (in_array($key, $exact, true)) {
+            return true;
+        }
+
+        $substrings = [
+            'password',
+            'passwd',
+            'passphrase',
+            'secret',
+            'token',
+            'apikey',
+            'api_key',
+            'credential',
+            'privatekey',
+            'private_key',
+        ];
+        foreach ($substrings as $needle) {
+            if (str_contains($key, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

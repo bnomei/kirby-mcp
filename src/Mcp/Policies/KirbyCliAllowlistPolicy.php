@@ -35,6 +35,15 @@ final class KirbyCliAllowlistPolicy
     ];
 
     /** @var array<int, string> */
+    public const WRITE_CAPABLE = [
+        'make:*',
+        'clear:*',
+        'mcp:*:update',
+        RuntimeCommands::UPDATE,
+        RuntimeCommands::INSTALL,
+    ];
+
+    /** @var array<int, string> */
     private array $deny;
 
     /** @var array<int, string> */
@@ -67,19 +76,26 @@ final class KirbyCliAllowlistPolicy
                 matchedDeny: $matchedDeny,
                 matchedAllow: null,
                 matchedAllowWrite: null,
+                matchedWriteCapable: null,
             );
         }
 
         $matchedAllow = $this->firstMatchingPattern($command, $this->allow);
         $matchedAllowWrite = $this->firstMatchingPattern($command, $this->allowWrite);
+        $matchedWriteCapable = $this->firstMatchingPattern($command, self::WRITE_CAPABLE);
 
-        $allowed = $matchedAllow !== null || ($allowWrite === true && $matchedAllowWrite !== null);
+        if ($matchedWriteCapable !== null || $matchedAllowWrite !== null) {
+            $allowed = $allowWrite === true && ($matchedAllow !== null || $matchedAllowWrite !== null);
+        } else {
+            $allowed = $matchedAllow !== null;
+        }
 
         return new KirbyCliAllowlistDecision(
             allowed: $allowed,
             matchedDeny: null,
             matchedAllow: $matchedAllow,
             matchedAllowWrite: $matchedAllowWrite,
+            matchedWriteCapable: $matchedWriteCapable,
         );
     }
 

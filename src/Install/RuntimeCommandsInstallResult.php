@@ -20,8 +20,14 @@ final readonly class RuntimeCommandsInstallResult
     ) {
     }
 
+    public function ok(): bool
+    {
+        return $this->errors === [];
+    }
+
     /**
      * @return array{
+     *   ok: bool,
      *   projectRoot: string,
      *   commandsRoot: string,
      *   installed: array<int, string>,
@@ -32,6 +38,7 @@ final readonly class RuntimeCommandsInstallResult
     public function toArray(): array
     {
         return [
+            'ok' => $this->ok(),
             'projectRoot' => $this->projectRoot,
             'commandsRoot' => $this->commandsRoot,
             'installed' => $this->installed,

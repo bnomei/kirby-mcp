@@ -116,6 +116,34 @@ it('rejects disallowed Origin before auth and protocol handling', function (): v
         ->and((string) $response->getBody())->toContain('Origin is not allowed.');
 });
 
+it('requires write scope for kirby_run_cli_command with allowWrite even on an execute token', function (): void {
+    $factory = new HttpFactory();
+    $handler = kirbyMcpHttpAuthHandler(new SharedTokenValidator('exec-token', [HttpAuthScopes::READ, HttpAuthScopes::EXECUTE]));
+
+    $initialize = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer exec-token')
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('initialize', 1)))
+    );
+    $sessionId = $initialize->getHeaderLine('Mcp-Session-Id');
+
+    $writeCli = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer exec-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('tools/call', 2, [
+                'name' => 'kirby_run_cli_command',
+                'arguments' => ['command' => 'clear:cache', 'allowWrite' => true],
+            ])))
+    );
+
+    expect($writeCli->getStatusCode())->toBe(403)
+        ->and($writeCli->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $writeCli->getBody())->toContain(HttpAuthScopes::WRITE);
+});
+
 it('keeps tools discoverable but rejects calls when the bearer token lacks operation scope', function (): void {
     $factory = new HttpFactory();
     $handler = kirbyMcpHttpAuthHandler(new SharedTokenValidator('read-token', [HttpAuthScopes::READ]));
@@ -189,18 +217,59 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
     expect($adminCall->getStatusCode())->toBe(403)
         ->and((string) $adminCall->getBody())->toContain(HttpAuthScopes::ADMIN);
 
+    $runtimeToolCall = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('tools/call', 6, [
+                'name' => 'kirby_blueprint_read',
+                'arguments' => ['id' => 'pages/home'],
+            ])))
+    );
+
+    expect($runtimeToolCall->getStatusCode())->toBe(403)
+        ->and($runtimeToolCall->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $runtimeToolCall->getBody())->toContain(HttpAuthScopes::RUNTIME);
+
     $loggingCall = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Authorization', 'Bearer read-token')
             ->withHeader('Mcp-Session-Id', $sessionId)
-            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('logging/setLevel', 6, [
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('logging/setLevel', 7, [
                 'level' => 'debug',
             ])))
     );
 
     expect($loggingCall->getStatusCode())->toBe(403)
         ->and((string) $loggingCall->getBody())->toContain(HttpAuthScopes::ADMIN);
+
+    $runtimeResourceRead = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 8, [
+                'uri' => 'kirby://page/content/home',
+            ])))
+    );
+
+    expect($runtimeResourceRead->getStatusCode())->toBe(403)
+        ->and($runtimeResourceRead->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $runtimeResourceRead->getBody())->toContain(HttpAuthScopes::RUNTIME);
+
+    $staticResourceRead = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 9, [
+                'uri' => 'kirby://kb',
+            ])))
+    );
+
+    expect($staticResourceRead->getStatusCode())->toBe(200);
 });
 
 it('allows a valid scoped bearer token to initialize and call read operations', function (): void {

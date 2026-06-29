@@ -65,10 +65,12 @@ final class SessionTools
     )]
     public function init(?RequestContext $context = null): string
     {
-        SessionState::markInitCalled($context?->getSession());
+        $session = $context?->getSession();
 
         try {
             if (ServerProfile::isGlobalReference($this->profile)) {
+                SessionState::markInitCalled($session);
+
                 return $this->globalReferenceInit();
             }
 
@@ -192,6 +194,8 @@ TEXT;
                     . $toPrettyJson(['error' => $exception->getMessage()])
                     . "\n```\n";
             }
+
+            SessionState::markInitCalled($session);
 
             return "<Kirby>\n" . $markdown . "</Kirby>";
         } catch (ToolCallException $exception) {

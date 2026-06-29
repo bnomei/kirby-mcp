@@ -43,6 +43,19 @@ it('validates hashed remote bearer tokens with per-token scoped attributes', fun
         ->and($denied->getError())->toBe('invalid_token');
 });
 
+it('defaults remote tokens with empty scopes to read-only instead of all scopes', function (): void {
+    $validator = new RemoteTokenValidator([
+        KirbyMcpHttpToken::fromPlainText('ci-bot', 'remote-secret', []),
+    ]);
+
+    $allowed = $validator->validate('remote-secret');
+
+    expect($allowed->isAllowed())->toBeTrue()
+        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->toBe([HttpAuthScopes::READ])
+        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::ADMIN)
+        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::WRITE);
+});
+
 it('allows absent and default loopback Origin headers and rejects public origins without an allowlist', function (): void {
     $defaultPolicy = new HttpOriginPolicy();
 
@@ -50,8 +63,11 @@ it('allows absent and default loopback Origin headers and rejects public origins
         ->and($defaultPolicy->allows(''))->toBeTrue()
         ->and($defaultPolicy->allows('http://localhost:3000'))->toBeTrue()
         ->and($defaultPolicy->allows('http://127.0.0.1:5173'))->toBeTrue()
+        ->and($defaultPolicy->allows('http://127.0.0.5:5173'))->toBeTrue()
         ->and($defaultPolicy->allows('http://[::1]:5173'))->toBeTrue()
-        ->and($defaultPolicy->allows('http://example.test'))->toBeFalse();
+        ->and($defaultPolicy->allows('http://example.test'))->toBeFalse()
+        ->and($defaultPolicy->allows('http://127.0.0.1.evil.com'))->toBeFalse()
+        ->and($defaultPolicy->allows('http://127.evil.com:8080'))->toBeFalse();
 });
 
 it('honors explicit Origin allowlists', function (): void {

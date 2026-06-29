@@ -48,7 +48,7 @@ final class DumpTools
     #[McpTool(
         name: 'kirby_dump_log_tail',
         title: 'Dump Log Tail',
-        description: 'Tail `.kirby-mcp/dumps.jsonl` written by `mcp_dump()` and return structured JSON. Filters: `traceId`, `path`. `limit=0` returns all.',
+        description: 'Tail `.kirby-mcp/dumps.jsonl` written by `mcp_dump()` and return structured JSON. Requires a filter — `traceId` (from kirby_render_page or this session\'s last render) or `path` — because the log is shared across sessions; an unfiltered tail returns no events. `limit=0` returns all matching events.',
         annotations: new ToolAnnotations(
             title: 'Dump Log Tail',
             readOnlyHint: true,
@@ -65,11 +65,28 @@ final class DumpTools
             $projectRoot = $this->context->projectRoot();
 
             $traceId = is_string($traceId) && trim($traceId) !== '' ? trim($traceId) : DumpState::lastTraceId($context?->getSession());
+            $normalizedPath = is_string($path) && trim($path) !== '' ? trim($path) : null;
+
+            if ($traceId === null && $normalizedPath === null) {
+                $payload = [
+                    'ok' => true,
+                    'projectRoot' => $projectRoot,
+                    'file' => DumpLogWriter::filePath($projectRoot),
+                    'traceId' => null,
+                    'path' => null,
+                    'limit' => max(0, $limit),
+                    'count' => 0,
+                    'events' => [],
+                    'note' => 'Provide a traceId (returned by kirby_render_page) or a path filter. The dump log is shared across sessions, so unfiltered tails are not returned.',
+                ];
+
+                return $this->maybeStructuredResult($context, $payload);
+            }
 
             $events = DumpLogReader::tail(
                 projectRoot: $projectRoot,
                 traceId: $traceId,
-                path: $path,
+                path: $normalizedPath,
                 limit: $limit,
             );
 
@@ -78,7 +95,7 @@ final class DumpTools
                 'projectRoot' => $projectRoot,
                 'file' => DumpLogWriter::filePath($projectRoot),
                 'traceId' => $traceId,
-                'path' => is_string($path) && trim($path) !== '' ? trim($path) : null,
+                'path' => $normalizedPath,
                 'limit' => max(0, $limit),
                 'count' => count($events),
                 'events' => $events,

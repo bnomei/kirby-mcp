@@ -37,7 +37,7 @@ final readonly class RemoteTokenValidator implements AuthorizationTokenValidator
             return AuthorizationResult::unauthorized('invalid_token', 'Invalid bearer token.');
         }
 
-        $scopes = $matchedToken->scopes === [] ? HttpAuthScopes::all() : $matchedToken->scopes;
+        $scopes = $matchedToken->scopes === [] ? [HttpAuthScopes::READ] : $matchedToken->scopes;
 
         return AuthorizationResult::allow([
             'oauth.claims' => [

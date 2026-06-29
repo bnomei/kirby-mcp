@@ -24,6 +24,12 @@ final class CliTools
 {
     use StructuredToolResult;
 
+    /** @var array<string, string> */
+    private const DEDICATED_TOOL_COMMANDS = [
+        RuntimeCommands::EVAL => 'kirby_eval',
+        RuntimeCommands::QUERY_DOT => 'kirby_query_dot',
+    ];
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -135,8 +141,17 @@ final class CliTools
             $success = ($exitCode === 0) && ($timedOut === false);
         }
 
+        $ok = $success !== false;
+
+        $message = is_string($result['message'] ?? null) ? $result['message'] : 'Command executed.';
+        if ($ok === false) {
+            $message = $timedOut === true
+                ? 'Command timed out.'
+                : 'Command failed (non-zero exit code).';
+        }
+
         return $this->maybeStructuredResult($context, [
-            'ok' => true,
+            'ok' => $ok,
             'projectRoot' => $result['projectRoot'],
             'host' => $result['host'],
             'command' => $result['command'],
@@ -144,7 +159,7 @@ final class CliTools
             'allowWrite' => (bool) ($result['allowWrite'] ?? $allowWrite),
             'config' => $result['config'],
             'policy' => $result['policy'],
-            'message' => is_string($result['message'] ?? null) ? $result['message'] : 'Command executed.',
+            'message' => $message,
             'success' => $success,
             'exitCode' => is_int($exitCode) ? $exitCode : null,
             'stdout' => is_string($stdout) ? $stdout : null,
@@ -216,6 +231,35 @@ final class CliTools
             $config = KirbyMcpConfig::load($projectRoot);
 
             $deny = $config->cliDeny();
+
+            $dedicatedTool = self::DEDICATED_TOOL_COMMANDS[$command] ?? null;
+            if ($dedicatedTool !== null) {
+                return [
+                    'ok' => false,
+                    'projectRoot' => $projectRoot,
+                    'host' => $host,
+                    'command' => $command,
+                    'arguments' => $normalizedArgs,
+                    'allowWrite' => $allowWrite,
+                    'config' => [
+                        'path' => $config->path,
+                        'error' => $config->error,
+                        'allow' => $config->cliAllow(),
+                        'allowWrite' => $config->cliAllowWrite(),
+                        'deny' => $deny,
+                    ],
+                    'policy' => [
+                        'matchedDeny' => null,
+                        'matchedAllow' => null,
+                        'matchedAllowWrite' => null,
+                    ],
+                    'message' => "Command '{$command}' must be run through the dedicated MCP tool `{$dedicatedTool}`, which enforces confirmation/elicitation. It is not available via kirby_run_cli_command.",
+                    'cli' => null,
+                    'mcpJson' => null,
+                    'mcpJsonError' => null,
+                ];
+            }
+
             $decision = (new KirbyCliAllowlistPolicy($config))->evaluate($command, $allowWrite);
 
             if ($decision->matchedDeny !== null) {

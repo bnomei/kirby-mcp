@@ -63,6 +63,35 @@ final readonly class OAuthFileStore
         return is_array($decoded) ? $decoded : null;
     }
 
+    /** @return array<string, mixed>|null */
+    public function take(string $bucket, string $id): ?array
+    {
+        $path = $this->path($bucket, $id);
+        if (!is_file($path)) {
+            return null;
+        }
+
+        $claim = $path . '.' . bin2hex(random_bytes(6)) . '.claim';
+        if (!@rename($path, $claim)) {
+            return null;
+        }
+
+        $contents = @file_get_contents($claim);
+        @unlink($claim);
+
+        if (!is_string($contents)) {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
     public function delete(string $bucket, string $id): void
     {
         $path = $this->path($bucket, $id);

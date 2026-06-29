@@ -106,12 +106,17 @@ final class KirbyRuntimeContext implements RuntimeContextInterface
             $indexPhpMtime = is_int($mtime) ? $mtime : null;
         }
 
-        self::$rootsInspectionCache[$cacheKey] = new KirbyRootsInspectionCacheEntry(
-            inspection: $inspection,
-            inspectedAt: time(),
-            indexPhpPath: $indexPhpPath,
-            indexPhpMtime: $indexPhpMtime,
-        );
+        $succeeded = $inspection->cliResult->exitCode === 0
+            && trim($inspection->cliResult->stdout) !== '';
+
+        if ($succeeded) {
+            self::$rootsInspectionCache[$cacheKey] = new KirbyRootsInspectionCacheEntry(
+                inspection: $inspection,
+                inspectedAt: time(),
+                indexPhpPath: $indexPhpPath,
+                indexPhpMtime: $indexPhpMtime,
+            );
+        }
 
         return $inspection;
     }

@@ -30,6 +30,36 @@ it('initializes and returns guidance for a composer-based Kirby project', functi
     expect(SessionState::initCalled($session))->toBeTrue();
 });
 
+it('does not mark the session initialized when project init fails validation', function (): void {
+    $projectRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-init-' . bin2hex(random_bytes(8));
+    mkdir($projectRoot, 0777, true);
+
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $projectRoot);
+
+    $session = new Session(new InMemorySessionStore(60));
+    $context = new RequestContext($session, new CallToolRequest('kirby_init', []));
+
+    \Bnomei\KirbyMcp\Mcp\LoggingState::setLevel(\Mcp\Schema\Enum\LoggingLevel::Critical, $session);
+
+    try {
+        $threw = false;
+        try {
+            (new SessionTools())->init(context: $context);
+        } catch (\Mcp\Exception\ToolCallException) {
+            $threw = true;
+        }
+
+        expect($threw)->toBeTrue();
+        expect(SessionState::initCalled($session))->toBeFalse();
+    } finally {
+        putenv('KIRBY_MCP_PROJECT_ROOT');
+
+        if (is_dir($projectRoot)) {
+            @rmdir($projectRoot);
+        }
+    }
+});
+
 it('initializes global reference mode without a Kirby project', function (): void {
     putenv('KIRBY_MCP_PROJECT_ROOT');
 

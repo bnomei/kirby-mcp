@@ -35,7 +35,6 @@ use Bnomei\KirbyMcp\Mcp\Support\JsonMarkers;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Bnomei\KirbyMcp\Project\ProjectRootFinder;
-use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
 use Mcp\Server\Transport\Stdio\RunnerControl;
 use Mcp\Server\Transport\Stdio\RunnerState;
@@ -96,9 +95,8 @@ if ($globalMode !== true && is_string($projectRoot) && $projectRoot !== '') {
     if (is_string($detected) && $detected !== '') {
         putenv('KIRBY_MCP_PROJECT_ROOT=' . $detected);
     } elseif ($projectFlagProvided === true) {
-        // The user explicitly asked for project auto-detection with `--project`
-        // but we could not find a composer-based Kirby project root.
-        // Avoid writing to stdout/stderr because this is a stdio protocol server.
+        fwrite(STDERR, "Kirby MCP: --project was provided but no Kirby project root could be detected. Pass --project=/path/to/kirby-project, or fix the client's project configuration before reconnecting.\n");
+        exit(1);
     }
 }
 
@@ -231,7 +229,7 @@ if ($subcommand === 'install' || $subcommand === 'update') {
     }
 
     $payload = [
-        'ok' => $installResult->errors === [] && $configResult['error'] === null,
+        'ok' => $installResult->ok() && $configResult['error'] === null,
         'command' => $subcommand,
         'projectRoot' => $installResult->projectRoot,
         'commandsRoot' => $installResult->commandsRoot,

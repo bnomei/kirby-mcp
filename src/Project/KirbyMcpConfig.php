@@ -390,6 +390,9 @@ final readonly class KirbyMcpConfig
                 consentSnippet: $this->envString('KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT_SNIPPET')
                     ?? $this->stringValue($oauthProvider['consentSnippet'] ?? $oauthProvider['consent_snippet'] ?? null)
                     ?? KirbyMcpOAuthProviderConfig::DEFAULT_CONSENT_SNIPPET,
+                role: $this->envString('KIRBY_MCP_HTTP_OAUTH_PROVIDER_ROLE')
+                    ?? $this->stringValue($oauthProvider['role'] ?? null)
+                    ?? KirbyMcpOAuthProviderConfig::DEFAULT_ROLE,
             ),
         );
     }

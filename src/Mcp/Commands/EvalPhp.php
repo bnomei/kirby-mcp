@@ -157,8 +157,8 @@ final class EvalPhp extends RuntimeCommand
             restore_error_handler();
         }
 
-        if ($maxChars > 0 && strlen($stdout) > $maxChars) {
-            $stdout = substr($stdout, 0, $maxChars);
+        if ($maxChars > 0 && mb_strlen($stdout) > $maxChars) {
+            $stdout = mb_substr($stdout, 0, $maxChars);
             $stdoutTruncated = true;
         }
 
@@ -172,14 +172,19 @@ final class EvalPhp extends RuntimeCommand
         }
 
         if (is_string($encoded)) {
-            try {
-                $resultJson = json_decode($encoded, true, flags: JSON_THROW_ON_ERROR);
-            } catch (\JsonException) {
-                $resultJson = null;
+            if ($maxChars > 0 && mb_strlen($encoded) > $maxChars) {
+                $resultDump = mb_substr($encoded, 0, $maxChars);
+                $resultDumpTruncated = true;
+            } else {
+                try {
+                    $resultJson = json_decode($encoded, true, flags: JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    $resultJson = null;
+                }
             }
         }
 
-        if ($resultJson === null) {
+        if ($resultJson === null && $resultDump === null) {
             $dump = null;
             try {
                 $dump = var_export($resultValue, true);
@@ -188,8 +193,8 @@ final class EvalPhp extends RuntimeCommand
             }
 
             if (is_string($dump)) {
-                if ($maxChars > 0 && strlen($dump) > $maxChars) {
-                    $dump = substr($dump, 0, $maxChars);
+                if ($maxChars > 0 && mb_strlen($dump) > $maxChars) {
+                    $dump = mb_substr($dump, 0, $maxChars);
                     $resultDumpTruncated = true;
                 }
                 $resultDump = $dump;

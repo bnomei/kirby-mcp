@@ -50,6 +50,10 @@ final class FuzzySearch
     {
         $dist = levenshtein(mb_strtolower($needle), mb_strtolower($haystack));
 
+        if ($dist < 0) {
+            return false;
+        }
+
         return $dist <= $maxDist;
     }
 }

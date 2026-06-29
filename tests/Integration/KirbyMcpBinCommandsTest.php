@@ -67,6 +67,30 @@ it('supports vendor/bin-style install command', function (): void {
     }
 });
 
+it('fails closed when --project is given but no project root can be detected', function (): void {
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+
+    $emptyDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-noproject-' . bin2hex(random_bytes(8));
+    mkdir($emptyDir, 0777, true);
+
+    try {
+        $process = new Process(
+            command: [PHP_BINARY, $bin, '--project'],
+            cwd: $emptyDir,
+            env: ['KIRBY_MCP_PROJECT_ROOT' => false],
+            timeout: 15,
+        );
+
+        $process->run();
+
+        expect($process->getExitCode())->toBe(1);
+        expect($process->getErrorOutput())->toContain('--project was provided but no Kirby project root could be detected');
+    } finally {
+        @rmdir($emptyDir);
+    }
+});
+
 it('rejects global mode when combined with a project flag', function (): void {
     $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
     expect($bin)->not()->toBeFalse();

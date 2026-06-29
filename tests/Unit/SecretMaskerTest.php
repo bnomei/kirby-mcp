@@ -203,6 +203,46 @@ it('recursively masks secrets in arrays', function (): void {
     expect($result['nested']['deep']['token'])->toBe('[REDACTED]');
 });
 
+it('redacts plaintext values stored under sensitive keys regardless of format', function (): void {
+    $masker = new SecretMasker();
+
+    $input = [
+        'db' => [
+            'user' => 'root',
+            'password' => 'S3cretDbPass!',
+        ],
+        'env' => [
+            'APP_SECRET' => 'plain-non-token-value',
+            'access_token' => 'opaque-value-123',
+            'apiKey' => 'just-some-string',
+        ],
+        'flags' => [
+            'auth' => true,
+            'author' => 'Jane Doe',
+            'token_count' => 42,
+        ],
+    ];
+
+    $result = $masker->maskRecursive($input);
+
+    expect($result['db']['user'])->toBe('root');
+    expect($result['db']['password'])->toBe('[REDACTED]');
+    expect($result['env']['APP_SECRET'])->toBe('[REDACTED]');
+    expect($result['env']['access_token'])->toBe('[REDACTED]');
+    expect($result['env']['apiKey'])->toBe('[REDACTED]');
+    expect($result['flags']['auth'])->toBeTrue();
+    expect($result['flags']['author'])->toBe('Jane Doe');
+    expect($result['flags']['token_count'])->toBe(42);
+});
+
+it('does not redact sensitive keys when masking is disabled', function (): void {
+    $masker = new SecretMasker([]);
+
+    $result = $masker->maskRecursive(['password' => 'S3cretDbPass!']);
+
+    expect($result['password'])->toBe('S3cretDbPass!');
+});
+
 it('can be disabled with empty patterns array', function (): void {
     $masker = new SecretMasker([]);
 

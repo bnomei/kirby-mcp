@@ -69,12 +69,13 @@ final class RuntimeCommandIntegrationCli extends CLI
         private array $commands = [],
         private array $definitions = [],
         private string $cliVersion = '0.0.0-test',
+        array $cliRoots = [],
     ) {
         $this->kirby = $kirby;
         $this->cwd = $cwd ?? cmsPath();
         $this->climate = $climate ?? new RuntimeCommandIntegrationClimate();
         $this->options = [];
-        $this->roots = [];
+        $this->roots = $cliRoots;
     }
 
     public function arg(string $name): mixed
@@ -289,6 +290,50 @@ it('reads config options via the config:get command', function (): void {
 
         expect($payload['ok'])->toBeTrue();
         expect($payload['value'])->toBe('Closure type');
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('redacts sensitive config option values in config:get', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        $secret = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.secretoption',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($secret['ok'])->toBeTrue();
+        expect($secret['redacted'] ?? null)->toBeTrue();
+        expect($secret['value'])->toBe('[REDACTED]');
+        expect($secret['value'])->not()->toContain('super-secret-value');
+        expect($secret['line'])->not()->toContain('super-secret-value');
+
+        $apiKey = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.apiKey',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($apiKey['redacted'] ?? null)->toBeTrue();
+        expect($apiKey['value'])->toBe('[REDACTED]');
+
+        $plain = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'path' => 'vendorname.pluginname.someoption',
+            ], $app);
+
+            ConfigGet::run($cli);
+        });
+
+        expect($plain['redacted'] ?? null)->toBeFalse();
+        expect($plain['value'])->toBe('5');
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
     }
@@ -603,6 +648,50 @@ it('paginates collections with limit', function (): void {
         expect($payload['pagination']['limit'])->toBe(1);
         expect($payload['pagination']['returned'])->toBe(1);
         expect($payload['pagination']['total'])->toBeGreaterThanOrEqual(1);
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('rejects non-decimal pagination limits instead of disabling pagination', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+
+    try {
+        foreach (['0x10', '1e2', '10.5', 'sixteen'] as $bad) {
+            $payload = runRuntimeCommand(function () use ($app, $bad): void {
+                $cli = new RuntimeCommandIntegrationCli([
+                    'limit' => $bad,
+                ], $app);
+
+                Collections::run($cli);
+            });
+
+            expect($payload['ok'])->toBeFalse();
+            expect($payload['error']['message'] ?? '')->toBe('--limit must be a base-10 integer.');
+        }
+
+        $cursorPayload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'cursor' => '0x1',
+            ], $app);
+
+            Collections::run($cli);
+        });
+
+        expect($cursorPayload['ok'])->toBeFalse();
+        expect($cursorPayload['error']['message'] ?? '')->toBe('--cursor must be a base-10 integer.');
+
+        $ok = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'limit' => '1',
+            ], $app);
+
+            Collections::run($cli);
+        });
+
+        expect($ok['ok'])->toBeTrue();
+        expect($ok['pagination']['limit'])->toBe(1);
+        expect($ok['pagination']['returned'])->toBe(1);
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
     }
@@ -1405,7 +1494,9 @@ it('executes eval code when enabled and confirm=true', function (): void {
         expect($payload['ok'])->toBeTrue();
         expect($payload['stdout'])->toBe('xxx');
         expect($payload['stdoutTruncated'])->toBeTrue();
-        expect($payload['return']['json'] ?? null)->toBe(['value' => 123]);
+        expect($payload['return']['json'] ?? null)->toBeNull();
+        expect($payload['return']['dump'] ?? null)->toBe('{"v');
+        expect($payload['return']['dumpTruncated'] ?? null)->toBeTrue();
         expect($payload['return']['type'] ?? null)->toBe('array');
         expect($payload['code'] ?? null)->toBe("echo str_repeat('x', 5); return ['value' => 123];");
 
@@ -1420,6 +1511,83 @@ it('executes eval code when enabled and confirm=true', function (): void {
 
         expect($missing['ok'])->toBeFalse();
         expect($missing['error']['message'] ?? null)->toBe('Missing eval code argument.');
+    } finally {
+        if ($previousEnv === false) {
+            putenv(EvalPhp::ENV_ENABLE_EVAL);
+        } else {
+            putenv(EvalPhp::ENV_ENABLE_EVAL . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('truncates eval stdout by characters without splitting multibyte UTF-8', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(EvalPhp::ENV_ENABLE_EVAL);
+    putenv(EvalPhp::ENV_ENABLE_EVAL . '=1');
+
+    try {
+        $payload = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 3,
+                'code' => "<?php echo 'aa\u{00e9}bb';",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($payload['ok'])->toBeTrue();
+        expect($payload['stdoutTruncated'])->toBeTrue();
+        expect($payload['stdout'])->toBe("aa\u{00e9}");
+        expect(mb_check_encoding($payload['stdout'], 'UTF-8'))->toBeTrue();
+    } finally {
+        if ($previousEnv === false) {
+            putenv(EvalPhp::ENV_ENABLE_EVAL);
+        } else {
+            putenv(EvalPhp::ENV_ENABLE_EVAL . '=' . $previousEnv);
+        }
+
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+    }
+});
+
+it('keeps small JSON eval returns intact but bounds oversized ones by --max', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $previousEnv = getenv(EvalPhp::ENV_ENABLE_EVAL);
+    putenv(EvalPhp::ENV_ENABLE_EVAL . '=1');
+
+    try {
+        $small = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 20000,
+                'code' => "<?php return ['value' => 123];",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($small['ok'])->toBeTrue();
+        expect($small['return']['json'] ?? null)->toBe(['value' => 123]);
+        expect($small['return']['dump'] ?? null)->toBeNull();
+        expect($small['return']['dumpTruncated'] ?? null)->toBeFalse();
+
+        $large = runRuntimeCommand(function () use ($app): void {
+            $cli = new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'max' => 50,
+                'code' => "<?php return array_fill(0, 100, 'abcdef');",
+            ], $app);
+
+            EvalPhp::run($cli);
+        });
+
+        expect($large['ok'])->toBeTrue();
+        expect($large['return']['json'] ?? null)->toBeNull();
+        expect($large['return']['dumpTruncated'] ?? null)->toBeTrue();
+        expect(strlen((string) ($large['return']['dump'] ?? '')))->toBe(50);
     } finally {
         if ($previousEnv === false) {
             putenv(EvalPhp::ENV_ENABLE_EVAL);
@@ -1596,6 +1764,36 @@ it('installs runtime commands into a temp commands root', function (): void {
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
         removeRuntimeCommandsDir($commandsRoot);
+    }
+});
+
+it('installs runtime commands into commands.local when it diverges from commands', function (): void {
+    $localRoot = runtimeCommandsTempDir('install-local');
+    $plainRoot = runtimeCommandsTempDir('install-plain');
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp($plainRoot);
+    $climate = new RuntimeCommandIntegrationClimate();
+
+    try {
+        $cli = new RuntimeCommandIntegrationCli(
+            args: ['force' => true],
+            kirby: $app,
+            cwd: cmsPath(),
+            climate: $climate,
+            cliRoots: ['commands.local' => $localRoot, 'commands' => $plainRoot],
+        );
+
+        Install::run($cli);
+
+        $blueprint = DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php';
+        expect(is_file($localRoot . $blueprint))->toBeTrue();
+        expect(is_file($plainRoot . $blueprint))->toBeFalse();
+
+        $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $climate->messages));
+        expect($combined)->toContain('Target: ' . rtrim($localRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
+    } finally {
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
+        removeRuntimeCommandsDir($localRoot);
+        removeRuntimeCommandsDir($plainRoot);
     }
 });
 

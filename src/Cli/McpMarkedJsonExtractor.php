@@ -22,8 +22,9 @@ final class McpMarkedJsonExtractor
         }
 
         $start += strlen(JsonMarkers::START);
-        $end = strpos($stdout, JsonMarkers::END, $start);
-        if ($end === false) {
+
+        $end = self::lastStandaloneMarkerOffset($stdout, JsonMarkers::END, $start);
+        if ($end === null) {
             return null;
         }
 
@@ -33,5 +34,22 @@ final class McpMarkedJsonExtractor
         }
 
         return Json::decodeString($json);
+    }
+
+    private static function lastStandaloneMarkerOffset(string $stdout, string $marker, int $from): ?int
+    {
+        $pattern = '/^' . preg_quote($marker, '/') . '\r?$/m';
+        if (preg_match_all($pattern, $stdout, $matches, PREG_OFFSET_CAPTURE) >= 1) {
+            for ($i = count($matches[0]) - 1; $i >= 0; $i--) {
+                $offset = $matches[0][$i][1];
+                if ($offset >= $from) {
+                    return $offset;
+                }
+            }
+        }
+
+        $fallback = strrpos($stdout, $marker, $from);
+
+        return $fallback === false ? null : $fallback;
     }
 }

@@ -10,6 +10,32 @@ use Throwable;
 
 final class ConfigGet extends RuntimeCommand
 {
+    private const REDACTED = '[REDACTED]';
+
+    /** @var array<int, string> */
+    private const SENSITIVE_SUBSTRINGS = [
+        'password',
+        'passwd',
+        'passphrase',
+        'secret',
+        'token',
+        'apikey',
+        'api_key',
+        'credential',
+        'privatekey',
+        'private_key',
+    ];
+
+    /** @var array<int, string> */
+    private const SENSITIVE_SEGMENTS = [
+        'key',
+        'auth',
+        'pwd',
+        'dsn',
+        'salt',
+        'credentials',
+    ];
+
     /**
      * @return array{
      *   description: string,
@@ -61,6 +87,12 @@ final class ConfigGet extends RuntimeCommand
             $value = $kirby->option($path);
             $string = self::stringifyValue($value);
 
+            $redacted = false;
+            if (self::isSensitiveOptionPath($path) && $string !== '' && $string !== 'null') {
+                $string = self::REDACTED;
+                $redacted = true;
+            }
+
             $host = self::hostFromEnv();
             $prefix = is_string($host) && $host !== '' ? '[' . $host . '] ' : '';
 
@@ -71,6 +103,7 @@ final class ConfigGet extends RuntimeCommand
                 'host' => $host !== '' ? $host : null,
                 'path' => $path,
                 'value' => $string,
+                'redacted' => $redacted,
                 'line' => $line,
             ]);
         } catch (Throwable $exception) {
@@ -80,6 +113,28 @@ final class ConfigGet extends RuntimeCommand
                 'error' => self::errorArray($exception, self::traceForCli($cli, $exception)),
             ]);
         }
+    }
+
+    private static function isSensitiveOptionPath(string $path): bool
+    {
+        foreach (explode('.', strtolower($path)) as $segment) {
+            $segment = trim($segment);
+            if ($segment === '') {
+                continue;
+            }
+
+            if (in_array($segment, self::SENSITIVE_SEGMENTS, true)) {
+                return true;
+            }
+
+            foreach (self::SENSITIVE_SUBSTRINGS as $needle) {
+                if (str_contains($segment, $needle)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private static function hostFromEnv(): string

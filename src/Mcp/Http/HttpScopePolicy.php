@@ -19,14 +19,69 @@ final class HttpScopePolicy
             'tools/list',
             'resources/list',
             'resources/templates/list',
-            'resources/read',
             'prompts/list',
             'prompts/get',
             'completion/complete' => [HttpAuthScopes::READ],
             'logging/setLevel' => [HttpAuthScopes::ADMIN],
-            'tools/call' => $this->toolScopes($this->stringParam($params, 'name')),
+            'tools/call' => $this->toolCallScopes($params),
+            'resources/read' => $this->resourceScopes($this->stringParam($params, 'uri')),
             default => [HttpAuthScopes::READ],
         };
+    }
+
+    /**
+     * @param array<string, mixed>|null $params
+     *
+     * @return list<string>
+     */
+    public function toolCallScopes(?array $params): array
+    {
+        $name = $this->stringParam($params, 'name');
+        $scopes = $this->toolScopes($name);
+
+        if ($name === 'kirby_run_cli_command') {
+            if ($this->boolArgument($params, 'allowWrite') === true && !in_array(HttpAuthScopes::WRITE, $scopes, true)) {
+                $scopes[] = HttpAuthScopes::WRITE;
+            }
+
+            $command = $this->stringArgument($params, 'command');
+            if (is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
+                $scopes[] = HttpAuthScopes::RUNTIME;
+            }
+        }
+
+        return $scopes;
+    }
+
+    /** @return list<string> */
+    public function resourceScopes(?string $uri): array
+    {
+        if ($uri === null || $uri === '') {
+            return [HttpAuthScopes::READ];
+        }
+
+        $normalized = strtolower(trim($uri));
+
+        if (str_contains($normalized, '/update-schema')) {
+            return [HttpAuthScopes::READ];
+        }
+
+        $runtimePrefixes = [
+            'kirby://page/content',
+            'kirby://site/content',
+            'kirby://file/content',
+            'kirby://user/content',
+            'kirby://config/',
+            'kirby://blueprint/',
+        ];
+
+        foreach ($runtimePrefixes as $prefix) {
+            if (str_starts_with($normalized, $prefix)) {
+                return [HttpAuthScopes::RUNTIME];
+            }
+        }
+
+        return [HttpAuthScopes::READ];
     }
 
     /**
@@ -87,6 +142,7 @@ final class HttpScopePolicy
             'kirby_read_user_content',
             'kirby_routes_index',
             'kirby_dump_log_tail',
+            'kirby_blueprint_read',
             'kirby_blueprints_loaded',
         ], true) || str_starts_with($toolName, 'kirby_runtime_') || str_contains($toolName, '_render_')) {
             return [HttpAuthScopes::RUNTIME];
@@ -101,6 +157,40 @@ final class HttpScopePolicy
     private function stringParam(?array $params, string $name): ?string
     {
         $value = $params[$name] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /** @param array<string, mixed>|null $params */
+    private function boolArgument(?array $params, string $name): ?bool
+    {
+        $arguments = $params['arguments'] ?? null;
+        if ($arguments instanceof \stdClass) {
+            $arguments = (array) $arguments;
+        }
+
+        if (!is_array($arguments)) {
+            return null;
+        }
+
+        $value = $arguments[$name] ?? null;
+
+        return is_bool($value) ? $value : null;
+    }
+
+    /** @param array<string, mixed>|null $params */
+    private function stringArgument(?array $params, string $name): ?string
+    {
+        $arguments = $params['arguments'] ?? null;
+        if ($arguments instanceof \stdClass) {
+            $arguments = (array) $arguments;
+        }
+
+        if (!is_array($arguments)) {
+            return null;
+        }
+
+        $value = $arguments[$name] ?? null;
 
         return is_string($value) ? $value : null;
     }

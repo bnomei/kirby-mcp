@@ -628,9 +628,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -869,9 +869,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -942,9 +942,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -1014,9 +1014,9 @@ final class RuntimeTools
             ]));
         }
 
-        $payload = array_merge($result->payload, [
+        $payload = self::contentAsObject(array_merge($result->payload, [
             'cli' => $result->cli(),
-        ]);
+        ]));
 
         return $this->maybeStructuredResult($context, $payload);
     }
@@ -1896,6 +1896,16 @@ final class RuntimeTools
         }
 
         return $this->maybeStructuredResult($context, $response);
+    }
+
+    /** @param array<string, mixed> $payload */
+    private static function contentAsObject(array $payload): array
+    {
+        if (($payload['content'] ?? null) === []) {
+            $payload['content'] = new \stdClass();
+        }
+
+        return $payload;
     }
 
     /**
