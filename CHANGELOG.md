@@ -5,6 +5,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-06-29
+
 - Added `KIRBY_MCP_PHP_BINARY` to override the PHP executable used when Kirby CLI calls are wrapped with MCP's prepend file, useful for PHP-FPM deployments where `PHP_BINARY` is not the CLI binary.
 
 ## [1.10.0] - 2026-06-29
