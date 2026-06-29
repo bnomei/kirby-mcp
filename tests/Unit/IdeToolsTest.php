@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
+use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 
 /**
  * @param array<string, string> $templates
@@ -12,6 +13,7 @@ use Bnomei\KirbyMcp\Mcp\Tools\IdeTools;
 function withIdeToolsStatusProject(array $templates, array $snippets, callable $callback): mixed
 {
     $previousRoot = getenv(ProjectContext::ENV_PROJECT_ROOT);
+    $previousKirbyBin = getenv(KirbyCliRunner::ENV_KIRBY_BIN);
 
     $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-ide-status-' . bin2hex(random_bytes(6));
     mkdir($root . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'templates', 0777, true);
@@ -21,6 +23,7 @@ function withIdeToolsStatusProject(array $templates, array $snippets, callable $
     ideToolsWritePhpFiles($root . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'snippets', $snippets);
 
     putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $root);
+    putenv(KirbyCliRunner::ENV_KIRBY_BIN);
 
     try {
         return $callback($root);
@@ -29,6 +32,12 @@ function withIdeToolsStatusProject(array $templates, array $snippets, callable $
             putenv(ProjectContext::ENV_PROJECT_ROOT);
         } else {
             putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $previousRoot);
+        }
+
+        if ($previousKirbyBin === false) {
+            putenv(KirbyCliRunner::ENV_KIRBY_BIN);
+        } else {
+            putenv(KirbyCliRunner::ENV_KIRBY_BIN . '=' . $previousKirbyBin);
         }
 
         ideToolsRemoveDirectory($root);
