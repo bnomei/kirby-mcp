@@ -55,6 +55,7 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - SDK v0.6 renames `Mcp\Schema\Resource` to `ResourceDefinition` and removes the manual-registration flag from `Registry::registerResource()`; keep sized manual resources registered after discovery so they override discovered definitions.
 - SDK v0.6 adds default Streamable HTTP middleware. `HttpMcpHandler` keeps this repo's auth/origin/CORS wrapper authoritative and explicitly installs protocol-version validation in the SDK transport.
 - Write tools that mutate content exposed via `kirby://...` resources should emit `notifications/resources/updated` for subscribed URIs (session-scoped subscriptions).
+- `kirby_ide_helpers_status` template/snippet PHPDoc warnings must be usage-aware: only PHP-code references to `$kirby`, `$site`, and `$page` require matching `@var` hints.
 - `resources/list` entries must stay Codex-compatible plain descriptors: `uri`, `name`, `title`, `description`, and `mimeType` only. Strip descriptor-level `annotations`, `size`, `icons`, and `_meta` at list serialization time; keep richer metadata on `resources/read` contents when available.
 - Resource and resource-template definitions should include MCP `title` values; keep attribute titles and sized manual `ResourceDefinition` titles aligned.
 - HTTP `/mcp` requests are auth-gated before MCP protocol handling: validate Origin, reject query-string credentials, require Bearer auth, attach `oauth.*` request metadata, and enforce operation scopes without hiding tools/resources.

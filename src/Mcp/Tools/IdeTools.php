@@ -29,6 +29,13 @@ final class IdeTools
 {
     use StructuredToolResult;
 
+    /** @var array<string, string> */
+    private const KIRBY_TEMPLATE_VAR_HINTS = [
+        '$kirby' => 'Kirby\\Cms\\App',
+        '$site' => 'Kirby\\Cms\\Site',
+        '$page' => 'Kirby\\Cms\\Page',
+    ];
+
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
     ) {
@@ -382,13 +389,13 @@ final class IdeTools
      *     total: int,
      *     withKirbyVarHints: int,
      *     missingKirbyVarHints: int,
-     *     missing: array<int, array{id: string, relativePath: string|null, absolutePath: string|null}>
+     *     missing: array<int, array{id: string, relativePath: string|null, absolutePath: string|null, missingVars?: array<int, string>}>
      *   },
      *   snippets: array{
      *     total: int,
      *     withKirbyVarHints: int,
      *     missingKirbyVarHints: int,
-     *     missing: array<int, array{id: string, relativePath: string|null, absolutePath: string|null}>
+     *     missing: array<int, array{id: string, relativePath: string|null, absolutePath: string|null, missingVars?: array<int, string>}>
      *   },
      *   controllers: array{
      *     total: int,
@@ -1255,30 +1262,40 @@ PHP;
 
     /**
      * @param array<string, array{id?:string, name?:string, absolutePath?:string, relativePath?:string}> $entries
-     * @return array{total:int, withKirbyVarHints:int, missingKirbyVarHints:int, missing: array<int, array{id:string, relativePath: string|null, absolutePath: string|null}>}
+     * @return array{total:int, withKirbyVarHints:int, missingKirbyVarHints:int, missing: array<int, array{id:string, relativePath: string|null, absolutePath: string|null, missingVars: array<int, string>}>}
      */
     private function kirbyVarHintsCoverage(array $entries, bool $withDetails, int $limit, int $cacheTtlSeconds): array
     {
         $total = 0;
         $withHints = 0;
+        $missingHints = 0;
         $missing = [];
 
         foreach ($entries as $id => $entry) {
             $total++;
 
             $absolutePath = $entry['absolutePath'] ?? null;
-            $hasHints = is_string($absolutePath) ? $this->hasKirbyVarHints($absolutePath, $cacheTtlSeconds) : false;
+            $hintInfo = is_string($absolutePath) ? $this->kirbyVarHintInfo($absolutePath, $cacheTtlSeconds) : [
+                'usedVars' => [],
+                'hintedVars' => [],
+                'missingVars' => [],
+            ];
 
-            if ($hasHints) {
-                $withHints++;
+            if ($hintInfo['missingVars'] === []) {
+                if ($hintInfo['usedVars'] !== []) {
+                    $withHints++;
+                }
                 continue;
             }
+
+            $missingHints++;
 
             if (count($missing) < max(0, $limit)) {
                 $missing[] = [
                     'id' => is_string($entry['id'] ?? null) ? $entry['id'] : (is_string($id) ? $id : ''),
                     'relativePath' => is_string($entry['relativePath'] ?? null) ? $entry['relativePath'] : null,
                     'absolutePath' => $withDetails ? (is_string($absolutePath) ? $absolutePath : null) : null,
+                    'missingVars' => $hintInfo['missingVars'],
                 ];
             }
         }
@@ -1286,7 +1303,7 @@ PHP;
         return [
             'total' => $total,
             'withKirbyVarHints' => $withHints,
-            'missingKirbyVarHints' => max(0, $total - $withHints),
+            'missingKirbyVarHints' => $missingHints,
             'missing' => $missing,
         ];
     }
@@ -1539,39 +1556,105 @@ PHP;
         return ['isPageModel' => true, 'typed' => false];
     }
 
-    private function hasKirbyVarHints(string $absolutePath, int $cacheTtlSeconds): bool
+    /**
+     * @return array{usedVars: array<int, string>, hintedVars: array<int, string>, missingVars: array<int, string>}
+     */
+    private function kirbyVarHintInfo(string $absolutePath, int $cacheTtlSeconds): array
     {
         $mtime = @filemtime($absolutePath);
         $cacheKey = null;
         if (is_int($mtime) && $cacheTtlSeconds > 0) {
-            $cacheKey = 'ide:kirbyVarHints:' . $absolutePath . ':' . $mtime;
+            $cacheKey = 'ide:kirbyVarHintInfo:' . $absolutePath . ':' . $mtime;
         }
 
         if (is_string($cacheKey)) {
-            return (bool) StaticCache::remember($cacheKey, function () use ($absolutePath): bool {
-                $head = $this->readFileHead($absolutePath, 8192);
-                if ($head === null || $head === '') {
-                    return false;
-                }
-
-                $hasKirby = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\App\\s+\\$kirby\\b/', $head) === 1;
-                $hasSite = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\Site\\s+\\$site\\b/', $head) === 1;
-                $hasPage = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\Page\\s+\\$page\\b/', $head) === 1;
-
-                return $hasKirby && $hasSite && $hasPage;
+            /** @var array{usedVars: array<int, string>, hintedVars: array<int, string>, missingVars: array<int, string>} $cached */
+            $cached = StaticCache::remember($cacheKey, function () use ($absolutePath): array {
+                return $this->kirbyVarHintInfoUncached($absolutePath);
             }, $cacheTtlSeconds);
+
+            return $cached;
         }
 
-        $head = $this->readFileHead($absolutePath, 8192);
-        if ($head === null || $head === '') {
-            return false;
+        return $this->kirbyVarHintInfoUncached($absolutePath);
+    }
+
+    /**
+     * @return array{usedVars: array<int, string>, hintedVars: array<int, string>, missingVars: array<int, string>}
+     */
+    private function kirbyVarHintInfoUncached(string $absolutePath): array
+    {
+        $contents = @file_get_contents($absolutePath);
+        if (!is_string($contents) || $contents === '') {
+            return [
+                'usedVars' => [],
+                'hintedVars' => [],
+                'missingVars' => [],
+            ];
         }
 
-        $hasKirby = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\App\\s+\\$kirby\\b/', $head) === 1;
-        $hasSite = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\Site\\s+\\$site\\b/', $head) === 1;
-        $hasPage = preg_match('/@var\\s+\\\\?Kirby\\\\Cms\\\\Page\\s+\\$page\\b/', $head) === 1;
+        $usedVars = $this->usedKirbyTemplateVars($contents);
+        $hintedVars = $this->hintedKirbyTemplateVars(substr($contents, 0, 8192));
+        $hintedLookup = array_fill_keys($hintedVars, true);
 
-        return $hasKirby && $hasSite && $hasPage;
+        $missingVars = [];
+        foreach ($usedVars as $usedVar) {
+            if (!isset($hintedLookup[$usedVar])) {
+                $missingVars[] = $usedVar;
+            }
+        }
+
+        return [
+            'usedVars' => $usedVars,
+            'hintedVars' => $hintedVars,
+            'missingVars' => $missingVars,
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function usedKirbyTemplateVars(string $contents): array
+    {
+        $used = [];
+        $tokens = token_get_all($contents);
+
+        foreach ($tokens as $token) {
+            if (!is_array($token) || ($token[0] ?? null) !== T_VARIABLE) {
+                continue;
+            }
+
+            $name = $token[1] ?? null;
+            if (is_string($name) && isset(self::KIRBY_TEMPLATE_VAR_HINTS[$name])) {
+                $used[$name] = true;
+            }
+        }
+
+        $out = [];
+        foreach (array_keys(self::KIRBY_TEMPLATE_VAR_HINTS) as $varName) {
+            if (isset($used[$varName])) {
+                $out[] = $varName;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function hintedKirbyTemplateVars(string $head): array
+    {
+        $hinted = [];
+
+        foreach (self::KIRBY_TEMPLATE_VAR_HINTS as $varName => $type) {
+            $pattern = '/@var\\s+\\\\?' . preg_quote($type, '/') . '\\s+' . preg_quote($varName, '/') . '\\b/';
+            if (preg_match($pattern, $head) === 1) {
+                $hinted[] = $varName;
+            }
+        }
+
+        return $hinted;
     }
 
     private function readFileHead(string $path, int $maxBytes): ?string

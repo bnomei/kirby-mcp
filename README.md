@@ -242,7 +242,7 @@ In global reference mode (`kirby-mcp --global`), the exposed surface is intentio
 - `kirby_eval` — execute PHP in Kirby runtime for quick inspection, requires enable plus confirm
 - `kirby_query_dot` — evaluate Kirby query language (dot-notation) strings, requires confirm and can be disabled via config
 - `kirby_generate_ide_helpers` — generate regeneratable IDE helper files into `.kirby-mcp/`
-- `kirby_ide_helpers_status` — report missing template/snippet PHPDoc `@var` hints + helper file freshness (mtime-based)
+- `kirby_ide_helpers_status` — report missing template/snippet PHPDoc `@var` hints for used Kirby globals + helper file freshness (mtime-based)
 - `kirby_info` — project runtime info, composer audit and local environment detection
 - `kirby_init` — session guidance plus project-specific audit, call once per session
 - `kirby_search` — search the bundled local Kirby knowledge base markdown files (preferred)
