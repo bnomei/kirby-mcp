@@ -142,6 +142,7 @@ final class HttpScopePolicy
             'kirby_read_user_content',
             'kirby_routes_index',
             'kirby_dump_log_tail',
+            'kirby_blueprint_read',
             'kirby_blueprints_loaded',
         ], true) || str_starts_with($toolName, 'kirby_runtime_') || str_contains($toolName, '_render_')) {
             return [HttpAuthScopes::RUNTIME];

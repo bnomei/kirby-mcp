@@ -217,12 +217,27 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
     expect($adminCall->getStatusCode())->toBe(403)
         ->and((string) $adminCall->getBody())->toContain(HttpAuthScopes::ADMIN);
 
+    $runtimeToolCall = $handler->handle(
+        $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Authorization', 'Bearer read-token')
+            ->withHeader('Mcp-Session-Id', $sessionId)
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('tools/call', 6, [
+                'name' => 'kirby_blueprint_read',
+                'arguments' => ['id' => 'pages/home'],
+            ])))
+    );
+
+    expect($runtimeToolCall->getStatusCode())->toBe(403)
+        ->and($runtimeToolCall->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope')
+        ->and((string) $runtimeToolCall->getBody())->toContain(HttpAuthScopes::RUNTIME);
+
     $loggingCall = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Authorization', 'Bearer read-token')
             ->withHeader('Mcp-Session-Id', $sessionId)
-            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('logging/setLevel', 6, [
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('logging/setLevel', 7, [
                 'level' => 'debug',
             ])))
     );
@@ -235,7 +250,7 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Authorization', 'Bearer read-token')
             ->withHeader('Mcp-Session-Id', $sessionId)
-            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 7, [
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 8, [
                 'uri' => 'kirby://page/content/home',
             ])))
     );
@@ -249,7 +264,7 @@ it('keeps tools discoverable but rejects calls when the bearer token lacks opera
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Authorization', 'Bearer read-token')
             ->withHeader('Mcp-Session-Id', $sessionId)
-            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 8, [
+            ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/read', 9, [
                 'uri' => 'kirby://kb',
             ])))
     );

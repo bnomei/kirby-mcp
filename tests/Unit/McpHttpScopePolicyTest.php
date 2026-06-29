@@ -23,6 +23,7 @@ it('classifies actual sensitive tools into runtime write execute and admin scope
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_render_page']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_read_page_content']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_routes_index']))->toBe([HttpAuthScopes::RUNTIME])
+        ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_blueprint_read']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_blueprints_loaded']))->toBe([HttpAuthScopes::RUNTIME])
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_update_page_content']))->toBe([HttpAuthScopes::WRITE])
         ->and($policy->requiredScopes('tools/call', ['name' => 'kirby_generate_ide_helpers']))->toBe([HttpAuthScopes::WRITE])
