@@ -5,6 +5,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-06-29
+
+- Fixed copied Kirby MCP and OAuth route closures so Kirby 5.4.x can bind route actions before invocation. thanks @dfsoeten
+- Fixed `kirby_ide_helpers_status` template/snippet PHPDoc warnings so `@var` hints are required only for used `$kirby`, `$site`, and `$page` globals. thanks @sigtrygg-space
+
 ## [1.10.1] - 2026-06-29
 
 - Added `KIRBY_MCP_PHP_BINARY` to override the PHP executable used when Kirby CLI calls are wrapped with MCP's prepend file, useful for PHP-FPM deployments where `PHP_BINARY` is not the CLI binary.
