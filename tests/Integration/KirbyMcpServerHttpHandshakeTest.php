@@ -313,6 +313,25 @@ it('rejects malformed MCP session ids before delegating non-GET requests', funct
     }
 });
 
+it('rejects malformed JSON-RPC payloads before MCP dispatch', function (): void {
+    $factory = new HttpFactory();
+    $sessionDir = sys_get_temp_dir() . '/kirby-mcp-http-test-' . bin2hex(random_bytes(6));
+    $sessionStore = new FileSessionStore($sessionDir);
+    $handler = new HttpMcpHandler(new ServerFactory(), $sessionStore, sharedToken: 'local-secret');
+
+    $response = $handler->handle(
+        kirbyMcpHttpAuthorize(
+            $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($factory->createStream('{"jsonrpc":'))
+        )
+    );
+
+    expect($response->getStatusCode())->toBe(200);
+    $payload = kirbyMcpHttpDecodeResponse($response);
+    expect($payload['error']['code'] ?? null)->toBe(-32700);
+});
+
 it('enforces Streamable HTTP session header semantics for missing and unknown sessions', function (): void {
     $factory = new HttpFactory();
     $sessionDir = sys_get_temp_dir() . '/kirby-mcp-http-test-' . bin2hex(random_bytes(6));
