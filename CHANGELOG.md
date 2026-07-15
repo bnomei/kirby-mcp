@@ -5,6 +5,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-15
+
+- Updated the MCP PHP SDK dependency to `mcp/sdk` v0.7.0, including hardened malformed JSON-RPC parsing and session-header handling.
+- Added HTTP regression coverage for malformed JSON-RPC requests.
+- Refreshed compatible Composer dependencies, including Kirby CMS 5.5.2, Kirby CLI 1.10.0, Guzzle PSR-7 2.12.5, and Pest 4.7.5.
+
 ## [1.10.2] - 2026-06-29
 
 - Fixed copied Kirby MCP and OAuth route closures so Kirby 5.4.x can bind route actions before invocation. thanks @dfsoeten
