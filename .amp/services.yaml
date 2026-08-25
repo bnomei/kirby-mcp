@@ -1,0 +1,15 @@
+services:
+  kirby:
+    command: >-
+      test -s .amp/secrets/kirby-mcp-token &&
+      KIRBY_MCP_FIXTURE_HTTP_ROUTE=1
+      KIRBY_MCP_HTTP_ENABLED=1
+      KIRBY_MCP_HTTP_AUTH_MODE=remote-token
+      KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH="sha256:$(sha256sum .amp/secrets/kirby-mcp-token | cut -d ' ' -f1)"
+      KIRBY_MCP_HTTP_REMOTE_TOKEN_ID=orb-fixture
+      KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES=kirby-mcp:read,kirby-mcp:runtime
+      php -S "0.0.0.0:$PORT" -t tests/cms "$PWD/.amp/kirby-router.php"
+    health: /
+    portal:
+      title: Kirby test fixture
+      description: Generated Starterkit with a scoped, bearer-authenticated MCP route at /mcp.

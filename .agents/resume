@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This repository has no services or credentials to reconnect after an orb wakes.
-:
+# Generate a credential after orb activation so it is never captured in the shared
+# project snapshot. The portal service receives only the token's SHA-256 hash.
+secret_dir=.amp/secrets
+token_file="$secret_dir/kirby-mcp-token"
+
+mkdir -p "$secret_dir"
+
+if [[ ! -s "$token_file" ]]; then
+    umask 077
+    php -r 'echo bin2hex(random_bytes(32));' > "$token_file"
+fi
+
+chmod 600 "$token_file"

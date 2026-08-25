@@ -14,6 +14,7 @@ coverage.xml
 .frigg
 specs/
 .amp/portals/*
+.amp/secrets/*
 
 !tests/fixture/.kirby-mcp/
 !tests/fixture/.kirby-mcp/**

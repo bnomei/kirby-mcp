@@ -41,13 +41,15 @@ final class KirbyMcpResponse extends KirbyResponse
     public function send(): string
     {
         if (headers_sent() === false) {
-            http_response_code($this->response->getStatusCode());
-
             foreach ($this->response->getHeaders() as $name => $values) {
                 foreach ($values as $value) {
                     header($name . ': ' . $value, false);
                 }
             }
+
+            // WWW-Authenticate implicitly changes PHP's status to 401, so restore
+            // the authoritative PSR response status after emitting all headers.
+            http_response_code($this->response->getStatusCode());
         }
 
         return (string) $this->response->getBody();

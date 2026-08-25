@@ -1,5 +1,7 @@
 <?php
 
+use Bnomei\KirbyMcp\Mcp\KirbyMcpRoutes;
+
 /**
  * The config file is optional. It accepts a return array with config options
  * Note: Never include more than one return statement, all options go within this single return array
@@ -7,6 +9,19 @@
  * This setting must be set to false in production.
  * All config options: https://getkirby.com/docs/reference/system/options
  */
+$mcpRoutes = [];
+
+if (PHP_SAPI === 'cli-server' && getenv('KIRBY_MCP_FIXTURE_HTTP_ROUTE') === '1') {
+    $fixtureLoader = require dirname(__DIR__, 2) . '/kirby/vendor/autoload.php';
+    require dirname(__DIR__, 4) . '/vendor/autoload.php';
+
+    // Keep the fixture's bundled Kirby version authoritative after loading this package.
+    $fixtureLoader->unregister();
+    $fixtureLoader->register(true);
+
+    $mcpRoutes = KirbyMcpRoutes::mcp(projectRoot: dirname(__DIR__, 2));
+}
+
 return [
   'debug' => true,
   'yaml.handler' => 'symfony', // already makes use of the more modern Symfony YAML parser: https://getkirby.com/docs/reference/system/options/yaml (will become the default in a future Kirby version)
@@ -21,6 +36,7 @@ return [
   ],
   'vendorname.pluginname.closureoption' => static fn (): int => 123,
   'routes' => [
+    ...$mcpRoutes,
     [
       'pattern' => 'mcp-test/config-route',
       'method' => 'GET',
