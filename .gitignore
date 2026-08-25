@@ -13,6 +13,7 @@ coverage.xml
 .orchid
 .frigg
 specs/
+.amp/portals/*
 
 !tests/fixture/.kirby-mcp/
 !tests/fixture/.kirby-mcp/**

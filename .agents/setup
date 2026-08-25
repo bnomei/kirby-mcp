@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+php_packages=(
+    php8.5-cli
+    php8.5-curl
+    php8.5-gd
+    php8.5-intl
+    php8.5-mbstring
+    php8.5-xml
+    php8.5-zip
+)
+
+missing_php_packages=()
+for package in "${php_packages[@]}"; do
+    if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -Fq 'install ok installed'; then
+        missing_php_packages+=("$package")
+    fi
+done
+
+if ((${#missing_php_packages[@]})); then
+    echo "==> Installing PHP 8.5 and required extensions"
+    if [[ ! -f /usr/share/keyrings/debsuryorg-archive-keyring.gpg ]]; then
+        keyring_package="$(mktemp --suffix=.deb)"
+        trap 'rm -f "$keyring_package"' EXIT
+        curl -fsSL https://packages.sury.org/debsuryorg-archive-keyring.deb -o "$keyring_package"
+        sudo env DEBIAN_FRONTEND=noninteractive dpkg -i "$keyring_package"
+        rm -f "$keyring_package"
+        trap - EXIT
+    fi
+
+    php_source='deb [signed-by=/usr/share/keyrings/debsuryorg-archive-keyring.gpg] https://packages.sury.org/php/ bookworm main'
+    if [[ ! -f /etc/apt/sources.list.d/php.list ]] || ! grep -Fqx "$php_source" /etc/apt/sources.list.d/php.list; then
+        printf '%s\n' "$php_source" | sudo tee /etc/apt/sources.list.d/php.list >/dev/null
+    fi
+
+    time sudo apt-get update
+    time sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_php_packages[@]}"
+fi
+
+if [[ "$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')" != '8.5' ]]; then
+    sudo update-alternatives --set php /usr/bin/php8.5
+fi
+
+if ! command -v composer >/dev/null 2>&1; then
+    echo "==> Installing Composer"
+    composer_installer="$(mktemp)"
+    trap 'rm -f "$composer_installer"' EXIT
+    expected_signature="$(curl -fsSL https://composer.github.io/installer.sig)"
+    curl -fsSL https://getcomposer.org/installer -o "$composer_installer"
+    actual_signature="$(php -r "echo hash_file('sha384', '$composer_installer');")"
+    if [[ "$actual_signature" != "$expected_signature" ]]; then
+        echo 'Composer installer signature verification failed.' >&2
+        exit 1
+    fi
+    sudo php "$composer_installer" --quiet --install-dir=/usr/local/bin --filename=composer
+    rm -f "$composer_installer"
+    trap - EXIT
+fi
+
+echo "==> Installing Composer dependencies"
+time composer install --no-interaction --prefer-dist --no-progress
+
+echo "==> Preparing the Kirby starterkit test fixture"
+time composer cms:starterkit
+
+echo "==> Installing npm dependencies"
+time npm ci --no-audit --no-fund

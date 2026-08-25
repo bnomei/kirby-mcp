@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This repository has no services or credentials to reconnect after an orb wakes.
+:
