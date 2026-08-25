@@ -5,6 +5,18 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-08-25
+
+- Enabled MCP SDK v0.8 dual-era dispatch, preserving stateful handshake clients while adding stateless `2026-07-28` requests.
+- Added conservative MCP cache hints: global-reference discovery and bundled static resource reads are public for one hour, while project, runtime, fetched-doc, session, auth, user, and mutable results retain private zero-TTL defaults.
+- Added operation-bound modern confirmation elicitation and bounded cross-process local HTTP resource-update notifications.
+- Stopped advertising the deprecated MCP logging capability and removed project-owned session log levels; server diagnostics continue to use stderr.
+- Added wire-level regression coverage for protocol negotiation, v0.8 invalid-params not-found errors, malformed-request null IDs, and public tool schemas.
+- No top-level list-shaped structured tool result is currently exposed, so the v0.8 list-shaped structured-content wire behavior is not applicable yet.
+- Added navigable resource links to modern tool results that already expose concrete `kirby://` URIs in structured fields; existing structured data and JSON text remain unchanged.
+- Correlated stderr diagnostics with valid modern W3C v00 `traceparent` values without logging `tracestate` or `baggage`.
+- Hardened modern subscriptions by enforcing each resource URI's bearer scope, allowing browser `Traceparent` preflights, and using portable zero-based notification cursors.
+
 ## [1.11.0] - 2026-07-15
 
 - Updated the MCP PHP SDK dependency to `mcp/sdk` v0.7.0, including hardened malformed JSON-RPC parsing and session-header handling.

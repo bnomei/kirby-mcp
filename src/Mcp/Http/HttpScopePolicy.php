@@ -22,6 +22,8 @@ final class HttpScopePolicy
             'prompts/list',
             'prompts/get',
             'completion/complete' => [HttpAuthScopes::READ],
+            'server/discover' => [HttpAuthScopes::READ],
+            'subscriptions/listen' => $this->subscriptionScopes($params),
             'logging/setLevel' => [HttpAuthScopes::ADMIN],
             'tools/call' => $this->toolCallScopes($params),
             'resources/read' => $this->resourceScopes($this->stringParam($params, 'uri')),
@@ -47,6 +49,39 @@ final class HttpScopePolicy
             $command = $this->stringArgument($params, 'command');
             if (is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::RUNTIME;
+            }
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @param array<string, mixed>|null $params
+     *
+     * @return list<string>
+     */
+    private function subscriptionScopes(?array $params): array
+    {
+        $scopes = [HttpAuthScopes::READ];
+        $notifications = $params['notifications'] ?? null;
+        if (!is_array($notifications)) {
+            return $scopes;
+        }
+
+        $subscriptions = $notifications['resourceSubscriptions'] ?? null;
+        if (!is_array($subscriptions)) {
+            return $scopes;
+        }
+
+        foreach ($subscriptions as $uri) {
+            if (!is_string($uri)) {
+                continue;
+            }
+
+            foreach ($this->resourceScopes($uri) as $scope) {
+                if (!in_array($scope, $scopes, true)) {
+                    $scopes[] = $scope;
+                }
             }
         }
 

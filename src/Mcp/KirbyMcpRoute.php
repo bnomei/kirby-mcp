@@ -114,6 +114,7 @@ final class KirbyMcpRoute
             sseMaxSeconds: $sseMaxSeconds,
             tokenValidator: $tokenValidator,
             protectedResourceMetadata: $protectedResourceMetadata,
+            projectRoot: $projectRoot,
         );
     }
 

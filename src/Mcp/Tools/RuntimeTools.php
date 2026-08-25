@@ -27,6 +27,7 @@ use Mcp\Schema\Notification\ResourceUpdatedNotification;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
+use Mcp\Server\Subscription\NotificationBusInterface;
 
 final class RuntimeTools
 {
@@ -301,6 +302,7 @@ final class RuntimeTools
 
     public function __construct(
         private readonly ProjectContext $context = new ProjectContext(),
+        private readonly ?NotificationBusInterface $notificationBus = null,
     ) {
     }
 
@@ -778,6 +780,7 @@ final class RuntimeTools
                 $context,
                 $payload,
                 'Run kirby_update_page_content for page "' . $id . '" and apply keys: ' . $this->previewList(array_keys($data)) . '?',
+                ['tool' => 'kirby_update_page_content', 'target' => $id, 'data' => $data, 'language' => $language, 'validate' => $validate, 'schemaValidated' => $payloadValidatedWithFieldSchemas, 'maxCharsPerField' => $maxCharsPerField],
             )
         ) {
             $confirmedArgs = $args;
@@ -1152,6 +1155,7 @@ final class RuntimeTools
                 $context,
                 $payload,
                 'Run kirby_update_site_content and apply keys: ' . $this->previewList(array_keys($data)) . '?',
+                ['tool' => 'kirby_update_site_content', 'target' => 'site', 'data' => $data, 'language' => $language, 'validate' => $validate, 'schemaValidated' => $payloadValidatedWithFieldSchemas, 'maxCharsPerField' => $maxCharsPerField],
             )
         ) {
             $confirmedArgs = $args;
@@ -1326,6 +1330,7 @@ final class RuntimeTools
                 $context,
                 $payload,
                 'Run kirby_update_file_content for file "' . $id . '" and apply keys: ' . $this->previewList(array_keys($data)) . '?',
+                ['tool' => 'kirby_update_file_content', 'target' => $id, 'data' => $data, 'language' => $language, 'validate' => $validate, 'schemaValidated' => $payloadValidatedWithFieldSchemas, 'maxCharsPerField' => $maxCharsPerField],
             )
         ) {
             $confirmedArgs = $args;
@@ -1503,6 +1508,7 @@ final class RuntimeTools
                 $context,
                 $payload,
                 'Run kirby_update_user_content for user "' . $id . '" and apply keys: ' . $this->previewList(array_keys($data)) . '?',
+                ['tool' => 'kirby_update_user_content', 'target' => $id, 'data' => $data, 'language' => $language, 'validate' => $validate, 'schemaValidated' => $payloadValidatedWithFieldSchemas, 'maxCharsPerField' => $maxCharsPerField],
             )
         ) {
             $confirmedArgs = $args;
@@ -1614,14 +1620,16 @@ final class RuntimeTools
             ]));
         }
 
+        $payload = $result->payload;
         $confirmedViaElicitation = false;
 
         if (
             $confirm !== true &&
             $this->shouldRunWithElicitedConfirm(
                 $context,
-                $result->payload,
+                $payload,
                 'Run kirby_eval and execute this PHP snippet in Kirby runtime? ' . $this->previewText($code),
+                ['tool' => 'kirby_eval', 'code' => $code, 'maxChars' => $maxChars, 'timeoutSeconds' => $timeoutSeconds, 'debug' => $debug],
             )
         ) {
             $confirmedArgs = $args;
@@ -1642,11 +1650,12 @@ final class RuntimeTools
             }
 
             $result = $confirmed;
+            $payload = $confirmed->payload;
             $confirmedViaElicitation = true;
         }
 
         /** @var array<string, mixed> $response */
-        $response = $result->payload;
+        $response = $payload;
 
         if (isset($response['blueprints']) && is_array($response['blueprints'])) {
             foreach ($response['blueprints'] as $index => $entry) {
@@ -1756,14 +1765,16 @@ final class RuntimeTools
             ]));
         }
 
+        $payload = $result->payload;
         $confirmedViaElicitation = false;
 
         if (
             $confirm !== true &&
             $this->shouldRunWithElicitedConfirm(
                 $context,
-                $result->payload,
+                $payload,
                 'Run kirby_query_dot with query "' . $this->previewText($query, 220) . '"' . (is_string($model) && trim($model) !== '' ? ' on model "' . trim($model) . '"' : '') . '?',
+                ['tool' => 'kirby_query_dot', 'query' => $query, 'model' => $model, 'timeoutSeconds' => $timeoutSeconds, 'debug' => $debug],
             )
         ) {
             $confirmedArgs = $args;
@@ -1784,11 +1795,12 @@ final class RuntimeTools
             }
 
             $result = $confirmed;
+            $payload = $confirmed->payload;
             $confirmedViaElicitation = true;
         }
 
         /** @var array<string, mixed> $response */
-        $response = $result->payload;
+        $response = $payload;
         $response['cliMeta'] = $result->cliMeta();
 
         if ($confirmedViaElicitation === true) {
@@ -1951,16 +1963,34 @@ final class RuntimeTools
     /**
      * @param array<string, mixed> $payload
      */
-    private function shouldRunWithElicitedConfirm(?RequestContext $context, array $payload, string $message): bool
+    private function shouldRunWithElicitedConfirm(?RequestContext $context, array &$payload, string $message, array $operation): bool
     {
         if (($payload['needsConfirm'] ?? false) !== true) {
             return false;
         }
 
-        return $this->requestElicitedConfirm($context, $message);
+        $key = $this->confirmationKey($operation);
+        $input = $context?->getInputContext();
+        $responses = $input?->all() ?? [];
+        if (
+            $responses !== []
+            && array_diff_key($responses, [$key => true]) !== []
+            && $input?->elicitResult($key) === null
+        ) {
+            $notice = 'The supplied confirmation response belongs to different arguments. No operation was executed. Start a new tool call for these arguments to receive a fresh confirmation, or use confirm=true when intentionally authorized.';
+            $existingMessage = is_string($payload['message'] ?? null) ? trim($payload['message']) : '';
+            $payload['message'] = $existingMessage === '' ? $notice : $existingMessage . ' ' . $notice;
+            $payload['confirmationStatus'] = 'stale_input_ignored';
+            $payload['retryWithoutInputResponses'] = true;
+
+            return false;
+        }
+
+        return $this->requestElicitedConfirm($context, $message, $operation);
     }
 
-    private function requestElicitedConfirm(?RequestContext $context, string $message): bool
+    /** @param array<string, mixed> $operation */
+    private function requestElicitedConfirm(?RequestContext $context, string $message, array $operation = []): bool
     {
         if ($context === null) {
             return false;
@@ -1988,6 +2018,7 @@ final class RuntimeTools
                     ],
                     required: ['confirm'],
                 ),
+                key: $this->confirmationKey($operation),
             );
         } catch (\Throwable $exception) {
             try {
@@ -2009,6 +2040,15 @@ final class RuntimeTools
         $confirm = $result->content['confirm'] ?? null;
 
         return $confirm === 'execute' || $confirm === true;
+    }
+
+    /** @param array<string, mixed> $operation */
+    private function confirmationKey(array $operation): string
+    {
+        return 'kirby-confirm-' . hash('sha256', json_encode(
+            $operation,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION,
+        ));
     }
 
     /**
@@ -2062,7 +2102,19 @@ final class RuntimeTools
      */
     private function notifyUpdatedResourceUris(?RequestContext $context, array $payload, array $uris): void
     {
-        if ($context === null || ($payload['ok'] ?? false) !== true || $uris === []) {
+        if (($payload['ok'] ?? false) !== true || $uris === []) {
+            return;
+        }
+
+        foreach ($uris as $uri) {
+            try {
+                $this->notificationBus?->publish(new ResourceUpdatedNotification($uri));
+            } catch (\Throwable $exception) {
+                error_log('Kirby MCP failed to publish resource update for ' . $uri . ': ' . $exception->getMessage());
+            }
+        }
+
+        if ($context === null) {
             return;
         }
 

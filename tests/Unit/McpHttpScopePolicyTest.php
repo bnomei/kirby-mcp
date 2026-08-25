@@ -9,10 +9,27 @@ it('classifies JSON-RPC discovery and resource operations as read scope without 
     $policy = new HttpScopePolicy();
 
     expect($policy->requiredScopes('initialize'))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('server/discover'))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('subscriptions/listen'))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('tools/list'))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('resources/list'))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('resources/read', ['uri' => 'kirby://kb']))->toBe([HttpAuthScopes::READ])
         ->and($policy->requiredScopes('logging/setLevel'))->toBe([HttpAuthScopes::ADMIN]);
+});
+
+it('requires the scope of every resource in a modern subscription', function (): void {
+    $policy = new HttpScopePolicy();
+
+    expect($policy->requiredScopes('subscriptions/listen', [
+        'notifications' => ['resourceSubscriptions' => ['kirby://kb']],
+    ]))->toBe([HttpAuthScopes::READ])
+        ->and($policy->requiredScopes('subscriptions/listen', [
+            'notifications' => ['resourceSubscriptions' => [
+                'kirby://kb',
+                'kirby://site/content',
+                'kirby://page/content/home',
+            ]],
+        ]))->toBe([HttpAuthScopes::READ, HttpAuthScopes::RUNTIME]);
 });
 
 it('classifies actual sensitive tools into runtime write execute and admin scopes', function (): void {

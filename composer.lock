@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c59a9dd7272aa744d1f3807c8ed9f85e",
+    "content-hash": "1a68e4cae4cf5f594201b14cef7eb0d7",
     "packages": [
         {
             "name": "doctrine/deprecations",
@@ -585,16 +585,16 @@
         },
         {
             "name": "mcp/sdk",
-            "version": "v0.7.0",
+            "version": "v0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/modelcontextprotocol/php-sdk.git",
-                "reference": "a6f415578fa789783d010274d11c922e97659a8a"
+                "reference": "e173367c5f506af39345f7a18e88764786edbdfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/a6f415578fa789783d010274d11c922e97659a8a",
-                "reference": "a6f415578fa789783d010274d11c922e97659a8a",
+                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/e173367c5f506af39345f7a18e88764786edbdfa",
+                "reference": "e173367c5f506af39345f7a18e88764786edbdfa",
                 "shasum": ""
             },
             "require": {
@@ -612,6 +612,7 @@
                 "psr/http-server-handler": "^1.0",
                 "psr/http-server-middleware": "^1.0",
                 "psr/log": "^1.0 || ^2.0 || ^3.0",
+                "symfony/deprecation-contracts": "^2.5 || ^3.0",
                 "symfony/uid": "^5.4 || ^6.4 || ^7.3 || ^8.0"
             },
             "require-dev": {
@@ -686,10 +687,10 @@
             ],
             "description": "Model Context Protocol SDK for Client and Server applications in PHP",
             "support": {
-                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.7.0",
+                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.8.0",
                 "issues": "https://github.com/modelcontextprotocol/php-sdk/issues"
             },
-            "time": "2026-07-14T22:58:00+00:00"
+            "time": "2026-08-24T23:12:29+00:00"
         },
         {
             "name": "opis/json-schema",

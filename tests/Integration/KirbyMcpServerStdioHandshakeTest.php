@@ -5,6 +5,56 @@ declare(strict_types=1);
 use Symfony\Component\Process\Process;
 use Composer\InstalledVersions;
 
+it('negotiates only supported handshake protocol revisions', function (string $offered, string $expected): void {
+    $responses = runKirbyMcpStdioRequests([[
+        'jsonrpc' => '2.0',
+        'id' => 1,
+        'method' => 'initialize',
+        'params' => [
+            'protocolVersion' => $offered,
+            'capabilities' => new stdClass(),
+            'clientInfo' => ['name' => 'tests', 'version' => 'dev'],
+        ],
+    ]]);
+
+    expect($responses[0]['result']['protocolVersion'] ?? null)->toBe($expected);
+})->with([
+    'supported older revision is echoed' => ['2024-11-05', '2024-11-05'],
+    'unknown date counter-offers latest handshake revision' => ['1900-01-01', '2025-11-25'],
+    'malformed date counter-offers latest handshake revision' => ['not-a-date', '2025-11-25'],
+    'modern revision offered through initialize counter-offers the handshake revision' => ['2026-07-28', '2025-11-25'],
+]);
+
+it('returns invalid params for unknown references on known MCP methods', function (): void {
+    $responses = runKirbyMcpStdioRequests([
+        [
+            'jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2025-11-25',
+                'capabilities' => new stdClass(),
+                'clientInfo' => ['name' => 'tests', 'version' => 'dev'],
+            ],
+        ],
+        ['jsonrpc' => '2.0', 'method' => 'notifications/initialized'],
+        ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => ['name' => 'kirby_init', 'arguments' => new stdClass()]],
+        ['jsonrpc' => '2.0', 'id' => 3, 'method' => 'tools/call', 'params' => ['name' => 'missing_tool', 'arguments' => new stdClass()]],
+        ['jsonrpc' => '2.0', 'id' => 4, 'method' => 'completion/complete', 'params' => [
+            'ref' => ['type' => 'ref/resource', 'uri' => 'kirby://missing'],
+            'argument' => ['name' => 'value', 'value' => ''],
+        ]],
+    ]);
+
+    $byId = [];
+    foreach ($responses as $response) {
+        if (isset($response['id'])) {
+            $byId[$response['id']] = $response;
+        }
+    }
+    foreach ([3, 4] as $id) {
+        expect($byId[$id]['error']['code'] ?? null)->toBe(-32602);
+    }
+});
+
 it('boots the MCP stdio server and answers initialize', function (): void {
     $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
     expect($bin)->not()->toBeFalse();
@@ -143,6 +193,7 @@ it('boots the MCP stdio server and answers initialize', function (): void {
     $capabilities = $byId['1']['result']['capabilities'] ?? null;
     expect($capabilities)->toBeArray();
     expect($capabilities)->toHaveKey('resources');
+    expect($capabilities)->not()->toHaveKey('logging');
     expect($capabilities['resources'])->toBeArray();
     expect($capabilities['resources']['subscribe'] ?? null)->toBeTrue();
 
@@ -474,4 +525,27 @@ function collectArraySchemasWithoutItems(array $schema, string $path, string $to
             $violations,
         );
     }
+}
+
+/**
+ * @param array<int, array<string, mixed>> $requests
+ * @return array<int, array<string, mixed>>
+ */
+function runKirbyMcpStdioRequests(array $requests): array
+{
+    $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');
+    expect($bin)->not()->toBeFalse();
+    $input = implode("\n", array_map(
+        static fn (array $request): string => json_encode($request, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
+        $requests,
+    )) . "\n";
+    $process = new Process([PHP_BINARY, '-d', 'display_errors=0', '-d', 'display_startup_errors=0', $bin], cmsPath(), timeout: 15);
+    $process->setInput($input);
+    $process->run();
+    expect($process->getExitCode())->toBe(0);
+
+    return array_map(
+        static fn (string $line): array => json_decode($line, true, flags: JSON_THROW_ON_ERROR),
+        array_values(array_filter(array_map('trim', explode("\n", trim($process->getOutput()))))),
+    );
 }

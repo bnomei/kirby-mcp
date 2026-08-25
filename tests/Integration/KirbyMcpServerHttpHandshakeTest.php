@@ -244,6 +244,19 @@ it('serves the MCP server over a single /mcp HTTP endpoint with reusable session
     expect($resourcesResponse->getHeaderLine('Mcp-Session-Id'))->toBe($sessionId);
     $resourcesPayload = kirbyMcpHttpDecodeResponse($resourcesResponse);
 
+    $bundledReadRequest = kirbyMcpHttpAuthorize($factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+        ->withHeader('Content-Type', 'application/json')
+        ->withHeader('Mcp-Session-Id', $sessionId)
+        ->withBody($factory->createStream(json_encode([
+            'jsonrpc' => '2.0',
+            'id' => 4,
+            'method' => 'resources/read',
+            'params' => ['uri' => 'kirby://kb'],
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES))));
+    $bundledReadPayload = kirbyMcpHttpDecodeResponse($handler->handle($bundledReadRequest));
+    expect($bundledReadPayload['result'] ?? null)->toBeArray()
+        ->and($bundledReadPayload['result'])->not()->toHaveKeys(['ttlMs', 'cacheScope']);
+
     $getResponse = $handler->handle(
         kirbyMcpHttpAuthorize($factory->createServerRequest('GET', 'http://127.0.0.1/mcp')
             ->withHeader('Mcp-Session-Id', $sessionId))
@@ -330,6 +343,7 @@ it('rejects malformed JSON-RPC payloads before MCP dispatch', function (): void 
     expect($response->getStatusCode())->toBe(200);
     $payload = kirbyMcpHttpDecodeResponse($response);
     expect($payload['error']['code'] ?? null)->toBe(-32700);
+    expect(array_key_exists('id', $payload))->toBeFalse();
 });
 
 it('enforces Streamable HTTP session header semantics for missing and unknown sessions', function (): void {
@@ -403,11 +417,15 @@ it('answers Streamable HTTP CORS preflight on the MCP endpoint', function (): vo
             ->withHeader('Authorization', 'Bearer local-secret')
             ->withHeader('Origin', 'http://localhost:3000')
             ->withHeader('Access-Control-Request-Method', 'POST')
+            ->withHeader('Access-Control-Request-Headers', 'Authorization,Content-Type,Mcp-Protocol-Version,Mcp-Method,Mcp-Name,Traceparent')
     );
 
     expect($response->getStatusCode())->toBe(204);
     expect($response->getHeaderLine('Access-Control-Allow-Methods'))->toContain('GET');
-    expect($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Session-Id');
+    expect($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Session-Id')
+        ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Method')
+        ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Name')
+        ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Traceparent');
 });
 
 it('enforces shared-token authorization and origin policy before protocol handling', function (): void {
@@ -465,7 +483,12 @@ it('enforces shared-token authorization and origin policy before protocol handli
             ->withBody($factory->createStream(kirbyMcpHttpJsonRequest('tools/list', 2)))
     );
     expect($badProtocolResponse->getStatusCode())->toBe(400);
-    expect((string) $badProtocolResponse->getBody())->toContain('Unsupported Mcp-Protocol-Version header value');
+    $badProtocolPayload = kirbyMcpHttpDecodeResponse($badProtocolResponse);
+    expect($badProtocolPayload['error']['code'] ?? null)->toBe(-32022)
+        ->and($badProtocolPayload['error']['message'] ?? null)->toBe('Unsupported protocol version')
+        ->and($badProtocolPayload['error']['data']['requested'] ?? null)->toBe('1900-01-01')
+        ->and($badProtocolPayload['error']['data']['supported'] ?? null)->toBeArray()
+        ->not()->toBeEmpty();
 
     $badGetProtocolResponse = $handler->handle(
         $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')
@@ -475,7 +498,12 @@ it('enforces shared-token authorization and origin policy before protocol handli
             ->withHeader('Mcp-Protocol-Version', '1900-01-01')
     );
     expect($badGetProtocolResponse->getStatusCode())->toBe(400);
-    expect((string) $badGetProtocolResponse->getBody())->toContain('Unsupported Mcp-Protocol-Version header value');
+    $badGetProtocolPayload = kirbyMcpHttpDecodeResponse($badGetProtocolResponse);
+    expect($badGetProtocolPayload['error']['code'] ?? null)->toBe(-32022)
+        ->and($badGetProtocolPayload['error']['message'] ?? null)->toBe('Unsupported protocol version')
+        ->and($badGetProtocolPayload['error']['data']['requested'] ?? null)->toBe('1900-01-01')
+        ->and($badGetProtocolPayload['error']['data']['supported'] ?? null)->toBeArray()
+        ->not()->toBeEmpty();
 
     $getResponse = $handler->handle(
         $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')

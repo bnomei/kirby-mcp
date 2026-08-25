@@ -7,9 +7,9 @@ namespace Bnomei\KirbyMcp\Mcp;
 use Bnomei\KirbyMcp\Docs\ExtensionReferenceIndex;
 use Bnomei\KirbyMcp\Docs\HookReferenceIndex;
 use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
+use Bnomei\KirbyMcp\Mcp\Handlers\BundledReadResourceHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\CodexSafeListResourcesHandler;
 use Bnomei\KirbyMcp\Mcp\Handlers\RequireInitForToolsHandler;
-use Bnomei\KirbyMcp\Mcp\Handlers\SetLogLevelHandler;
 use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
 use Bnomei\KirbyMcp\Mcp\Resources\ExtensionReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
@@ -18,8 +18,10 @@ use Bnomei\KirbyMcp\Mcp\Resources\KbResources;
 use Bnomei\KirbyMcp\Mcp\Resources\MetaResources;
 use Bnomei\KirbyMcp\Mcp\Resources\PanelReferenceResources;
 use Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources;
+use Bnomei\KirbyMcp\Mcp\Subscription\FileNotificationBus;
 use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
 use Bnomei\KirbyMcp\Mcp\Tools\MetaTools;
+use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
 use Bnomei\KirbyMcp\Mcp\Tools\SessionTools;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Composer\InstalledVersions;
@@ -28,12 +30,17 @@ use Mcp\Capability\Registry;
 use Mcp\Capability\Registry\Container;
 use Mcp\Capability\Registry\ReferenceHandler;
 use Mcp\Schema\Annotations;
+use Mcp\Schema\Enum\CacheScope;
 use Mcp\Schema\Enum\Role;
 use Mcp\Schema\ResourceDefinition;
 use Mcp\Schema\ServerCapabilities;
 use Mcp\Server;
 use Mcp\Server\Handler\Request\CallToolHandler;
+use Mcp\Server\Handler\Request\ReadResourceHandler;
 use Mcp\Server\Session\SessionStoreInterface;
+use Mcp\Server\Wire\CachePolicy;
+use Mcp\Server\Subscription\InMemoryNotificationBus;
+use Mcp\Server\Subscription\NotificationBusInterface;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Throwable;
@@ -44,8 +51,12 @@ final class ServerFactory
     public const SESSION_GC_PROBABILITY = 1;
     public const SESSION_GC_DIVISOR = 20;
 
-    public function create(?SessionStoreInterface $sessionStore = null, string $profile = ServerProfile::PROJECT): Server
-    {
+    public function create(
+        ?SessionStoreInterface $sessionStore = null,
+        string $profile = ServerProfile::PROJECT,
+        ?NotificationBusInterface $notificationBus = null,
+        float $subscriptionLifetime = 30.0,
+    ): Server {
         $profile = ServerProfile::normalize($profile);
         $container = new Container();
         $registry = new Registry();
@@ -59,9 +70,14 @@ final class ServerFactory
             $this->registerProjectlessReferenceResources($container);
         }
 
+        $notificationBus ??= new InMemoryNotificationBus();
+        $container->set(RuntimeTools::class, new RuntimeTools(notificationBus: $notificationBus));
+
         $builder = Server::builder()
             ->setContainer($container)
             ->setRegistry($registry)
+            ->setNotificationBus($notificationBus)
+            ->setSubscriptionLifetime($subscriptionLifetime)
             ->setServerInfo(
                 ServerProfile::isGlobalReference($profile) ? 'Kirby MCP Reference' : 'Kirby MCP',
                 $this->resolveVersion(),
@@ -77,6 +93,14 @@ final class ServerFactory
         }
 
         if (ServerProfile::isGlobalReference($profile)) {
+            $builder->setCachePolicy(
+                CachePolicy::none()
+                    ->withMethod('server/discover', BundledReadResourceHandler::TTL_MS, CacheScope::Public)
+                    ->withMethod('tools/list', BundledReadResourceHandler::TTL_MS, CacheScope::Public)
+                    ->withMethod('prompts/list', BundledReadResourceHandler::TTL_MS, CacheScope::Public)
+                    ->withMethod('resources/list', BundledReadResourceHandler::TTL_MS, CacheScope::Public)
+                    ->withMethod('resources/templates/list', BundledReadResourceHandler::TTL_MS, CacheScope::Public),
+            );
             $builder->addLoader(new ProfileDiscoveryLoader(
                 basePath: dirname(__DIR__, 2),
                 scanDirs: ['src/Mcp/Tools', 'src/Mcp/Resources'],
@@ -91,20 +115,26 @@ final class ServerFactory
         }
 
         $server = $builder
+            ->addRequestHandler(new BundledReadResourceHandler(
+                new ReadResourceHandler($registry, $referenceHandler),
+            ))
             ->addRequestHandler(new CodexSafeListResourcesHandler($registry))
             ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
-            ->addRequestHandler(new SetLogLevelHandler())
             ->setCapabilities(new ServerCapabilities(
                 tools: true,
                 resources: true,
                 resourcesSubscribe: true,
                 prompts: false,
-                logging: true,
+                logging: false,
                 completions: true,
             ))
             ->build();
 
         $this->registerSizedMarkdownResources($registry, $profile);
+
+        if ($notificationBus instanceof FileNotificationBus) {
+            $notificationBus->activate();
+        }
 
         return $server;
     }
@@ -112,10 +142,10 @@ final class ServerFactory
     private function instructions(string $profile): string
     {
         if (ServerProfile::isGlobalReference($profile)) {
-            return 'Call kirby_init once per session. This is the global Kirby reference MCP: use it for bundled KB, glossary, update schemas, reference docs, and official online Kirby search. It is not connected to any project and cannot inspect, render, mutate, or run commands in a Kirby project.';
+            return 'For handshake sessions, call kirby_init once before other tools. Stateless modern calls may use kirby_init optionally for guidance. This is the global Kirby reference MCP: it is not connected to a project.';
         }
 
-        return 'Call kirby_init once per session before calling any other Kirby tools. Use kirby_tool_suggest if unsure which tool/resource to use.';
+        return 'For handshake sessions, call kirby_init once before other tools. Stateless modern calls may call kirby_init for audit and guidance but do not require it. Use kirby_tool_suggest if unsure which tool/resource to use.';
     }
 
     private function registerProjectlessReferenceResources(Container $container): void

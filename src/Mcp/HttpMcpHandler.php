@@ -8,6 +8,7 @@ use Bnomei\KirbyMcp\Mcp\Http\HttpAuthFactory;
 use Bnomei\KirbyMcp\Mcp\Http\HttpOriginPolicy;
 use Bnomei\KirbyMcp\Mcp\Http\HttpScopeMiddleware;
 use Bnomei\KirbyMcp\Mcp\Http\HttpScopePolicy;
+use Bnomei\KirbyMcp\Mcp\Subscription\FileNotificationBus;
 use GuzzleHttp\Psr7\HttpFactory;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\MessageInterface;
@@ -47,6 +48,7 @@ final class HttpMcpHandler
         private readonly ?AuthorizationTokenValidatorInterface $tokenValidator = null,
         private readonly ?ProtectedResourceMetadata $protectedResourceMetadata = null,
         private readonly ?HttpScopePolicy $scopePolicy = null,
+        private readonly ?string $projectRoot = null,
     ) {
     }
 
@@ -115,12 +117,14 @@ final class HttpMcpHandler
             request: $request,
             responseFactory: $responseFactory,
             streamFactory: $streamFactory,
-            middleware: [
-                new ProtocolVersionMiddleware(responseFactory: $responseFactory, streamFactory: $streamFactory),
-            ],
+            middleware: [],
         );
 
-        return $this->serverFactory->create($this->sessionStore)->run($transport);
+        return $this->serverFactory->create(
+            $this->sessionStore,
+            notificationBus: $this->notificationBus(),
+            subscriptionLifetime: $this->sseMaxSeconds,
+        )->run($transport);
     }
 
     private function authorizationTokenValidator(): AuthorizationTokenValidatorInterface
@@ -193,7 +197,11 @@ final class HttpMcpHandler
             return $this->sessionNotFoundResponse($responseFactory, $streamFactory);
         }
 
-        return $this->serverFactory->create($this->sessionStore)->run(
+        return $this->serverFactory->create(
+            $this->sessionStore,
+            notificationBus: $this->notificationBus(),
+            subscriptionLifetime: $this->sseMaxSeconds,
+        )->run(
             new StreamableHttpGetTransport(
                 sessionIdValue: $uuid,
                 responseFactory: $responseFactory,
@@ -306,7 +314,7 @@ final class HttpMcpHandler
         $headers = [
             'Access-Control-Allow-Origin' => $origin !== '' ? $origin : '*',
             'Access-Control-Allow-Methods' => 'GET, POST, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Protocol-Version,' . self::SESSION_HEADER,
+            'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Method,Mcp-Name,Mcp-Protocol-Version,Traceparent,' . self::SESSION_HEADER,
             'Access-Control-Expose-Headers' => self::SESSION_HEADER,
         ];
 
@@ -365,5 +373,10 @@ final class HttpMcpHandler
     private function encodeError(string $message): string
     {
         return json_encode(Error::forInvalidRequest($message), JSON_THROW_ON_ERROR);
+    }
+
+    private function notificationBus(): ?FileNotificationBus
+    {
+        return is_string($this->projectRoot) ? new FileNotificationBus($this->projectRoot) : null;
     }
 }

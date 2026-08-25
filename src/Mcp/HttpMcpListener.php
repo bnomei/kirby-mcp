@@ -78,6 +78,7 @@ final class HttpMcpListener
             sseMaxSeconds: $sseMaxSeconds,
             tokenValidator: $tokenValidator,
             protectedResourceMetadata: $protectedResourceMetadata,
+            projectRoot: $projectRoot,
         );
 
         fwrite(STDERR, sprintf("Kirby MCP HTTP listening on http://%s:%d%s\n", $host, $port, $path));

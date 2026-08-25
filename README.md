@@ -13,6 +13,8 @@ CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or ag
 
 It can also run as a projectless global reference MCP (`kirby-mcp --global`) for always-on Kirby docs/KB research. Global reference mode is intentionally separate from project-local MCP servers and cannot inspect, render, update, or run commands in a Kirby project.
 
+The server uses MCP SDK v0.8 dual-era dispatch: existing clients negotiate stateful sessions through `initialize`, while `2026-07-28` clients use stateless requests. MCP logging requests are not advertised—diagnostics are written to stderr instead. A valid W3C v00 `traceparent` supplied by a modern request, including the native HTTP header from browser clients, is included for correlation; `tracestate` and `baggage` are never logged.
+
 > [!WARNING]
 > Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
 
@@ -217,13 +219,16 @@ My home page renders incorrectly. Help me debug it with mcp_dump() to return the
 ## Capabilities
 
 > [!INFO]
-> `kirby_init` is required once per session before calling any other tool or resource but the agent should figure this out automatically. Some capabilities require the runtime wrappers because they query Kirby at runtime. Installing/updating them should happen automatically as well.
+> `kirby_init` is required once per handshake session before other tools. It remains available as optional audit/guidance for stateless `2026-07-28` calls. Some capabilities require runtime wrappers because they query Kirby at runtime.
 
 At initialization, the server tells the agent which tools/resources to use. The knowledge base cross-references them so the agent can find the next step.
 
 Current inventory: 37 tools, 15 resources, 15 resource templates, 216 KB articles.
 
 In global reference mode (`kirby-mcp --global`), the exposed surface is intentionally smaller: `kirby_init`, `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`, and static reference resources/templates (`kirby://kb`, glossary, fields/sections, hooks, extensions, and update schemas).
+
+Modern `2026-07-28` clients receive one-hour public cache hints for the global reference profile's deployment-static discovery surface and for bundled KB/reference index reads in either profile. Externally fetched docs and all project-specific results remain private and immediately stale.
+Tool results that expose concrete `kirby://` references in structured fields also include navigable resource links for modern clients; URI templates remain structured references only.
 
 <details>
 <summary>🛠️ Tools</summary>
@@ -268,7 +273,7 @@ In global reference mode (`kirby-mcp --global`), the exposed surface is intentio
 
 Update tool `data` input accepts either a JSON object or a JSON-encoded object string for backward compatibility.
 If your client supports MCP resource subscriptions, successful `kirby_update_*_content` writes emit `notifications/resources/updated` for subscribed content resources (`kirby://site/content`, `kirby://page/content/{...}`, `kirby://file/content/{...}`, `kirby://user/content/{...}`).
-Confirm-gated tools (`kirby_update_*_content`, `kirby_eval`, `kirby_query_dot`) keep explicit `confirm=true`; clients with MCP elicitation support may present an inline confirmation prompt and continue on accept.
+Confirm-gated tools (`kirby_update_*_content`, `kirby_eval`, `kirby_query_dot`) keep explicit `confirm=true`; clients with MCP elicitation support may present an inline confirmation prompt and continue on accept. Modern confirmations are bound to the complete operation inputs. If a retry changes those inputs, the stale response is ignored and the tool returns a safe preview with `confirmationStatus: "stale_input_ignored"` and `retryWithoutInputResponses: true`; start a fresh call to confirm the changed operation.
 
 </details>
 
@@ -435,6 +440,8 @@ Start the server (point it at a composer-based Kirby project):
 
 HTTP is disabled by default. `vendor/bin/kirby-mcp` continues to run stdio unless you add the Kirby
 route and set `"http.enabled": true` in `.kirby-mcp/mcp.json` or environment variables.
+
+Modern resource update subscriptions use a bounded, 120-second local-filesystem bus under `.kirby-mcp/http-notifications` so separate same-host HTTP workers can communicate. Each subscribed URI requires the same bearer scope as reading that resource; project content subscriptions require `kirby-mcp:runtime`. This is not multi-host/NFS storage and does not promise durability or exactly-once delivery. Stateless dump calls must pass an explicit render `traceId` or request `path`; only handshake sessions provide last-trace convenience. Confirmation elicitation is a user-safety interaction, while HTTP bearer scopes are authorization; explicit `confirm=true` remains supported.
 
 > [!NOTE]
 > Remote HTTP follows the standard MCP pattern: HTTPS `/mcp`, Bearer/OAuth auth, and MCP metadata

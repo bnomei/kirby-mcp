@@ -85,6 +85,19 @@ it('keeps update content data modeled as object or JSON string', function (): vo
     }
 });
 
+it('keeps empty tool inputs as objects and omits RequestContext from public schemas', function (): void {
+    $schemas = generatedToolInputSchemas();
+    $init = $schemas['kirby_init'];
+
+    expect($init['type'] ?? null)->toBe('object');
+    expect($init['properties'] ?? null)->toEqual(new stdClass());
+
+    foreach ($schemas as $schema) {
+        $properties = $schema['properties'] ?? [];
+        expect($properties)->not()->toHaveKey('context');
+    }
+});
+
 /**
  * @param array<string, mixed> $schema
  * @param array<int, string> $violations

@@ -39,8 +39,6 @@ it('does not mark the session initialized when project init fails validation', f
     $session = new Session(new InMemorySessionStore(60));
     $context = new RequestContext($session, new CallToolRequest('kirby_init', []));
 
-    \Bnomei\KirbyMcp\Mcp\LoggingState::setLevel(\Mcp\Schema\Enum\LoggingLevel::Critical, $session);
-
     try {
         $threw = false;
         try {

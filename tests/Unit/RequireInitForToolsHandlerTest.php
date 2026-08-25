@@ -90,6 +90,32 @@ it('does not block tool calls after kirby_init', function (): void {
     expect($callToolHandler->calls)->toBe(1);
 });
 
+it('allows modern stateless tool calls without kirby_init', function (): void {
+    $callToolHandler = new FakeCallToolHandler();
+    $handler = new RequireInitForToolsHandler($callToolHandler);
+    $request = (new CallToolRequest('kirby_search', ['query' => 'config options']))
+        ->withId(1)
+        ->withMeta(['io.modelcontextprotocol/protocolVersion' => '2026-07-28']);
+
+    $response = $handler->handle($request, new Session(new InMemorySessionStore(60)));
+
+    expect($response->result)->toBeInstanceOf(CallToolResult::class);
+    expect($response->result->isError)->toBeFalse();
+    expect($callToolHandler->calls)->toBe(1);
+});
+
+it('fails closed for unknown per-request protocol revisions', function (): void {
+    $callToolHandler = new FakeCallToolHandler();
+    $handler = new RequireInitForToolsHandler($callToolHandler);
+    $request = (new CallToolRequest('kirby_search', []))->withId(1)
+        ->withMeta(['io.modelcontextprotocol/protocolVersion' => 'unknown']);
+
+    $response = $handler->handle($request, new Session(new InMemorySessionStore(60)));
+
+    expect($response->result->isError)->toBeTrue();
+    expect($callToolHandler->calls)->toBe(0);
+});
+
 it('keeps init state scoped to the session', function (): void {
     $sessionA = new Session(new InMemorySessionStore(60));
     $sessionB = new Session(new InMemorySessionStore(60));

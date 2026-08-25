@@ -40,7 +40,7 @@ final class SessionTools
      * @return string
      */
     #[McpToolIndex(
-        whenToUse: 'Call once at the start of a session to load Kirby-specific working guidelines and a quick project audit (composer + environment).',
+        whenToUse: 'Required once at the start of a handshake session; optional in stateless modern calls for Kirby-specific guidance and a quick project audit.',
         keywords: [
             'init' => 100,
             'initialize' => 80,
@@ -56,7 +56,7 @@ final class SessionTools
     #[McpTool(
         name: 'kirby_init',
         title: 'Kirby Init',
-        description: 'Return Kirby MCP session guidance + project-specific audit (composer + environment). Call this once per session before using other Kirby tools.',
+        description: 'Return Kirby MCP guidance + project-specific audit. Required before other tools in handshake sessions; optional for stateless modern calls.',
         annotations: new ToolAnnotations(
             title: 'Kirby Init',
             readOnlyHint: true,
