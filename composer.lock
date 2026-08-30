@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a68e4cae4cf5f594201b14cef7eb0d7",
+    "content-hash": "ba17c2429382dd5643e90d07e006772d",
     "packages": [
         {
             "name": "doctrine/deprecations",
@@ -585,16 +585,16 @@
         },
         {
             "name": "mcp/sdk",
-            "version": "v0.8.0",
+            "version": "v0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/modelcontextprotocol/php-sdk.git",
-                "reference": "e173367c5f506af39345f7a18e88764786edbdfa"
+                "reference": "c5dbfb64e5a2a30872ec3927b4cf13a2eb05e10e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/e173367c5f506af39345f7a18e88764786edbdfa",
-                "reference": "e173367c5f506af39345f7a18e88764786edbdfa",
+                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/c5dbfb64e5a2a30872ec3927b4cf13a2eb05e10e",
+                "reference": "c5dbfb64e5a2a30872ec3927b4cf13a2eb05e10e",
                 "shasum": ""
             },
             "require": {
@@ -687,10 +687,10 @@
             ],
             "description": "Model Context Protocol SDK for Client and Server applications in PHP",
             "support": {
-                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.8.0",
+                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.8.1",
                 "issues": "https://github.com/modelcontextprotocol/php-sdk/issues"
             },
-            "time": "2026-08-24T23:12:29+00:00"
+            "time": "2026-08-29T23:10:56+00:00"
         },
         {
             "name": "opis/json-schema",

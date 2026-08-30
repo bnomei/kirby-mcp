@@ -5,6 +5,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-08-30
+
+- Updated the MCP PHP SDK dependency to `mcp/sdk` v0.8.1, fixing variadic tool and prompt arguments and suppressing spurious list-change notifications during initial registry loading.
+
 ## [1.12.0] - 2026-08-25
 
 - Enabled MCP SDK v0.8 dual-era dispatch, preserving stateful handshake clients while adding stateless `2026-07-28` requests.
