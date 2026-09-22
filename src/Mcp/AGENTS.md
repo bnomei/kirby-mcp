@@ -43,12 +43,16 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - Keep `kirby_run_cli_command` defaults minimal; prefer dedicated tools/resources over broad allowlist patterns (especially for `mcp:*` runtime wrappers).
 - Return structured data; avoid `echo`/side effects from tools/resources.
 - Treat query evaluation tools (e.g. `kirby_query_dot`) as sensitive; keep confirm gating and document default enablement/disable switches.
-- Handshake-era tool calls (except `kirby_init`) are init-guarded. Modern `2026-07-28` calls are stateless and may call `kirby_init` only for audit/guidance.
+- Stdio handshake-era tool calls (except `kirby_init`) are init-guarded. HTTP calls are scope-authorized and may call
+  `kirby_init` for audit/guidance but do not require it because remote clients may use a fresh session per tool call.
+  Modern `2026-07-28` calls remain stateless.
 - In `global-reference` mode, `kirby_init` must not require or discover a Kirby project. It should describe the
   reference-only scope and explicitly direct project work to a separate project-local MCP server.
 - Init gating is session-scoped via `SessionInterface`; use `RequestContext` to access per-session state from tools when needed.
 - Dump trace convenience is handshake-session scoped. Stateless calls must correlate explicitly with `traceId` or `path`; do not persist modern dump state.
 - Provide tool output schemas via `#[McpTool(outputSchema: ...)]` (SDK v0.3+); keep `structuredContent` + JSON text in sync.
+- Validate representative success payloads against declared output schemas, including nullable values and empty PHP maps
+  that must serialize as JSON objects rather than arrays.
 - Modern structured tool results may append resource links for concrete `kirby://` URIs from explicit semantic fields; preserve structured fields and JSON text, filter templates, and never scan arbitrary content.
 - SDK v0.4 validates tool input before method execution and adds resource subscribe/unsubscribe handlers; when behavior depends on legacy-compatible inputs or mutable resources, reflect that in schemas and tests.
 - SDK v0.5 exposes top-level `title` on tools/prompts; keep `#[McpTool(title: ...)]` and `#[McpPrompt(title: ...)]` populated and aligned with display titles.

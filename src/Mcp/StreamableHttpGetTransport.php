@@ -23,6 +23,7 @@ final class StreamableHttpGetTransport extends BaseTransport
         private readonly ResponseFactoryInterface $responseFactory,
         private readonly int $maxSeconds = 300,
         private readonly int $pollIntervalMicros = 100000,
+        private readonly float $heartbeatIntervalSeconds = 15.0,
         ?LoggerInterface $logger = null,
     ) {
         parent::__construct($logger);
@@ -32,9 +33,11 @@ final class StreamableHttpGetTransport extends BaseTransport
     public function listen(): ResponseInterface
     {
         $stream = new CallbackStream(function (): void {
+            @set_time_limit($this->maxSeconds > 0 ? $this->maxSeconds + 5 : 0);
+
             $started = microtime(true);
             $sentInitialComment = false;
-            $nextHeartbeat = $started + 15.0;
+            $nextHeartbeat = $started + $this->heartbeatIntervalSeconds;
 
             while (true) {
                 $messages = $this->getOutgoingMessages($this->sessionIdValue);
@@ -46,7 +49,7 @@ final class StreamableHttpGetTransport extends BaseTransport
                         @ob_flush();
                         flush();
                         $sentInitialComment = true;
-                        $nextHeartbeat = $now + 15.0;
+                        $nextHeartbeat = $now + $this->heartbeatIntervalSeconds;
                     }
                 } else {
                     foreach ($messages as $message) {

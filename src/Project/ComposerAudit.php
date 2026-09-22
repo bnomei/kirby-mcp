@@ -31,7 +31,7 @@ final readonly class ComposerAudit
      * @return array{
      *   projectRoot: string,
      *   composerJson: array<mixed>,
-     *   scripts: array<string, mixed>,
+     *   scripts: array<string, mixed>|\stdClass,
      *   tools: array<string, ToolDetection>
      * }
      */
@@ -40,7 +40,7 @@ final readonly class ComposerAudit
         return [
             'projectRoot' => $this->projectRoot,
             'composerJson' => $this->composerJson,
-            'scripts' => $this->scripts,
+            'scripts' => $this->scripts !== [] ? $this->scripts : new \stdClass(),
             'tools' => $this->tools,
         ];
     }

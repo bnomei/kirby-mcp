@@ -12,6 +12,11 @@ final class KirbyCliRunner
     public const ENV_KIRBY_BIN = 'KIRBY_MCP_KIRBY_BIN';
     public const ENV_PHP_BINARY = 'KIRBY_MCP_PHP_BINARY';
 
+    public function __construct(
+        private readonly PhpBinaryResolver $phpBinaryResolver = new PhpBinaryResolver(),
+    ) {
+    }
+
     /**
      * @param array<int, string> $args Kirby CLI arguments (e.g. ["list"], ["make:blueprint", "post"])
      * @param array<string, string> $env Extra environment variables
@@ -67,22 +72,7 @@ final class KirbyCliRunner
 
     private function phpBinary(): string
     {
-        $envOverride = getenv(self::ENV_PHP_BINARY);
-        if (!is_string($envOverride)) {
-            return PHP_BINARY;
-        }
-
-        $phpBinary = trim($envOverride);
-        if ($phpBinary === '') {
-            return PHP_BINARY;
-        }
-
-        $quote = $phpBinary[0];
-        if (($quote === '"' || $quote === "'") && str_ends_with($phpBinary, $quote)) {
-            $phpBinary = trim(substr($phpBinary, 1, -1));
-        }
-
-        return $phpBinary !== '' ? $phpBinary : PHP_BINARY;
+        return $this->phpBinaryResolver->resolve(getenv(self::ENV_PHP_BINARY));
     }
 
     private function resolveBinary(string $projectRoot): ?string

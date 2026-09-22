@@ -25,6 +25,36 @@ it('negotiates only supported handshake protocol revisions', function (string $o
     'modern revision offered through initialize counter-offers the handshake revision' => ['2026-07-28', '2025-11-25'],
 ]);
 
+it('keeps the init prerequisite for default stdio handshake sessions', function (): void {
+    $responses = runKirbyMcpStdioRequests([
+        [
+            'jsonrpc' => '2.0',
+            'id' => 1,
+            'method' => 'initialize',
+            'params' => [
+                'protocolVersion' => '2025-11-25',
+                'capabilities' => new stdClass(),
+                'clientInfo' => ['name' => 'tests', 'version' => 'dev'],
+            ],
+        ],
+        ['jsonrpc' => '2.0', 'method' => 'notifications/initialized'],
+        [
+            'jsonrpc' => '2.0',
+            'id' => 2,
+            'method' => 'tools/call',
+            'params' => [
+                'name' => 'kirby_search',
+                'arguments' => ['query' => 'config options'],
+            ],
+        ],
+    ]);
+
+    $toolResponse = $responses[1] ?? [];
+    expect($toolResponse['id'] ?? null)->toBe(2)
+        ->and($toolResponse['result']['isError'] ?? false)->toBeTrue()
+        ->and($toolResponse['result']['content'][0]['text'] ?? '')->toContain('kirby_init');
+});
+
 it('returns invalid params for unknown references on known MCP methods', function (): void {
     $responses = runKirbyMcpStdioRequests([
         [
@@ -223,6 +253,23 @@ it('boots the MCP stdio server and answers initialize', function (): void {
         expect($outputSchema)->toHaveKey('type');
         expect($outputSchema['type'])->toBe('object');
     }
+
+    foreach ([
+        'kirby_read_page_content',
+        'kirby_read_site_content',
+        'kirby_read_file_content',
+        'kirby_read_user_content',
+    ] as $toolName) {
+        $fieldSchemas = $byName[$toolName]['outputSchema']['oneOf'][0]['properties']['fieldSchemas'] ?? null;
+        expect($fieldSchemas)->toBeArray();
+        expect($fieldSchemas['type'] ?? null)->toBe('object');
+        expect($fieldSchemas['additionalProperties']['type'] ?? null)->toBe('object');
+    }
+
+    $userEmailType = $byName['kirby_read_user_content']['outputSchema']['oneOf'][0]['properties']['user']['properties']['email']['type'] ?? null;
+    expect($userEmailType)->toBeArray();
+    expect($userEmailType)->toContain('string');
+    expect($userEmailType)->toContain('null');
 
     foreach ([
         'kirby_update_page_content',

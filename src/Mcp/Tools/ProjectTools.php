@@ -133,7 +133,7 @@ final class ProjectTools
      *   composer: array{
      *     projectRoot: string,
      *     composerJson: array<mixed>,
-     *     scripts: array<string, mixed>,
+     *     scripts: array<string, mixed>|\stdClass,
      *     tools: array<string, mixed>
      *   }
      * }

@@ -124,6 +124,7 @@ final class HttpMcpHandler
             $this->sessionStore,
             notificationBus: $this->notificationBus(),
             subscriptionLifetime: $this->sseMaxSeconds,
+            requireInit: false,
         )->run($transport);
     }
 
@@ -201,6 +202,7 @@ final class HttpMcpHandler
             $this->sessionStore,
             notificationBus: $this->notificationBus(),
             subscriptionLifetime: $this->sseMaxSeconds,
+            requireInit: false,
         )->run(
             new StreamableHttpGetTransport(
                 sessionIdValue: $uuid,

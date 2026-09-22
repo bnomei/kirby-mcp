@@ -5,6 +5,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.12.2] - 2026-09-22
+
+- Allowed authenticated HTTP clients to call tools without `kirby_init`, while retaining the init prerequisite for stdio handshake sessions and all bearer/OAuth scope checks.
+- Fixed runtime content output contracts: `fieldSchemas` and empty Composer script maps now serialize as JSON objects, and user email may be null.
+- Extended PHP's execution deadline around bounded HTTP SSE streams so the configured package lifetime remains authoritative under FrankenPHP and similar SAPIs.
+- Added PHP CLI fallback resolution for web SAPIs with an empty `PHP_BINARY`, and restored Kirby-compatible `e()` behavior in CLI-rendered templates.
+- Updated the development lock file and Starterkit validation baseline to Kirby 5.6.0, and refreshed Guzzle to patched 7.x releases.
+
 ## [1.12.1] - 2026-08-30
 
 - Updated the MCP PHP SDK dependency to `mcp/sdk` v0.8.1, fixing variadic tool and prompt arguments and suppressing spurious list-change notifications during initial registry loading.

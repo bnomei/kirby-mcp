@@ -38,6 +38,20 @@ function kirbyMcpHttpJsonRequest(string $method, int|string|null $id = null): st
     return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 }
 
+/** @param array<string, mixed> $arguments */
+function kirbyMcpHttpToolCall(string $name, int $id, array $arguments = []): string
+{
+    return json_encode([
+        'jsonrpc' => '2.0',
+        'id' => $id,
+        'method' => 'tools/call',
+        'params' => [
+            'name' => $name,
+            'arguments' => $arguments === [] ? new stdClass() : $arguments,
+        ],
+    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+}
+
 function kirbyMcpHttpAuthorize(mixed $request): mixed
 {
     return $request->withHeader('Authorization', 'Bearer local-secret');
@@ -305,6 +319,66 @@ it('serves the MCP server over a single /mcp HTTP endpoint with reusable session
             ->withHeader('Mcp-Session-Id', $sessionId))
     );
     expect($afterDeleteResponse->getStatusCode())->toBe(404);
+});
+
+it('allows handshake-era HTTP tools without kirby_init across independent sessions', function (): void {
+    $factory = new HttpFactory();
+    $sessionDir = sys_get_temp_dir() . '/kirby-mcp-http-no-init-' . bin2hex(random_bytes(6));
+    $handler = new HttpMcpHandler(
+        new ServerFactory(),
+        new FileSessionStore($sessionDir),
+        sharedToken: 'local-secret',
+        projectRoot: cmsPath(),
+    );
+    $previousRoot = getenv('KIRBY_MCP_PROJECT_ROOT');
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . cmsPath());
+
+    try {
+        foreach ([1, 2] as $requestNumber) {
+            $initialize = $handler->handle(kirbyMcpHttpAuthorize(
+                $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody($factory->createStream(kirbyMcpHttpJsonRequest('initialize', $requestNumber * 10)))
+            ));
+            expect($initialize->getStatusCode())->toBe(200);
+            $sessionId = $initialize->getHeaderLine('Mcp-Session-Id');
+            expect($sessionId)->not()->toBe('');
+
+            $initializePayload = kirbyMcpHttpDecodeResponse($initialize);
+            expect($initializePayload['result']['instructions'] ?? '')
+                ->toContain('recommended')
+                ->toContain('not required for HTTP');
+
+            $initialized = $handler->handle(kirbyMcpHttpAuthorize(
+                $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withHeader('Mcp-Session-Id', $sessionId)
+                    ->withBody($factory->createStream(kirbyMcpHttpJsonRequest('notifications/initialized')))
+            ));
+            expect($initialized->getStatusCode())->toBe(202);
+
+            $toolResponse = $handler->handle(kirbyMcpHttpAuthorize(
+                $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withHeader('Mcp-Session-Id', $sessionId)
+                    ->withBody($factory->createStream(kirbyMcpHttpToolCall(
+                        'kirby_runtime_status',
+                        $requestNumber * 10 + 1,
+                    )))
+            ));
+            $toolPayload = kirbyMcpHttpDecodeResponse($toolResponse);
+
+            expect($toolResponse->getStatusCode())->toBe(200)
+                ->and($toolPayload['result']['isError'] ?? false)->toBeFalse()
+                ->and($toolPayload['result']['structuredContent']['projectRoot'] ?? null)->toBe(cmsPath());
+        }
+    } finally {
+        if ($previousRoot === false) {
+            putenv('KIRBY_MCP_PROJECT_ROOT');
+        } else {
+            putenv('KIRBY_MCP_PROJECT_ROOT=' . $previousRoot);
+        }
+    }
 });
 
 it('rejects malformed MCP session ids before delegating non-GET requests', function (): void {

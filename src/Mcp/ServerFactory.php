@@ -56,6 +56,7 @@ final class ServerFactory
         string $profile = ServerProfile::PROJECT,
         ?NotificationBusInterface $notificationBus = null,
         float $subscriptionLifetime = 30.0,
+        bool $requireInit = true,
     ): Server {
         $profile = ServerProfile::normalize($profile);
         $container = new Container();
@@ -82,7 +83,7 @@ final class ServerFactory
                 ServerProfile::isGlobalReference($profile) ? 'Kirby MCP Reference' : 'Kirby MCP',
                 $this->resolveVersion(),
             )
-            ->setInstructions($this->instructions($profile));
+            ->setInstructions($this->instructions($profile, $requireInit));
 
         if ($sessionStore !== null) {
             $builder->setSession(
@@ -114,12 +115,17 @@ final class ServerFactory
             $builder->setDiscovery(dirname(__DIR__, 2), ['src/Mcp/Tools', 'src/Mcp/Resources']);
         }
 
-        $server = $builder
+        $builder
             ->addRequestHandler(new BundledReadResourceHandler(
                 new ReadResourceHandler($registry, $referenceHandler),
             ))
-            ->addRequestHandler(new CodexSafeListResourcesHandler($registry))
-            ->addRequestHandler(new RequireInitForToolsHandler($callToolHandler))
+            ->addRequestHandler(new CodexSafeListResourcesHandler($registry));
+
+        $builder->addRequestHandler(
+            $requireInit ? new RequireInitForToolsHandler($callToolHandler) : $callToolHandler,
+        );
+
+        $server = $builder
             ->setCapabilities(new ServerCapabilities(
                 tools: true,
                 resources: true,
@@ -139,8 +145,16 @@ final class ServerFactory
         return $server;
     }
 
-    private function instructions(string $profile): string
+    private function instructions(string $profile, bool $requireInit): string
     {
+        if ($requireInit === false) {
+            if (ServerProfile::isGlobalReference($profile)) {
+                return 'kirby_init is recommended for guidance but is not required for HTTP tool calls. This is the global Kirby reference MCP: it is not connected to a project.';
+            }
+
+            return 'kirby_init is recommended for audit and guidance but is not required for HTTP tool calls. Use kirby_tool_suggest if unsure which tool/resource to use.';
+        }
+
         if (ServerProfile::isGlobalReference($profile)) {
             return 'For handshake sessions, call kirby_init once before other tools. Stateless modern calls may use kirby_init optionally for guidance. This is the global Kirby reference MCP: it is not connected to a project.';
         }

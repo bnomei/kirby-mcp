@@ -65,6 +65,24 @@ it('detects common tooling as absent in the cms fixture', function (): void {
     }
 });
 
+it('serializes an absent scripts map as a JSON object', function (): void {
+    $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-composer-no-scripts-' . bin2hex(random_bytes(4));
+    mkdir($root, 0777, true);
+    file_put_contents($root . DIRECTORY_SEPARATOR . 'composer.json', json_encode([
+        'name' => 'test/project',
+    ], JSON_THROW_ON_ERROR));
+
+    try {
+        $payload = (new ComposerInspector())->inspect($root)->toArray();
+        $json = json_encode($payload, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($json, false, flags: JSON_THROW_ON_ERROR);
+
+        expect($decoded->scripts)->toBeObject();
+    } finally {
+        removeComposerInspectorFixtureDir($root);
+    }
+});
+
 it('detects mago when installed via composer require-dev', function (): void {
     $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'kirby-mcp-composer-mago-require-' . bin2hex(random_bytes(4));
     mkdir($root, 0777, true);

@@ -84,8 +84,8 @@ final class RuntimeTools
                         'additionalProperties' => true,
                     ],
                     'fieldSchemas' => [
-                        'type' => 'array',
-                        'items' => ['type' => 'object'],
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'object'],
                     ],
                     'warningBlock' => ['type' => ['object', 'null']],
                     'BEFORE_UPDATE_READ' => [
@@ -144,8 +144,8 @@ final class RuntimeTools
                         'additionalProperties' => true,
                     ],
                     'fieldSchemas' => [
-                        'type' => 'array',
-                        'items' => ['type' => 'object'],
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'object'],
                     ],
                     'warningBlock' => ['type' => ['object', 'null']],
                     'BEFORE_UPDATE_READ' => [
@@ -208,8 +208,8 @@ final class RuntimeTools
                         'additionalProperties' => true,
                     ],
                     'fieldSchemas' => [
-                        'type' => 'array',
-                        'items' => ['type' => 'object'],
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'object'],
                     ],
                     'warningBlock' => ['type' => ['object', 'null']],
                     'BEFORE_UPDATE_READ' => [
@@ -249,7 +249,7 @@ final class RuntimeTools
                         'type' => 'object',
                         'properties' => [
                             'id' => ['type' => 'string'],
-                            'email' => ['type' => 'string'],
+                            'email' => ['type' => ['string', 'null']],
                             'name' => ['type' => ['string', 'null']],
                             'role' => ['type' => 'string'],
                         ],
@@ -270,8 +270,8 @@ final class RuntimeTools
                         'additionalProperties' => true,
                     ],
                     'fieldSchemas' => [
-                        'type' => 'array',
-                        'items' => ['type' => 'object'],
+                        'type' => 'object',
+                        'additionalProperties' => ['type' => 'object'],
                     ],
                     'warningBlock' => ['type' => ['object', 'null']],
                     'BEFORE_UPDATE_READ' => [
@@ -1915,6 +1915,10 @@ final class RuntimeTools
     {
         if (($payload['content'] ?? null) === []) {
             $payload['content'] = new \stdClass();
+        }
+
+        if (($payload['fieldSchemas'] ?? null) === []) {
+            $payload['fieldSchemas'] = new \stdClass();
         }
 
         return $payload;

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
 use Kirby\Cms\App;
+use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Discovery\SchemaValidator;
 
 it('reads site content via runtime CLI', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
@@ -144,6 +146,17 @@ it('reads user content via runtime CLI', function (): void {
         expect($result)->toHaveKey('ok', true);
         expect($result['user']['email'] ?? null)->toBe('mcp-runtime@example.com');
         expect($result['content'])->toBeArray();
+        expect($result['fieldSchemas'])->toHaveKey('city');
+
+        $attributes = (new ReflectionMethod(RuntimeTools::class, 'readUserContent'))->getAttributes(McpTool::class);
+        expect($attributes)->toHaveCount(1);
+
+        $outputSchema = $attributes[0]->newInstance()->outputSchema;
+        if (!is_array($outputSchema)) {
+            throw new RuntimeException('Expected readUserContent to declare an output schema.');
+        }
+
+        expect((new SchemaValidator())->validateAgainstJsonSchema($result, $outputSchema))->toBe([]);
     } finally {
         if ($previousApp instanceof App) {
             App::instance($previousApp);
