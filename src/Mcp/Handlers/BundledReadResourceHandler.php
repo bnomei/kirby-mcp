@@ -63,7 +63,6 @@ final class BundledReadResourceHandler implements RequestHandlerInterface
             'kirby://hooks',
             'kirby://kb',
             'kirby://sections',
-            'kirby://tools',
         ], true)) {
             return true;
         }

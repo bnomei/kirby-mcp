@@ -428,6 +428,12 @@ final class RuntimeTools
         $commandsRoot = $runtime->commandsRoot();
 
         $mcpCommandsDir = rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp';
+        $pluginRoot = $runtime->root('plugins', $projectRoot . '/site/plugins') . DIRECTORY_SEPARATOR . 'kirby-mcp';
+        $pluginMissing = array_values(array_filter(
+            ['index.php', 'composer.json'],
+            static fn (string $file): bool => !is_file($pluginRoot . DIRECTORY_SEPARATOR . $file)
+        ));
+        $plugin = ['root' => $pluginRoot, 'installed' => $pluginMissing === [], 'missingFiles' => $pluginMissing];
 
         $packageRoot = dirname(__DIR__, 3);
         $sourceRoot = rtrim($packageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'commands';
@@ -439,6 +445,7 @@ final class RuntimeTools
                 'host' => $host,
                 'commandsRoot' => $commandsRoot,
                 'mcpCommandsDir' => $mcpCommandsDir,
+                'plugin' => $plugin,
                 'installed' => false,
                 'inSync' => false,
                 'expectedFiles' => [],
@@ -466,19 +473,20 @@ final class RuntimeTools
         sort($missingFiles);
 
         $installed = $installedFiles !== [];
-        $inSync = $installed === true && $missingFiles === [];
+        $inSync = $installed === true && $missingFiles === [] && $pluginMissing === [];
 
         $message = $inSync === true
-            ? 'Runtime commands are installed.'
+            ? 'Runtime commands and plugin adapter are installed.'
             : ($installed === false
                 ? 'Runtime commands are not installed. Run kirby_runtime_install (or `kirby mcp:install` once installed).'
-                : 'Runtime commands are partially installed. Run kirby_runtime_install (or `kirby mcp:update`) to install missing command files.');
+                : 'Runtime commands or plugin adapter are partially installed. Run kirby_runtime_install (or `kirby mcp:update`) to install missing files.');
 
         return $this->maybeStructuredResult($context, [
             'projectRoot' => $projectRoot,
             'host' => $host,
             'commandsRoot' => $commandsRoot,
             'mcpCommandsDir' => $mcpCommandsDir,
+            'plugin' => $plugin,
             'installed' => $installed,
             'inSync' => $inSync,
             'expectedFiles' => $expectedFiles,

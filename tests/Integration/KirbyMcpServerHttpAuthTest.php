@@ -8,7 +8,9 @@ use Bnomei\KirbyMcp\Mcp\HttpMcpHandler;
 use Bnomei\KirbyMcp\Mcp\ServerFactory;
 use GuzzleHttp\Psr7\HttpFactory;
 use Mcp\Server\Session\FileSessionStore;
+use Mcp\Server\Session\Session;
 use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\Uid\Uuid;
 
 function kirbyMcpHttpAuthJsonRequest(string $method, int|string|null $id = null, array $params = []): string
 {
@@ -43,6 +45,60 @@ function kirbyMcpHttpAuthDecode(ResponseInterface $response): array
 
     return $decoded;
 }
+
+it('enforces resource scopes on legacy subscriptions and rechecks stored subscriptions on GET', function (): void {
+    $factory = new HttpFactory();
+    $directory = sys_get_temp_dir() . '/kirby-mcp-subscription-scopes-' . bin2hex(random_bytes(6));
+    $store = new FileSessionStore($directory);
+    $reader = new HttpMcpHandler(
+        new ServerFactory(),
+        $store,
+        tokenValidator: new SharedTokenValidator('token', [HttpAuthScopes::READ]),
+        sseMaxSeconds: 1
+    );
+    $runtime = new HttpMcpHandler(
+        new ServerFactory(),
+        $store,
+        tokenValidator: new SharedTokenValidator('token', [HttpAuthScopes::READ, HttpAuthScopes::RUNTIME]),
+        sseMaxSeconds: 1
+    );
+    $base = $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+        ->withHeader('Authorization', 'Bearer token')->withHeader('Content-Type', 'application/json');
+    try {
+        $initialize = $reader->handle($base->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('initialize', 1))));
+        expect($initialize->getStatusCode())->toBe(200);
+        $id = $initialize->getHeaderLine('Mcp-Session-Id');
+        $base = $base->withHeader('Mcp-Session-Id', $id);
+        foreach (['resources/subscribe', 'resources/unsubscribe'] as $method) {
+            $request = $base->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest($method, 2, ['uri' => 'kirby://page/content/home'])));
+            $denied = $reader->handle($request);
+            expect($denied->getStatusCode())->toBe(403)
+                ->and($denied->getHeaderLine('WWW-Authenticate'))->toContain('insufficient_scope', HttpAuthScopes::RUNTIME);
+        }
+        foreach (['kirby://kb', 'kirby://page/content/home'] as $uri) {
+            $response = $runtime->handle($base->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/subscribe', 3, ['uri' => $uri]))));
+            expect($response->getStatusCode())->toBe(200)
+                ->and(kirbyMcpHttpAuthDecode($response))->toHaveKey('result');
+        }
+        $get = $factory->createServerRequest('GET', 'http://127.0.0.1/mcp')
+            ->withHeader('Authorization', 'Bearer token')->withHeader('Mcp-Session-Id', $id);
+        $denied = $reader->handle($get);
+        expect($denied->getStatusCode())->toBe(403)
+            ->and(kirbyMcpHttpAuthDecode($denied)['error']['data']['requiredScopes'])->toBe([HttpAuthScopes::READ, HttpAuthScopes::RUNTIME]);
+        expect($runtime->handle($get)->getStatusCode())->toBe(200);
+
+        $unsubscribed = $runtime->handle($base->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('resources/unsubscribe', 4, ['uri' => 'kirby://page/content/home']))));
+        expect(kirbyMcpHttpAuthDecode($unsubscribed))->toHaveKey('result');
+        $session = new Session($store, Uuid::fromString($id));
+        expect($session->get('resource_subscriptions'))->toBe(['kirby://kb' => true])
+            ->and($reader->handle($get)->getStatusCode())->toBe(200);
+    } finally {
+        foreach (glob($directory . '/*') ?: [] as $file) {
+            unlink($file);
+        }
+        rmdir($directory);
+    }
+});
 
 /**
  * @param list<string> $allowedOrigins

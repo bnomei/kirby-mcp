@@ -6,6 +6,7 @@ namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ServerProfile;
+use Bnomei\KirbyMcp\Mcp\Permissions;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Mcp\Capability\Attribute\McpResource;
 use Mcp\Schema\Annotations;
@@ -15,6 +16,7 @@ final class MetaResources
 {
     public function __construct(
         private readonly string $profile = ServerProfile::PROJECT,
+        private readonly ?Permissions $permissions = null,
     ) {
     }
 
@@ -66,6 +68,9 @@ final class MetaResources
     )]
     public function toolIndex(): array
     {
-        return ToolIndex::all($this->profile);
+        return array_values(array_filter(
+            ToolIndex::all($this->profile),
+            fn (array $item): bool => $this->permissions === null || $this->permissions->indexItem($item['kind'], $item['name'])
+        ));
     }
 }

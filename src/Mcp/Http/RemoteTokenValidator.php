@@ -24,7 +24,7 @@ final readonly class RemoteTokenValidator implements AuthorizationTokenValidator
         $matchedToken = null;
 
         foreach ($this->tokens as $token) {
-            if (!$token instanceof KirbyMcpHttpToken || !$token->hasValidHash()) {
+            if (!$token instanceof KirbyMcpHttpToken || !$token->hasValidHash() || !$token->hasValidUserId()) {
                 continue;
             }
 
@@ -45,7 +45,7 @@ final readonly class RemoteTokenValidator implements AuthorizationTokenValidator
                 'token_type' => 'remote-token',
             ],
             'oauth.scopes' => $scopes,
-            'oauth.subject' => 'remote-token:' . $matchedToken->id,
+            'oauth.subject' => $matchedToken->userId,
         ]);
     }
 }

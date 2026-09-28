@@ -11,14 +11,18 @@ use Bnomei\KirbyMcp\Mcp\KirbyMcpRoutes;
  */
 $mcpRoutes = [];
 
-if (PHP_SAPI === 'cli-server' && getenv('KIRBY_MCP_FIXTURE_HTTP_ROUTE') === '1') {
+// The downloaded kit is not Composer-based; load the library before plugin discovery
+// to model the supported host installation, keeping the kit's Kirby authoritative.
+if (!class_exists(\Bnomei\KirbyMcp\Mcp\Plugin::class)) {
     $fixtureLoader = require dirname(__DIR__, 2) . '/kirby/vendor/autoload.php';
     require dirname(__DIR__, 4) . '/vendor/autoload.php';
 
     // Keep the fixture's bundled Kirby version authoritative after loading this package.
     $fixtureLoader->unregister();
     $fixtureLoader->register(true);
+}
 
+if (PHP_SAPI === 'cli-server' && getenv('KIRBY_MCP_FIXTURE_HTTP_ROUTE') === '1') {
     $mcpRoutes = KirbyMcpRoutes::mcp(projectRoot: dirname(__DIR__, 2));
 }
 

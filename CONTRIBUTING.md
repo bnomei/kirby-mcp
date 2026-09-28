@@ -16,6 +16,8 @@ If integration tests require a Kirby fixture, run `composer cms:plainkit` first.
 
 - Keep PRs focused and describe the why and the how.
 - Update docs/tests when behavior changes.
+- Add every new tool/resource to `Mcp\Permissions` and [the capability map](docs/permissions.md).
+  Verify remote discovery and direct-call enforcement without changing trusted local behavior.
 - Follow repo guidelines in `AGENTS.md`.
 
 ## Code of Conduct

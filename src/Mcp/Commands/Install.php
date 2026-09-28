@@ -20,11 +20,11 @@ final class Install extends RuntimeCommand
     public static function definition(): array
     {
         return [
-            'description' => 'Install Kirby MCP runtime CLI commands into this project (site/commands/mcp)',
+            'description' => 'Install Kirby MCP runtime commands and permission plugin adapter into this project',
             'args' => [
                 'force' => [
                     'longPrefix' => 'force',
-                    'description' => 'Overwrite existing files in site/commands/mcp.',
+                    'description' => 'Overwrite existing runtime command and plugin adapter files.',
                     'noValue' => true,
                 ],
             ],
@@ -43,6 +43,7 @@ final class Install extends RuntimeCommand
         $force = $cli->arg('force') === true;
 
         $commandsRoot = self::resolveCommandsRoot($cli);
+        $pluginsRoot = $kirby->root('plugins');
 
         $projectRoot = $cli->dir();
 
@@ -50,19 +51,23 @@ final class Install extends RuntimeCommand
             projectRoot: $projectRoot,
             force: $force,
             commandsRootOverride: $commandsRoot,
+            pluginsRootOverride: $pluginsRoot,
         );
 
         if ($result->errors !== []) {
-            $cli->climate()->error('Kirby MCP runtime commands installed with errors.');
+            $cli->climate()->error('Kirby MCP runtime files installed with errors.');
             foreach ($result->errors as $error) {
                 $cli->climate()->error($error['path'] . ': ' . $error['error']);
             }
         } else {
-            $cli->climate()->green('Kirby MCP runtime commands installed.');
+            $cli->climate()->green('Kirby MCP runtime files installed.');
         }
 
-        $cli->climate()->out('Target: ' . rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
-        $cli->climate()->out('Installed: ' . count($result->installed));
-        $cli->climate()->out('Skipped: ' . count($result->skipped));
+        $cli->climate()->out('Commands target: ' . rtrim($commandsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
+        $cli->climate()->out('Commands installed: ' . count($result->installed));
+        $cli->climate()->out('Commands skipped: ' . count($result->skipped));
+        $cli->climate()->out('Plugin target: ' . $result->plugin->root);
+        $cli->climate()->out('Plugin files installed: ' . count($result->plugin->installed));
+        $cli->climate()->out('Plugin files skipped: ' . count($result->plugin->skipped));
     }
 }

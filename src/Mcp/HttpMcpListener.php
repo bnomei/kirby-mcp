@@ -54,6 +54,7 @@ final class HttpMcpListener
         $authFactory = new HttpAuthFactory();
         $tokenValidator = null;
         $protectedResourceMetadata = null;
+        $useKirbyUser = false;
 
         if ($sharedToken !== null && $sharedToken !== '') {
             $tokenValidator = $authFactory->sharedTokenValidator($sharedToken, $config->scopes);
@@ -62,9 +63,11 @@ final class HttpMcpListener
             $tokenValidator = $authFactory->sharedTokenValidator($sharedToken, $config->scopes);
         } elseif ($config->authMode === KirbyMcpHttpConfig::AUTH_MODE_REMOTE_TOKEN) {
             $tokenValidator = $authFactory->remoteTokenValidator($config->remoteTokens);
+            $useKirbyUser = true;
         } elseif ($config->authMode === KirbyMcpHttpConfig::AUTH_MODE_OAUTH && is_string($config->oauthIssuer) && is_string($config->oauthAudience)) {
             $tokenValidator = $authFactory->oauthValidator($config);
             $protectedResourceMetadata = $authFactory->metadata($config->oauthIssuer, $config->oauthAudience);
+            $useKirbyUser = true;
         }
 
         $handler = new HttpMcpHandler(
@@ -79,6 +82,7 @@ final class HttpMcpListener
             tokenValidator: $tokenValidator,
             protectedResourceMetadata: $protectedResourceMetadata,
             projectRoot: $projectRoot,
+            useKirbyUser: $useKirbyUser,
         );
 
         fwrite(STDERR, sprintf("Kirby MCP HTTP listening on http://%s:%d%s\n", $host, $port, $path));

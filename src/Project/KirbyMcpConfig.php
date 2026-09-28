@@ -426,12 +426,13 @@ final readonly class KirbyMcpConfig
         $envToken = $this->envString('KIRBY_MCP_HTTP_REMOTE_TOKEN');
         $envHash = $this->envString('KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH');
         $envId = $this->envString('KIRBY_MCP_HTTP_REMOTE_TOKEN_ID') ?? 'env';
+        $envUserId = $this->envString('KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID') ?? '';
         $envScopes = $this->envStringList('KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES') ?? $globalScopes;
 
         if ($envToken !== null) {
-            $tokens[] = KirbyMcpHttpToken::fromPlainText($envId, $envToken, $envScopes);
+            $tokens[] = KirbyMcpHttpToken::fromPlainText($envId, $envToken, $envUserId, $envScopes);
         } elseif ($envHash !== null) {
-            $tokens[] = new KirbyMcpHttpToken($envId, $envHash, $envScopes);
+            $tokens[] = new KirbyMcpHttpToken($envId, $envHash, $envUserId, $envScopes);
         }
 
         return $tokens;
@@ -448,6 +449,7 @@ final readonly class KirbyMcpConfig
         return new KirbyMcpHttpToken(
             id: $this->stringValue($item['id'] ?? null) ?? trim($fallbackId),
             hash: $this->stringValue($item['hash'] ?? $item['tokenHash'] ?? $item['token_hash'] ?? null) ?? '',
+            userId: $this->stringValue($item['userId'] ?? $item['user_id'] ?? null) ?? '',
             scopes: $scopes === [] ? $globalScopes : $scopes,
         );
     }

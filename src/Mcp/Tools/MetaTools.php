@@ -6,6 +6,7 @@ namespace Bnomei\KirbyMcp\Mcp\Tools;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ServerProfile;
+use Bnomei\KirbyMcp\Mcp\Permissions;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Bnomei\KirbyMcp\Mcp\SessionState;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
@@ -21,6 +22,7 @@ final class MetaTools
 
     public function __construct(
         private readonly string $profile = ServerProfile::PROJECT,
+        private readonly ?Permissions $permissions = null,
     ) {
     }
 
@@ -85,6 +87,9 @@ final class MetaTools
 
         $scored = [];
         foreach (ToolIndex::all($this->profile) as $tool) {
+            if ($this->permissions !== null && !$this->permissions->indexItem($tool['kind'], $tool['name'])) {
+                continue;
+            }
             $score = 0;
             $matched = [];
 

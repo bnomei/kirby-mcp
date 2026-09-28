@@ -558,6 +558,7 @@ Use `remote-token` for public HTTPS routes when the client can send a static Bea
         {
           "id": "claude-code",
           "hash": "sha256:replace-with-sha256-token-hash",
+          "userId": "editor-user",
           "scopes": ["kirby-mcp:read", "kirby-mcp:runtime", "kirby-mcp:write", "kirby-mcp:execute", "kirby-mcp:admin"]
         }
       ]
@@ -582,6 +583,7 @@ Or provide the raw token through the environment:
 KIRBY_MCP_HTTP_AUTH_MODE=remote-token
 KIRBY_MCP_HTTP_REMOTE_TOKEN=replace-with-a-long-random-secret
 KIRBY_MCP_HTTP_REMOTE_TOKEN_ID=claude-code
+KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID=editor-user
 KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES=kirby-mcp:read,kirby-mcp:runtime
 ```
 
@@ -592,10 +594,16 @@ Use OAuth instead for Claude Desktop/Claude.ai custom connectors.
 Use `oauth` for Claude Desktop/Claude.ai custom connectors. No separate OAuth server package is
 required for the built-in Claude flow.
 
-1. Register `KirbyMcpRoutes::routes()`.
-2. Enable the config below.
-3. Add a Claude custom connector with MCP server URL `https://example.com/mcp`.
-4. Add the consent snippet only if you want a custom approval screen.
+**Kirby users and permissions come first:** OAuth authenticates the connecting user, while every
+remote token names one existing Kirby user. Both modes apply the hierarchical Kirby MCP capability
+map; dedicated page, file, site, and user updates additionally run as that Kirby user. See
+[Kirby permissions and limits](#kirby-permissions-and-limits) and [the complete capability map](docs/permissions.md).
+
+1. Run `vendor/bin/kirby-mcp install` (or `update` after upgrading) to install the runtime commands and permission adapter.
+2. Register `KirbyMcpRoutes::routes()`.
+3. Enable the config below and configure the connecting user's role permissions.
+4. Add a Claude custom connector with MCP server URL `https://example.com/mcp`.
+5. Add the consent snippet only if you want a custom approval screen.
 
 ```json
 {
@@ -620,6 +628,10 @@ required for the built-in Claude flow.
 With `oauthProvider.enabled=true`, the route derives issuer, audience/resource, and JWKS URL from
 the incoming HTTPS request unless you set `http.auth.issuer`, `http.auth.audience`, or
 `http.auth.jwksUri`. Provider state is stored under `.kirby-mcp/oauth`, not in Kirby cache.
+
+The example admits only administrators. To connect editors instead, set `http.oauthProvider.role` to
+their existing Kirby role name (for example `editor`), or `"*"` to admit any authenticated Kirby user.
+This setting controls who can authorize a connection; it does not assign or change their Kirby role.
 
 > [!IMPORTANT]
 > Consent defaults to `snippet`. A logged-in Kirby user must approve or deny the client before Claude
@@ -683,6 +695,10 @@ operation scopes. Kirby MCP validates the resulting JWTs for this mode; it does 
 authorization server for you. A package such as `league/oauth2-server` can be useful if you build
 that issuer yourself, but it is not used by the built-in Claude OAuth provider.
 
+For all remote operations, an external issuer must set JWT `sub` to the exact ID of an existing Kirby user
+in this project (not their email or an external account ID). There is no automatic account mapping
+or provisioning. Missing subjects and unknown/deleted users are rejected.
+
 HTTP tokens are scope-checked per operation. Available scope names are:
 
 - `kirby-mcp:read` for read-only tools and resources.
@@ -712,13 +728,39 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 
 ## Security model
 
+### Kirby permissions and limits
+
+OAuth and remote-token connections resolve an existing Kirby user and apply the registered
+`bnomei.kirby-mcp` capability map to discovery and every operation. Every parent and leaf permission
+must be `true`; all entries default to `false` for custom roles, while Kirby's native `admin` role
+remains unrestricted. The four dedicated content-update tools also execute as that user, so Kirby's
+native mutation checks and hooks apply.
+
+Use [Kirby's permission configuration](https://getkirby.com/docs/guide/users/permissions):
+
+- Define role permissions in `site/blueprints/users/<role>.yml`.
+- Use model blueprint `options` and `before` hooks for project-specific rules.
+- Use a custom role for restricted users; Kirby's `admin` role remains unrestricted.
+
+HTTP scopes remain coarse tool-access gates, and write confirmations remain required. Neither replaces
+Kirby permissions. Local stdio and loopback shared-token connections remain trusted-operator access.
+See [Remote MCP permissions](docs/permissions.md) for role configuration and the complete map.
+
+**This is capability gating, not per-target isolation.** Granting a read capability permits every target
+supported by it. Enabled and permitted eval or generic CLI execution is trusted execution and can bypass
+other permissions. Identity, role, and account revocation are rechecked per HTTP request, but an already
+open streaming response is not continuously re-authorized. Do not use this server to isolate untrusted
+users to a private subset of a site.
+
+### Additional execution and transport controls
+
 - `kirby_run_cli_command` is guarded by an allowlist; extend it via `.kirby-mcp/mcp.json` (`cli.allow`, `cli.allowWrite`) and block via `cli.deny`.
 - Write-capable actions require explicit opt-in (e.g. `allowWrite=true` or `confirm=true`, depending on the tool).
 - `kirby_eval` is disabled by default; enable via `KIRBY_MCP_ENABLE_EVAL=1` or `.kirby-mcp/mcp.json` (`{"eval":{"enabled":true}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - `kirby_query_dot` is enabled by default; disable via `.kirby-mcp/mcp.json` (`{"query":{"enabled":false}}`) and still requires per-call confirmation (`confirm=true` or client-side elicitation).
 - HTTP transport is disabled by default and must never be exposed without Bearer-token authorization.
 - HTTP shared-token auth is limited to local development. Keep the token outside source control; the Kirby route rejects shared-token requests when `REMOTE_ADDR` is not loopback or the request host is not a real loopback host.
-- HTTP remote-token auth is explicit public bearer-token auth for header-capable clients. Store hashes in config, keep raw tokens in environment/secret storage, require HTTPS for non-loopback route requests, and scope tokens tightly.
+- HTTP remote-token auth is explicit public bearer-token auth for header-capable clients. Every token requires an existing Kirby `userId`. Store hashes in config, keep raw tokens in environment/secret storage, require HTTPS for non-loopback route requests, and scope tokens tightly.
 - OAuth remains the preferred production path for clients that need an interactive auth flow, including Claude Desktop and Claude.ai custom connectors. The optional built-in provider is disabled by default and writes only to `.kirby-mcp/oauth`.
 - HTTP validates `Origin` before MCP protocol handling and rejects missing, malformed, expired, invalid, or insufficient-scope tokens before tool/resource side effects.
 - HTTP exposes only the configured MCP route path, `/mcp` by default, for MCP traffic.
@@ -729,16 +771,20 @@ The agent can both check and generate IDE helpers for your project: `kirby_ide_h
 
 - Creates `.kirby-mcp/mcp.json` if neither `.kirby-mcp/mcp.json` nor `.kirby-mcp/config.json` exist.
 - Copies runtime command wrappers into the project’s Kirby commands root (usually `site/commands/mcp/`).
+- Copies the tiny plugin adapter `index.php` and generates its metadata-only `composer.json` in the
+  resolved plugins root (usually `site/plugins/kirby-mcp/`). The package remains a library in `vendor/`;
+  no implementation, dependency, HTTP route, or Panel UI registration is copied.
 - Use `--force` to overwrite existing wrapper files.
 
 `vendor/bin/kirby-mcp update`:
 
-- Overwrites the runtime wrappers (use after upgrading this package).
+- Overwrites the runtime wrappers and refreshes the copied plugin adapter metadata (use after upgrading this package).
 - Creates `.kirby-mcp/mcp.json` only if missing; it won’t overwrite an existing config.
 
 To remove everything:
 
 - Delete the runtime wrappers folder (`site/commands/mcp/` in most projects).
+- Delete the adapter folder (`site/plugins/kirby-mcp/` in most projects).
 - Optionally delete `.kirby-mcp/` (config + caches + optional helper files).
 
 ## Debug dumps (`mcp_dump`)
@@ -797,7 +843,7 @@ Kirby host selection:
 | `http.allowedOrigins`               | `string[]` | `[]`                      | Allowed browser origins for HTTP mode. Configure the exact client origins you expect.                                                                                                                                                |
 | `http.auth.mode`                    | `string`   | `null`                    | Required when HTTP is enabled: `oauth` for JWT validation, `remote-token` for public bearer-token clients that can send headers, or `shared-token` for loopback local development.                                                   |
 | `http.auth.token`                   | `string`   | `null`                    | Shared-token secret for local development. Prefer `KIRBY_MCP_HTTP_TOKEN` so secrets stay out of source control.                                                                                                                      |
-| `http.auth.tokens`                  | `array`    | `[]`                      | Remote-token records for `remote-token` mode. Each record needs `id`, `hash` (`sha256:<64-hex>`), and optional per-token `scopes`.                                                                                                   |
+| `http.auth.tokens`                  | `array`    | `[]`                      | Remote-token records. Each needs `id`, `hash` (`sha256:<64-hex>`), `userId` (an existing Kirby user ID), and optional per-token `scopes`.                                                                                            |
 | `http.auth.issuer`                  | `string`   | `null`                    | OAuth issuer expected in JWT access tokens.                                                                                                                                                                                          |
 | `http.auth.audience`                | `string`   | `null`                    | OAuth audience/resource expected in JWT access tokens, usually the MCP resource URL.                                                                                                                                                 |
 | `http.auth.jwksUri`                 | `string`   | `null`                    | OAuth JWKS URI used to verify access-token signatures.                                                                                                                                                                               |
@@ -829,6 +875,7 @@ Environment variables:
 | `KIRBY_MCP_HTTP_REMOTE_TOKEN`                   | Raw remote-token bearer secret for public HTTPS routes; prefer secret storage.                                                        |
 | `KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH`              | Remote-token hash in `sha256:<64-hex>` format.                                                                                        |
 | `KIRBY_MCP_HTTP_REMOTE_TOKEN_ID`                | Remote-token identifier used in auth metadata; defaults to `env`.                                                                     |
+| `KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID`           | Existing Kirby user ID required for the environment remote token.                                                                     |
 | `KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES`            | Comma-separated scopes for the environment remote token.                                                                              |
 | `KIRBY_MCP_HTTP_OAUTH_ISSUER`                   | OAuth JWT issuer.                                                                                                                     |
 | `KIRBY_MCP_HTTP_OAUTH_AUDIENCE`                 | OAuth JWT audience/resource.                                                                                                          |

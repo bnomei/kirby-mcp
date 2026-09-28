@@ -5,6 +5,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+- Keep permission-filtered tool-index reads private and non-cacheable, and enforce resource bearer scopes on legacy subscribe/unsubscribe and GET/SSE requests.
+- Added a tiny installed Kirby plugin adapter that registers the hierarchical, deny-by-default `bnomei.kirby-mcp` permission map without registering routes or Panel UI; install/update now report its copied `index.php` and generated `composer.json`, and update refreshes the metadata.
+- Apply that capability map to OAuth and remote-token discovery and operations. Remote tokens now require an existing Kirby `userId` (`KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID` for the environment token); dedicated content updates run as the resolved user and retain Kirby's native mutation checks and hooks. Local stdio and loopback shared-token access remain trusted.
+
 ## [1.12.2] - 2026-09-22
 
 - Allowed authenticated HTTP clients to call tools without `kirby_init`, while retaining the init prerequisite for stdio handshake sessions and all bearer/OAuth scope checks.

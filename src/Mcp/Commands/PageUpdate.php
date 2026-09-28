@@ -149,16 +149,17 @@ final class PageUpdate extends RuntimeCommand
             }
 
             $updatedKeys = array_keys($data);
-            $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($page->blueprint()->fields());
-            $schemaCheckReminder = ['kirby://blueprint/page/update-schema'];
-            foreach ($updatedKeys as $fieldKey) {
-                $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
-                if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {
-                    $schemaCheckReminder[] = $schema;
-                }
-            }
 
             if ($confirm !== true) {
+                $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($page->blueprint()->fields());
+                $schemaCheckReminder = ['kirby://blueprint/page/update-schema'];
+                foreach ($updatedKeys as $fieldKey) {
+                    $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
+                    if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {
+                        $schemaCheckReminder[] = $schema;
+                    }
+                }
+
                 self::emit($cli, [
                     'ok' => false,
                     'needsConfirm' => true,
@@ -177,7 +178,7 @@ final class PageUpdate extends RuntimeCommand
                 return;
             }
 
-            $updated = $kirby->impersonate('kirby', static function () use ($page, $data, $lang, $validate) {
+            $updated = $kirby->impersonate(self::mutationUser($kirby), static function () use ($page, $data, $lang, $validate) {
                 return $page->update($data, $lang, $validate);
             });
 

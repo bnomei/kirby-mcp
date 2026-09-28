@@ -57,6 +57,8 @@ final class ServerFactory
         ?NotificationBusInterface $notificationBus = null,
         float $subscriptionLifetime = 30.0,
         bool $requireInit = true,
+        ?string $oauthUserId = null,
+        ?Permissions $permissions = null,
     ): Server {
         $profile = ServerProfile::normalize($profile);
         $container = new Container();
@@ -64,15 +66,18 @@ final class ServerFactory
         $referenceHandler = new ReferenceHandler($container);
         $callToolHandler = new CallToolHandler($registry, $referenceHandler);
 
-        $container->set(MetaResources::class, new MetaResources($profile));
-        $container->set(MetaTools::class, new MetaTools($profile));
+        $container->set(MetaResources::class, new MetaResources($profile, $permissions));
+        $container->set(MetaTools::class, new MetaTools($profile, $permissions));
         $container->set(SessionTools::class, new SessionTools(profile: $profile));
         if (ServerProfile::isGlobalReference($profile)) {
             $this->registerProjectlessReferenceResources($container);
         }
 
         $notificationBus ??= new InMemoryNotificationBus();
-        $container->set(RuntimeTools::class, new RuntimeTools(notificationBus: $notificationBus));
+        $container->set(RuntimeTools::class, new RuntimeTools(
+            context: new ProjectContext(oauthUserId: $oauthUserId),
+            notificationBus: $notificationBus,
+        ));
 
         $builder = Server::builder()
             ->setContainer($container)
@@ -83,7 +88,9 @@ final class ServerFactory
                 ServerProfile::isGlobalReference($profile) ? 'Kirby MCP Reference' : 'Kirby MCP',
                 $this->resolveVersion(),
             )
-            ->setInstructions($this->instructions($profile, $requireInit));
+            ->setInstructions($this->instructions($profile, $requireInit) . ($oauthUserId !== null
+                ? ' Remote capabilities use Kirby role permissions. Content updates (page/file/site/user) also use the authenticated Kirby user and native mutation checks. Allowed reads and previews are not isolated per target; enabled eval and generic CLI execution are not a permission sandbox.'
+                : ''));
 
         if ($sessionStore !== null) {
             $builder->setSession(
@@ -136,7 +143,12 @@ final class ServerFactory
             ))
             ->build();
 
-        $this->registerSizedMarkdownResources($registry, $profile);
+        // Sizing is optional metadata and can execute runtime-backed resources.
+        // Remote discovery must not invoke resources before permission filtering.
+        if ($permissions === null) {
+            $this->registerSizedMarkdownResources($registry, $profile);
+        }
+        $permissions?->filterRegistry($registry);
 
         if ($notificationBus instanceof FileNotificationBus) {
             $notificationBus->activate();

@@ -17,6 +17,7 @@ final readonly class RuntimeCommandsInstallResult
         public array $installed,
         public array $skipped,
         public array $errors,
+        public PluginAdapterInstallResult $plugin,
     ) {
     }
 
@@ -32,7 +33,8 @@ final readonly class RuntimeCommandsInstallResult
      *   commandsRoot: string,
      *   installed: array<int, string>,
      *   skipped: array<int, string>,
-     *   errors: array<int, array{path: string, error: string}>
+     *   errors: array<int, array{path: string, error: string}>,
+     *   plugin: array{root: string, installed: array<int, string>, skipped: array<int, string>, errors: array<int, array{path: string, error: string}>}
      * }
      */
     public function toArray(): array
@@ -44,6 +46,7 @@ final readonly class RuntimeCommandsInstallResult
             'installed' => $this->installed,
             'skipped' => $this->skipped,
             'errors' => $this->errors,
+            'plugin' => $this->plugin->toArray(),
         ];
     }
 }

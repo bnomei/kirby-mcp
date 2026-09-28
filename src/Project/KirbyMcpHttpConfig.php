@@ -125,6 +125,10 @@ final readonly class KirbyMcpHttpConfig
                 if (!$token->hasValidHash()) {
                     $errors[] = 'HTTP remote-token auth token hashes must use sha256:<64-hex> format.';
                 }
+
+                if (!$token->hasValidUserId()) {
+                    $errors[] = 'HTTP remote-token auth token user IDs must not be empty or contain NUL bytes.';
+                }
             }
         }
 

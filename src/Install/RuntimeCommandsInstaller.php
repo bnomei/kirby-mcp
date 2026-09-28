@@ -5,17 +5,26 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Install;
 
 use Bnomei\KirbyMcp\Project\KirbyRootsInspector;
+use Composer\InstalledVersions;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Throwable;
 
 final class RuntimeCommandsInstaller
 {
     private const SOURCE_DIR = 'commands';
 
-    public function install(string $projectRoot, bool $force = false, ?string $commandsRootOverride = null): RuntimeCommandsInstallResult
-    {
+    private const PLUGIN_DIR = 'kirby-mcp';
+
+    public function install(
+        string $projectRoot,
+        bool $force = false,
+        ?string $commandsRootOverride = null,
+        ?string $pluginsRootOverride = null,
+    ): RuntimeCommandsInstallResult {
         $commandsRoot = null;
 
+        $roots = null;
         if (is_string($commandsRootOverride) && $commandsRootOverride !== '') {
             $commandsRoot = $commandsRootOverride;
         } else {
@@ -89,13 +98,109 @@ final class RuntimeCommandsInstaller
         sort($installed);
         sort($skipped);
 
+        if (is_string($pluginsRootOverride) && $pluginsRootOverride !== '') {
+            $pluginsRoot = $pluginsRootOverride;
+        } else {
+            $roots ??= (new KirbyRootsInspector())->inspect($projectRoot);
+            $pluginsRoot = $roots->get('plugins')
+                ?? rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'plugins';
+        }
+        $plugin = $this->installPluginAdapter($pluginsRoot, $force);
+        $errors = [...$errors, ...$plugin->errors];
+
         return new RuntimeCommandsInstallResult(
             projectRoot: $projectRoot,
             commandsRoot: $commandsRoot,
             installed: $installed,
             skipped: $skipped,
             errors: $errors,
+            plugin: $plugin,
         );
+    }
+
+    private function installPluginAdapter(string $pluginsRoot, bool $force): PluginAdapterInstallResult
+    {
+        $root = rtrim($pluginsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::PLUGIN_DIR;
+        $files = [
+            'index.php' => $this->readPluginTemplate(),
+            'composer.json' => $this->pluginManifest(),
+        ];
+        $installed = [];
+        $skipped = [];
+        $errors = [];
+
+        foreach ($files as $name => $contents) {
+            $path = $root . DIRECTORY_SEPARATOR . $name;
+            if (is_file($path) && $force === false) {
+                $skipped[] = $name;
+                continue;
+            }
+
+            $blockedPath = $this->findBlockedPath($root);
+            if ($blockedPath !== null) {
+                $errors[] = ['path' => $blockedPath, 'error' => 'Plugin destination directory path is blocked by a file'];
+                continue;
+            }
+
+            if (!is_dir($root) && !@mkdir($root, 0777, true) && !is_dir($root)) {
+                $errors[] = ['path' => $root, 'error' => 'Failed to create plugin directory'];
+                continue;
+            }
+
+            if ($contents === null) {
+                $errors[] = ['path' => $path, 'error' => 'Failed to generate plugin adapter file'];
+                continue;
+            }
+
+            if ($this->writeFileAtomically($path, $contents, 0644, $errors)) {
+                $installed[] = $name;
+            }
+        }
+
+        sort($installed);
+        sort($skipped);
+
+        return new PluginAdapterInstallResult($root, $installed, $skipped, $errors);
+    }
+
+    private function readPluginTemplate(): ?string
+    {
+        $contents = file_get_contents($this->packageRoot() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . 'index.php');
+
+        return is_string($contents) ? $contents : null;
+    }
+
+    private function pluginManifest(): ?string
+    {
+        $json = json_encode([
+            'name' => 'bnomei/kirby-mcp',
+            'title' => 'Kirby MCP',
+            'version' => $this->packageVersion(),
+            'type' => 'kirby-plugin',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        return is_string($json) ? $json . "\n" : null;
+    }
+
+    private function packageVersion(): string
+    {
+        try {
+            if (InstalledVersions::isInstalled('bnomei/kirby-mcp')) {
+                $version = InstalledVersions::getPrettyVersion('bnomei/kirby-mcp')
+                    ?? InstalledVersions::getVersion('bnomei/kirby-mcp');
+                if (is_string($version) && $version !== '') {
+                    return $version;
+                }
+            }
+        } catch (Throwable) {
+            // Fall back to package metadata when Composer runtime data is unavailable.
+        }
+
+        $contents = @file_get_contents($this->packageRoot() . DIRECTORY_SEPARATOR . 'composer.json');
+        $metadata = is_string($contents) ? json_decode($contents, true) : null;
+        $version = is_array($metadata) ? ($metadata['version'] ?? null) : null;
+
+        return is_string($version) && $version !== '' ? $version : '0.0.0';
     }
 
     private function packageRoot(): string

@@ -27,13 +27,13 @@ it('validates shared bearer tokens with constant-time exact matches and scoped a
 
 it('validates hashed remote bearer tokens with per-token scoped attributes', function (): void {
     $validator = new RemoteTokenValidator([
-        KirbyMcpHttpToken::fromPlainText('claude-code', 'remote-secret', [HttpAuthScopes::READ]),
+        KirbyMcpHttpToken::fromPlainText('claude-code', 'remote-secret', 'editor-user', [HttpAuthScopes::READ]),
     ]);
 
     $allowed = $validator->validate('remote-secret');
     expect($allowed->isAllowed())->toBeTrue()
         ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->toBe([HttpAuthScopes::READ])
-        ->and($allowed->getAttributes()['oauth.subject'] ?? null)->toBe('remote-token:claude-code')
+        ->and($allowed->getAttributes()['oauth.subject'] ?? null)->toBe('editor-user')
         ->and($allowed->getAttributes()['oauth.claims']['token_type'] ?? null)->toBe('remote-token')
         ->and($allowed->getAttributes()['oauth.claims']['token_id'] ?? null)->toBe('claude-code');
 
@@ -45,7 +45,7 @@ it('validates hashed remote bearer tokens with per-token scoped attributes', fun
 
 it('defaults remote tokens with empty scopes to read-only instead of all scopes', function (): void {
     $validator = new RemoteTokenValidator([
-        KirbyMcpHttpToken::fromPlainText('ci-bot', 'remote-secret', []),
+        KirbyMcpHttpToken::fromPlainText('ci-bot', 'remote-secret', 'automation-user', []),
     ]);
 
     $allowed = $validator->validate('remote-secret');
@@ -55,6 +55,14 @@ it('defaults remote tokens with empty scopes to read-only instead of all scopes'
         ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::ADMIN)
         ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::WRITE);
 });
+
+it('rejects remote tokens without a valid bound user', function (string $userId): void {
+    $validator = new RemoteTokenValidator([
+        KirbyMcpHttpToken::fromPlainText('unmapped', 'remote-secret', $userId),
+    ]);
+
+    expect($validator->validate('remote-secret')->isAllowed())->toBeFalse();
+})->with(['empty user ID' => '', 'whitespace user ID' => '  ', 'NUL user ID' => "user\0id"]);
 
 it('allows absent and default loopback Origin headers and rejects public origins without an allowlist', function (): void {
     $defaultPolicy = new HttpOriginPolicy();
@@ -102,7 +110,7 @@ it('builds protected-resource metadata and OAuth JWT validators from HTTP config
 it('builds remote-token validators from token records', function (): void {
     $factory = new HttpAuthFactory();
     $validator = $factory->remoteTokenValidator([
-        KirbyMcpHttpToken::fromPlainText('remote', 'secret'),
+        KirbyMcpHttpToken::fromPlainText('remote', 'secret', 'editor-user'),
     ]);
 
     expect($validator)->toBeInstanceOf(RemoteTokenValidator::class);

@@ -10,6 +10,23 @@ use Throwable;
 
 abstract class RuntimeCommand
 {
+    public const ENV_USER_ID = 'KIRBY_MCP_RUNTIME_USER_ID';
+
+    protected static function mutationUser(App $kirby): string
+    {
+        $id = getenv(self::ENV_USER_ID);
+        if ($id === false || $id === '') {
+            return 'kirby';
+        }
+
+        $user = $kirby->users()->find($id);
+        if ($user === null || $user->id() !== $id || in_array($id, ['kirby', 'nobody'], true)) {
+            throw new \RuntimeException('OAuth subject must identify an existing Kirby user.');
+        }
+
+        return $user->id();
+    }
+
     /**
      * @return array<string, mixed>
      */

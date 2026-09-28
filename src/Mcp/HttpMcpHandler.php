@@ -9,6 +9,8 @@ use Bnomei\KirbyMcp\Mcp\Http\HttpOriginPolicy;
 use Bnomei\KirbyMcp\Mcp\Http\HttpScopeMiddleware;
 use Bnomei\KirbyMcp\Mcp\Http\HttpScopePolicy;
 use Bnomei\KirbyMcp\Mcp\Subscription\FileNotificationBus;
+use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
+use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use GuzzleHttp\Psr7\HttpFactory;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\MessageInterface;
@@ -49,6 +51,7 @@ final class HttpMcpHandler
         private readonly ?ProtectedResourceMetadata $protectedResourceMetadata = null,
         private readonly ?HttpScopePolicy $scopePolicy = null,
         private readonly ?string $projectRoot = null,
+        private readonly bool $useKirbyUser = false,
     ) {
     }
 
@@ -100,8 +103,44 @@ final class HttpMcpHandler
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
     ): ResponseInterface {
+        $oauthUserId = null;
+        $permissions = null;
+        if ($this->useKirbyUser) {
+            $oauthUserId = $request->getAttribute('oauth.subject');
+            if (!is_string($oauthUserId) || trim($oauthUserId) === '' || str_contains($oauthUserId, "\0")) {
+                return $responseFactory->createResponse(401)
+                    ->withHeader('WWW-Authenticate', 'Bearer error="invalid_token"');
+            }
+            try {
+                $result = (new RuntimeCommandRunner(new KirbyRuntimeContext(new ProjectContext(oauthUserId: $oauthUserId))))
+                    ->runMarkedJson('mcp/permissions.php', ['mcp:permissions']);
+                $values = $result->payload['permissions'] ?? null;
+                if (($result->payload['ok'] ?? false) !== true || !is_array($values)) {
+                    return $this->permissionDenied($responseFactory, $streamFactory);
+                }
+                $permissions = new Permissions(array_map(static fn (mixed $value): bool => $value === true, $values));
+            } catch (\Throwable) {
+                return $this->permissionDenied($responseFactory, $streamFactory);
+            }
+            if (!$permissions->allows('access')) {
+                return $this->permissionDenied($responseFactory, $streamFactory);
+            }
+            if ($request->getMethod() === 'POST') {
+                $body = $request->getBody()->__toString();
+                $request->getBody()->rewind();
+                $payload = json_decode($body, true);
+                if (is_array($payload)) {
+                    foreach (array_is_list($payload) ? $payload : [$payload] as $message) {
+                        if (is_array($message) && !$permissions->request($message)) {
+                            return $this->permissionDenied($responseFactory, $streamFactory);
+                        }
+                    }
+                }
+            }
+        }
+
         if ($request->getMethod() === 'GET') {
-            return $this->handleGetRequest($request, $responseFactory, $streamFactory);
+            return $this->handleGetRequest($request, $responseFactory, $streamFactory, $permissions);
         }
 
         $sessionId = $this->sessionIdFromRequest($request, $responseFactory, $streamFactory);
@@ -125,7 +164,16 @@ final class HttpMcpHandler
             notificationBus: $this->notificationBus(),
             subscriptionLifetime: $this->sseMaxSeconds,
             requireInit: false,
+            oauthUserId: $oauthUserId,
+            permissions: $permissions,
         )->run($transport);
+    }
+
+    private function permissionDenied(ResponseFactoryInterface $responses, StreamFactoryInterface $streams): ResponseInterface
+    {
+        return $responses->createResponse(403)
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody($streams->createStream($this->encodeError('Kirby MCP permission denied. Check the user role and installed runtime/plugin adapter.')));
     }
 
     private function authorizationTokenValidator(): AuthorizationTokenValidatorInterface
@@ -173,6 +221,7 @@ final class HttpMcpHandler
         ServerRequestInterface $request,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
+        ?Permissions $permissions = null,
     ): ResponseInterface {
         $protocolVersionResponse = $this->validateProtocolVersion($request, $responseFactory, $streamFactory);
         if ($protocolVersionResponse instanceof ResponseInterface) {
@@ -198,11 +247,27 @@ final class HttpMcpHandler
             return $this->sessionNotFoundResponse($responseFactory, $streamFactory);
         }
 
+        $session = new \Mcp\Server\Session\Session($this->sessionStore, $uuid);
+        $scopePolicy = $this->scopePolicy ?? new HttpScopePolicy();
+        $requiredScopes = $scopePolicy->methodScopes('GET');
+        foreach (array_keys($session->get('resource_subscriptions', [])) as $uri) {
+            if (!is_string($uri) || ($permissions !== null && !$permissions->resource($uri))) {
+                return $this->permissionDenied($responseFactory, $streamFactory);
+            }
+            $requiredScopes = array_merge($requiredScopes, $scopePolicy->resourceScopes($uri));
+        }
+        $scopeResponse = (new HttpScopeMiddleware($scopePolicy, $responseFactory, $streamFactory))
+            ->checkScopes($request, array_values(array_unique($requiredScopes)));
+        if ($scopeResponse !== null) {
+            return $scopeResponse;
+        }
+
         return $this->serverFactory->create(
             $this->sessionStore,
             notificationBus: $this->notificationBus(),
             subscriptionLifetime: $this->sseMaxSeconds,
             requireInit: false,
+            permissions: $permissions,
         )->run(
             new StreamableHttpGetTransport(
                 sessionIdValue: $uuid,

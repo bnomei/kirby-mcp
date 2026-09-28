@@ -2,13 +2,15 @@
 
 ## Mission
 
-Provide Kirby CLI command definition templates that are copied into host projects by `kirby-mcp install`.
+Provide Kirby CLI command definition templates that are copied into host projects by `kirby-mcp install` alongside the separately generated tiny plugin adapter.
 
 ## System
 
 - Each file in `commands/mcp/**/*.php` returns a `::definition()` array from `src/Mcp/Commands/*`.
 - Directory structure maps to Kirby CLI command names (e.g. `commands/mcp/page/update.php` → `mcp:page:update`).
 - Content wrappers include `mcp:site:*`, `mcp:file:*`, and `mcp:user:*` alongside page commands.
+- The main package remains a Composer library. Runtime install copies only the adapter `index.php` and
+  generated `composer.json` to the plugins root; it does not copy implementation code or register routes/UI.
 
 ## Workflows
 

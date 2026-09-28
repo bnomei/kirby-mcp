@@ -115,6 +115,7 @@ final class KirbyMcpRoute
             tokenValidator: $tokenValidator,
             protectedResourceMetadata: $protectedResourceMetadata,
             projectRoot: $projectRoot,
+            useKirbyUser: $config->authMode !== KirbyMcpHttpConfig::AUTH_MODE_SHARED_TOKEN,
         );
     }
 

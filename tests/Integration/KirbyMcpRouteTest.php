@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Mcp\KirbyMcpRoute;
 use Bnomei\KirbyMcp\Mcp\KirbyMcpOAuthRoute;
 use Bnomei\KirbyMcp\Mcp\OAuth\OAuthKeySet;
+use Bnomei\KirbyMcp\Install\RuntimeCommandsInstaller;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpToken;
 use GuzzleHttp\Psr7\HttpFactory;
@@ -75,6 +76,7 @@ function kirbyMcpRouteWithHttpEnv(array $env, Closure $callback): mixed
         'KIRBY_MCP_HTTP_REMOTE_TOKEN',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN_ID',
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES',
         'KIRBY_MCP_HTTP_OAUTH_ISSUER',
         'KIRBY_MCP_HTTP_OAUTH_AUDIENCE',
@@ -98,6 +100,17 @@ function kirbyMcpRouteWithHttpEnv(array $env, Closure $callback): mixed
         putenv($name . '=' . $value);
     }
 
+    $adapterRoot = cmsPath() . '/site/plugins/kirby-mcp';
+    $installedAdapter = false;
+    if (in_array($env['KIRBY_MCP_HTTP_AUTH_MODE'] ?? null, ['oauth', 'remote-token'], true)) {
+        $installedAdapter = !is_dir($adapterRoot);
+        (new RuntimeCommandsInstaller())->install(
+            cmsPath(),
+            commandsRootOverride: cmsPath() . '/site/commands',
+            pluginsRootOverride: cmsPath() . '/site/plugins',
+        );
+    }
+
     KirbyMcpConfig::clearCache();
 
     try {
@@ -112,6 +125,9 @@ function kirbyMcpRouteWithHttpEnv(array $env, Closure $callback): mixed
             putenv($name . '=' . $value);
         }
 
+        if ($installedAdapter) {
+            kirbyMcpRouteRemoveDirectory($adapterRoot);
+        }
         KirbyMcpConfig::clearCache();
     }
 }
@@ -150,6 +166,22 @@ function kirbyMcpRouteCommitSession(App $app): void
         $app->session()->commit();
     } catch (Throwable) {
         // Some route tests never start Kirby's session component.
+    }
+}
+
+function kirbyMcpRouteRemoteUserId(): string
+{
+    $previous = App::instance(null, true);
+    $handlers = captureErrorHandlers();
+    $whoops = App::$enableWhoops;
+    App::$enableWhoops = false;
+    try {
+        $app = new App(['roots' => ['index' => cmsPath()]]);
+        return ensureUser($app, 'mcp-remote-token@example.com')->id();
+    } finally {
+        App::instance($previous, true);
+        App::$enableWhoops = $whoops;
+        restoreErrorHandlers($handlers);
     }
 }
 
@@ -326,6 +358,7 @@ it('serves remote-token Kirby route requests from public HTTPS clients', functio
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'remote-token',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN' => 'remote-secret',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN_ID' => 'claude-code',
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID' => kirbyMcpRouteRemoteUserId(),
     ], function (): void {
         $factory = new HttpFactory();
         $request = $factory->createServerRequest('POST', 'https://example.test/mcp', [
@@ -347,6 +380,7 @@ it('rejects remote-token Kirby route requests from public HTTP clients', functio
         'KIRBY_MCP_HTTP_ENABLED' => '1',
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'remote-token',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH' => KirbyMcpHttpToken::hashPlainText('remote-secret'),
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID' => kirbyMcpRouteRemoteUserId(),
     ], function (): void {
         $factory = new HttpFactory();
         $request = $factory->createServerRequest('POST', 'http://example.test/mcp', [
@@ -368,6 +402,7 @@ it('rejects remote-token public HTTP requests forwarded from local reverse proxi
         'KIRBY_MCP_HTTP_ENABLED' => '1',
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'remote-token',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN' => 'remote-secret',
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID' => kirbyMcpRouteRemoteUserId(),
     ], function (): void {
         $factory = new HttpFactory();
         $request = $factory->createServerRequest('POST', 'http://example.test/mcp', [
@@ -389,6 +424,7 @@ it('allows remote-token HTTP only when the request is fully loopback', function 
         'KIRBY_MCP_HTTP_ENABLED' => '1',
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'remote-token',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN' => 'remote-secret',
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID' => kirbyMcpRouteRemoteUserId(),
     ], function (): void {
         $factory = new HttpFactory();
         $request = $factory->createServerRequest('POST', 'http://127.0.0.1/mcp', [
@@ -1138,6 +1174,7 @@ it('rejects invalid remote-token bearer credentials', function (): void {
         'KIRBY_MCP_HTTP_ENABLED' => '1',
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'remote-token',
         'KIRBY_MCP_HTTP_REMOTE_TOKEN' => 'remote-secret',
+        'KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID' => kirbyMcpRouteRemoteUserId(),
     ], function (): void {
         $factory = new HttpFactory();
         $request = $factory->createServerRequest('POST', 'https://example.test/mcp', [

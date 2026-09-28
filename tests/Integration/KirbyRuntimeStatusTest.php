@@ -84,6 +84,21 @@ it('reports runtime commands as in sync after installation', function (): void {
         expect($status['missingFiles'])->toBe([]);
         expect($status['expectedFiles'])->toContain('mcp/render.php');
         expect($status['installedFiles'])->toContain('mcp/render.php');
+        expect($status['plugin']['root'])->toBe($install['plugin']['root'])
+            ->and($status['plugin']['installed'])->toBeTrue();
+
+        $manifest = $install['plugin']['root'] . '/composer.json';
+        $contents = file_get_contents($manifest);
+        expect($contents)->toBeString();
+        unlink($manifest);
+        try {
+            $missingAdapter = $tools->runtimeStatus();
+            expect($missingAdapter['installed'])->toBeTrue()
+                ->and($missingAdapter['inSync'])->toBeFalse()
+                ->and($missingAdapter['plugin']['missingFiles'])->toBe(['composer.json']);
+        } finally {
+            file_put_contents($manifest, $contents);
+        }
     } finally {
         $installed = $install['installed'];
         foreach ($installed as $relativePath) {

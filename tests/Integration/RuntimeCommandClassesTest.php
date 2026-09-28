@@ -1759,7 +1759,7 @@ it('installs runtime commands into a temp commands root', function (): void {
         $messages = $climate->messages;
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $messages));
 
-        expect($combined)->toContain('Kirby MCP runtime commands installed');
+        expect($combined)->toContain('Kirby MCP runtime files installed', 'Plugin target:', 'Plugin files installed: 2');
         expect(is_file($commandsRoot . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php'))->toBeTrue();
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
@@ -1789,7 +1789,7 @@ it('installs runtime commands into commands.local when it diverges from commands
         expect(is_file($plainRoot . $blueprint))->toBeFalse();
 
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $climate->messages));
-        expect($combined)->toContain('Target: ' . rtrim($localRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
+        expect($combined)->toContain('Commands target: ' . rtrim($localRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mcp');
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
         removeRuntimeCommandsDir($localRoot);
@@ -1822,8 +1822,8 @@ it('updates runtime commands into a temp commands root', function (): void {
         $messages = $climate->messages;
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $messages));
 
-        expect($combined)->toContain('Kirby MCP runtime commands updated');
-        expect($combined)->toContain('Missing (before):');
+        expect($combined)->toContain('Kirby MCP runtime files updated', 'Plugin target:', 'Plugin files installed: 2');
+        expect($combined)->toContain('Commands missing (before):');
         expect(is_file($commandsRoot . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli' . DIRECTORY_SEPARATOR . 'commands.php'))->toBeTrue();
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);

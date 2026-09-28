@@ -152,14 +152,6 @@ final class FileUpdate extends RuntimeCommand
             }
 
             $updatedKeys = array_keys($data);
-            $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($file->blueprint()->fields());
-            $schemaCheckReminder = ['kirby://blueprint/file/update-schema'];
-            foreach ($updatedKeys as $fieldKey) {
-                $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
-                if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {
-                    $schemaCheckReminder[] = $schema;
-                }
-            }
 
             $parent = $file->parent();
             $parentInfo = null;
@@ -185,6 +177,15 @@ final class FileUpdate extends RuntimeCommand
             }
 
             if ($confirm !== true) {
+                $fieldSchemas = FieldSchemaHelper::fromFieldDefinitions($file->blueprint()->fields());
+                $schemaCheckReminder = ['kirby://blueprint/file/update-schema'];
+                foreach ($updatedKeys as $fieldKey) {
+                    $schema = $fieldSchemas[$fieldKey]['_schemaRef']['updateSchema'] ?? null;
+                    if (is_string($schema) && $schema !== '' && !in_array($schema, $schemaCheckReminder, true)) {
+                        $schemaCheckReminder[] = $schema;
+                    }
+                }
+
                 self::emit($cli, [
                     'ok' => false,
                     'needsConfirm' => true,
@@ -205,7 +206,7 @@ final class FileUpdate extends RuntimeCommand
                 return;
             }
 
-            $updated = $kirby->impersonate('kirby', static function () use ($file, $data, $lang, $validate) {
+            $updated = $kirby->impersonate(self::mutationUser($kirby), static function () use ($file, $data, $lang, $validate) {
                 return $file->update($data, $lang, $validate);
             });
 

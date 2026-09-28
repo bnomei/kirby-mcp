@@ -12,6 +12,11 @@ final class ProjectContext
     public const ENV_PROJECT_ROOT = 'KIRBY_MCP_PROJECT_ROOT';
     public const ENV_HOST = 'KIRBY_MCP_HOST';
 
+    public function __construct(
+        public readonly ?string $oauthUserId = null,
+    ) {
+    }
+
     public function projectRoot(): string
     {
         $root = getenv(self::ENV_PROJECT_ROOT);

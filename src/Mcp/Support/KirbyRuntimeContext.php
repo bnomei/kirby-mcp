@@ -52,6 +52,9 @@ final class KirbyRuntimeContext implements RuntimeContextInterface
             $env[$key] = $value;
         }
 
+        // Request identity is server-owned, never inherited from the worker environment.
+        $env[RuntimeCommand::ENV_USER_ID] = $this->context->oauthUserId ?? '';
+
         return $env;
     }
 

@@ -26,7 +26,9 @@ final class HttpScopePolicy
             'subscriptions/listen' => $this->subscriptionScopes($params),
             'logging/setLevel' => [HttpAuthScopes::ADMIN],
             'tools/call' => $this->toolCallScopes($params),
-            'resources/read' => $this->resourceScopes($this->stringParam($params, 'uri')),
+            'resources/read',
+            'resources/subscribe',
+            'resources/unsubscribe' => $this->resourceScopes($this->stringParam($params, 'uri')),
             default => [HttpAuthScopes::READ],
         };
     }

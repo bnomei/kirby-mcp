@@ -27,11 +27,13 @@ final readonly class HttpScopeMiddleware implements MiddlewareInterface
             ? $this->requiredPostScopes($request)
             : $this->scopePolicy->methodScopes($request->getMethod());
 
-        if ($required === [] || $this->hasScopes($request, $required)) {
-            return $handler->handle($request);
-        }
+        return $this->checkScopes($request, $required) ?? $handler->handle($request);
+    }
 
-        return $this->insufficientScopeResponse($required);
+    /** @param list<string> $required */
+    public function checkScopes(ServerRequestInterface $request, array $required): ?ResponseInterface
+    {
+        return $this->hasScopes($request, $required) ? null : $this->insufficientScopeResponse($required);
     }
 
     /**
