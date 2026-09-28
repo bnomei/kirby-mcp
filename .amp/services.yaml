@@ -1,12 +1,15 @@
 services:
   kirby:
     command: >-
+      php .agents/prepare-panel.php &&
       test -s .amp/secrets/kirby-mcp-token &&
+      test -s .amp/secrets/kirby-panel-user-id &&
       KIRBY_MCP_FIXTURE_HTTP_ROUTE=1
       KIRBY_MCP_HTTP_ENABLED=1
       KIRBY_MCP_HTTP_AUTH_MODE=remote-token
-      KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH="sha256:$(sha256sum .amp/secrets/kirby-mcp-token | cut -d ' ' -f1)"
+      KIRBY_MCP_HTTP_REMOTE_TOKEN_HASH="sha256:$(printf %s "$(cat .amp/secrets/kirby-mcp-token)" | sha256sum | cut -d ' ' -f1)"
       KIRBY_MCP_HTTP_REMOTE_TOKEN_ID=orb-fixture
+      KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID="$(cat .amp/secrets/kirby-panel-user-id)"
       KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES=kirby-mcp:read,kirby-mcp:runtime
       php -S "0.0.0.0:$PORT" -t tests/cms "$PWD/.amp/kirby-router.php"
     health: /

@@ -107,7 +107,7 @@ it('installs a physical Kirby plugin adapter with generated package metadata', f
 
         $pluginRoot = $projectRoot . DIRECTORY_SEPARATOR . 'site' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'kirby-mcp';
         expect($result->plugin->root)->toBe($pluginRoot)
-            ->and($result->plugin->installed)->toBe(['composer.json', 'index.php'])
+            ->and($result->plugin->installed)->toBe(['composer.json', 'index.css', 'index.js', 'index.php'])
             ->and($result->plugin->skipped)->toBeEmpty()
             ->and($result->plugin->errors)->toBeEmpty()
             ->and(is_link($pluginRoot . DIRECTORY_SEPARATOR . 'index.php'))->toBeFalse()
@@ -143,11 +143,11 @@ it('preserves existing plugin adapter files unless force is enabled', function (
 
         $skipped = $installer->install($projectRoot, false, $commandsRoot, $pluginsRoot);
         expect($skipped->plugin->installed)->toBeEmpty()
-            ->and($skipped->plugin->skipped)->toBe(['composer.json', 'index.php'])
+            ->and($skipped->plugin->skipped)->toBe(['composer.json', 'index.css', 'index.js', 'index.php'])
             ->and(file_get_contents($index))->toBe('custom adapter');
 
         $updated = $installer->install($projectRoot, true, $commandsRoot, $pluginsRoot);
-        expect($updated->plugin->installed)->toBe(['composer.json', 'index.php'])
+        expect($updated->plugin->installed)->toBe(['composer.json', 'index.css', 'index.js', 'index.php'])
             ->and($updated->plugin->skipped)->toBeEmpty()
             ->and(file_get_contents($index))->toContain('Plugin::register();');
     } finally {
@@ -167,7 +167,7 @@ it('reports plugin adapter destination errors in both plugin and aggregate outco
         $result = (new RuntimeCommandsInstaller())->install($projectRoot, true, $commandsRoot, $pluginsRoot);
 
         expect($result->plugin->installed)->toBeEmpty()
-            ->and($result->plugin->errors)->toHaveCount(2)
+            ->and($result->plugin->errors)->toHaveCount(4)
             ->and($result->errors)->toContain(...$result->plugin->errors)
             ->and($result->ok())->toBeFalse();
     } finally {

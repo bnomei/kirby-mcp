@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp;
 
 use Kirby\Cms\App;
+use Kirby\Http\Response;
 
 final class Plugin
 {
@@ -19,6 +20,23 @@ final class Plugin
             name: 'bnomei/kirby-mcp',
             extends: [
                 'permissions' => Permissions::defaults(),
+                'api' => [
+                    'routes' => [[
+                        'pattern' => 'kirby-mcp/activity',
+                        'method' => 'GET',
+                        'action' => function (): Response {
+                            $app = App::instance();
+                            if ($app->user()?->isAdmin() !== true) {
+                                throw new \Kirby\Exception\PermissionException();
+                            }
+
+                            return Response::json(
+                                (new Activity($app->roots()->index()))->status(),
+                                headers: ['Cache-Control' => 'private, no-store'],
+                            );
+                        },
+                    ]],
+                ],
             ],
             root: $root,
         );

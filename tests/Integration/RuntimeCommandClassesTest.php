@@ -1759,7 +1759,7 @@ it('installs runtime commands into a temp commands root', function (): void {
         $messages = $climate->messages;
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $messages));
 
-        expect($combined)->toContain('Kirby MCP runtime files installed', 'Plugin target:', 'Plugin files installed: 2');
+        expect($combined)->toContain('Kirby MCP runtime files installed', 'Plugin target:', 'Plugin files installed: 4');
         expect(is_file($commandsRoot . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'blueprint.php'))->toBeTrue();
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
@@ -1822,7 +1822,7 @@ it('updates runtime commands into a temp commands root', function (): void {
         $messages = $climate->messages;
         $combined = implode("\n", array_map(static fn (array $entry): string => $entry['message'], $messages));
 
-        expect($combined)->toContain('Kirby MCP runtime files updated', 'Plugin target:', 'Plugin files installed: 2');
+        expect($combined)->toContain('Kirby MCP runtime files updated', 'Plugin target:', 'Plugin files installed: 4');
         expect($combined)->toContain('Commands missing (before):');
         expect(is_file($commandsRoot . DIRECTORY_SEPARATOR . 'mcp' . DIRECTORY_SEPARATOR . 'cli' . DIRECTORY_SEPARATOR . 'commands.php'))->toBeTrue();
     } finally {

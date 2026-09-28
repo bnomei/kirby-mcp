@@ -15,6 +15,7 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 - Add a unit test for behavior changes that don’t require a real Kirby runtime.
 - For HTTP transport changes, keep auth, Origin, scope mapping, shared-token loopback restrictions, remote-token hash validation, token metadata, and session-header helpers in unit tests where possible.
 - Keep the permission map exhaustive against MCP attributes; test parent denial, URI-template boundaries, and direct operation checks independently of discovery filtering.
+- Keep activity tracking tests deterministic with explicit timestamps; cover threshold boundaries, malformed/future data, successful-result filtering, and preservation of delegated response metadata.
 - Run a subset: `vendor/bin/pest tests/Unit/SomeTest.php`.
 - Coverage: run `composer cms:starterkit` then `herd coverage ./vendor/bin/pest --coverage` (see `TESTING.md`).
 

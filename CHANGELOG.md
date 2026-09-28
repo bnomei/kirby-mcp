@@ -5,6 +5,10 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-09-28
+
+- Added an opt-in, admin-only Panel robot indicator for recent successful MCP tool/resource activity. It fades from orange to grey and disappears after five minutes, using authenticated polling and a single shared timestamp rather than session tracking.
+
 ## [1.13.0] - 2026-09-28
 
 - Keep permission-filtered tool-index reads private and non-cacheable, and enforce resource bearer scopes on legacy subscribe/unsubscribe and GET/SSE requests.

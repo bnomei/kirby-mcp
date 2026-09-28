@@ -8,7 +8,7 @@ Install/update Kirby runtime command wrappers and the copied Kirby plugin adapte
 
 - `RuntimeCommandsInstaller` copies this package’s `commands/` directory into the host commands root
   (default `site/commands`, or discovered via `KirbyRootsInspector`).
-- It also copies the thin `plugin/index.php` adapter and generates its `composer.json` in the resolved
+- It also copies the thin `plugin/index.php` adapter and static `index.js`/`index.css` Panel assets and generates its `composer.json` in the resolved
   plugins root (`site/plugins/kirby-mcp` by default). Never symlink or copy library/dependency code there.
 - Installed files should stay thin proxies to `Bnomei\\KirbyMcp\\Mcp\\Commands\\*::definition()`.
 

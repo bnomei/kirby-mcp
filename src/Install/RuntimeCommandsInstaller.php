@@ -122,7 +122,9 @@ final class RuntimeCommandsInstaller
     {
         $root = rtrim($pluginsRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . self::PLUGIN_DIR;
         $files = [
-            'index.php' => $this->readPluginTemplate(),
+            'index.php' => $this->readPluginTemplate('index.php'),
+            'index.js' => $this->readPluginTemplate('index.js'),
+            'index.css' => $this->readPluginTemplate('index.css'),
             'composer.json' => $this->pluginManifest(),
         ];
         $installed = [];
@@ -163,9 +165,9 @@ final class RuntimeCommandsInstaller
         return new PluginAdapterInstallResult($root, $installed, $skipped, $errors);
     }
 
-    private function readPluginTemplate(): ?string
+    private function readPluginTemplate(string $name): ?string
     {
-        $contents = file_get_contents($this->packageRoot() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . 'index.php');
+        $contents = file_get_contents($this->packageRoot() . DIRECTORY_SEPARATOR . 'plugin' . DIRECTORY_SEPARATOR . $name);
 
         return is_string($contents) ? $contents : null;
     }

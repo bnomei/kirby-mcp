@@ -64,5 +64,8 @@ time composer install --no-interaction --prefer-dist --no-progress
 echo "==> Preparing the Kirby starterkit test fixture"
 time composer cms:starterkit
 
+echo "==> Preparing the Kirby Panel browser fixture"
+time php .agents/prepare-panel.php
+
 echo "==> Installing npm dependencies"
 time npm ci --no-audit --no-fund

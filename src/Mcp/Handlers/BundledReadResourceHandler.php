@@ -31,7 +31,7 @@ final class BundledReadResourceHandler implements RequestHandlerInterface
 
     public function supports(Request $request): bool
     {
-        return $request instanceof ReadResourceRequest && $this->isBundledResource($request->uri);
+        return $request instanceof ReadResourceRequest;
     }
 
     public function handle(Request $request, SessionInterface $session): Response|Error
@@ -41,7 +41,8 @@ final class BundledReadResourceHandler implements RequestHandlerInterface
             return $response;
         }
 
-        if (!(new RequestContext($session, $request))->getProtocolVersion()->isModern()) {
+        if (!$request instanceof ReadResourceRequest || !$this->isBundledResource($request->uri) ||
+            !(new RequestContext($session, $request))->getProtocolVersion()->isModern()) {
             return $response;
         }
 

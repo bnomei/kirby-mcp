@@ -65,6 +65,12 @@ final class ServerFactory
         $registry = new Registry();
         $referenceHandler = new ReferenceHandler($container);
         $callToolHandler = new CallToolHandler($registry, $referenceHandler);
+        $readResourceHandler = new BundledReadResourceHandler(new ReadResourceHandler($registry, $referenceHandler));
+        if (!ServerProfile::isGlobalReference($profile)) {
+            $activity = new Activity((new ProjectContext())->projectRoot());
+            $callToolHandler = new Handlers\ActivityHandler($callToolHandler, $activity);
+            $readResourceHandler = new Handlers\ActivityHandler($readResourceHandler, $activity);
+        }
 
         $container->set(MetaResources::class, new MetaResources($profile, $permissions));
         $container->set(MetaTools::class, new MetaTools($profile, $permissions));
@@ -123,9 +129,7 @@ final class ServerFactory
         }
 
         $builder
-            ->addRequestHandler(new BundledReadResourceHandler(
-                new ReadResourceHandler($registry, $referenceHandler),
-            ))
+            ->addRequestHandler($readResourceHandler)
             ->addRequestHandler(new CodexSafeListResourcesHandler($registry));
 
         $builder->addRequestHandler(

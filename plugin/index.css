@@ -1,0 +1,89 @@
+.kirby-mcp-activity {
+  position: fixed;
+  z-index: 100;
+  top: 0.5rem;
+  left: 50%;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  color: var(--color-gray-900, #1f2933);
+  background: var(--color-gray-500, #a6acb2);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+  cursor: default;
+  place-items: center;
+  transform: translateX(-50%);
+}
+
+.kirby-mcp-activity[hidden] {
+  display: none;
+}
+
+.kirby-mcp-activity[data-state='active'] {
+  background: var(--color-orange-500, #f59e0b);
+}
+
+.kirby-mcp-activity[data-state='recent'] {
+  background: var(--color-orange-300, #d9a45b);
+}
+
+.kirby-mcp-activity svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.kirby-mcp-activity__label {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 1rem);
+  padding: 0.3rem 0.45rem;
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  background: rgb(20 20 20 / 92%);
+  border-radius: 3px;
+  opacity: 0;
+  transform: translate(-50%, -0.2rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.kirby-mcp-activity:hover .kirby-mcp-activity__label,
+.kirby-mcp-activity:focus-visible .kirby-mcp-activity__label,
+.kirby-mcp-activity.is-expanded .kirby-mcp-activity__label {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.kirby-mcp-activity:focus-visible {
+  outline: 2px solid var(--color-focus, #2d6cdf);
+  outline-offset: 2px;
+}
+
+@media (max-width: 30rem) {
+  .kirby-mcp-activity {
+    top: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kirby-mcp-activity,
+  .kirby-mcp-activity__label {
+    animation: none;
+    transition: none;
+  }
+}

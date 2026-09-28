@@ -1,5 +1,20 @@
 # Testing
 
+## Panel activity browser checks in an orb
+
+Run the PHP suite before browser checks: some tests modify the generated `tests/cms/` fixture.
+Then run `php .agents/prepare-panel.php` and `amp orb services ensure`. The preparation script
+installs current adapter assets, enables activity, and creates a fixture admin with random credentials
+in ignored, mode-0600 `.amp/secrets/kirby-panel-email` and `kirby-panel-password` files. It also binds
+the fixture's read/runtime MCP bearer token to that user. Do not print or commit these secrets.
+
+Open the service's Panel, log in, and make an authenticated MCP tool call or resource read. Within
+15 seconds the robot should appear orange; focus or tap it to see the activity age. For deterministic
+visual checks, set the disposable fixture's `.kirby-mcp/activity` timestamp to 60, 180, and 301 seconds
+ago and verify muted orange, grey, and hidden states. This simulates age, not agent connections.
+Also verify anonymous/non-admin API rejection, hiding on polling failure/logout, and narrow screens.
+Do not regenerate the fixture while the browser is using it.
+
 ## Coverage (Herd + Xdebug)
 
 - Requires PHP >= 8.4 (CI uses 8.5).

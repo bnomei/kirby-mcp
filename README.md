@@ -771,9 +771,10 @@ users to a private subset of a site.
 
 - Creates `.kirby-mcp/mcp.json` if neither `.kirby-mcp/mcp.json` nor `.kirby-mcp/config.json` exist.
 - Copies runtime command wrappers into the project’s Kirby commands root (usually `site/commands/mcp/`).
-- Copies the tiny plugin adapter `index.php` and generates its metadata-only `composer.json` in the
-  resolved plugins root (usually `site/plugins/kirby-mcp/`). The package remains a library in `vendor/`;
-  no implementation, dependency, HTTP route, or Panel UI registration is copied.
+- Copies the tiny plugin adapter `index.php`, static Panel assets (`index.js`, `index.css`), and generates
+  its metadata-only `composer.json` in the resolved plugins root (usually `site/plugins/kirby-mcp/`).
+  The server and its dependencies remain a library in `vendor/`. The adapter registers permissions
+  and an authenticated Panel activity API, not the public MCP transport route.
 - Use `--force` to overwrite existing wrapper files.
 
 `vendor/bin/kirby-mcp update`:
@@ -786,6 +787,44 @@ To remove everything:
 - Delete the runtime wrappers folder (`site/commands/mcp/` in most projects).
 - Delete the adapter folder (`site/plugins/kirby-mcp/` in most projects).
 - Optionally delete `.kirby-mcp/` (config + caches + optional helper files).
+
+## Optional Panel activity indicator
+
+Enable this in your project's `.kirby-mcp/mcp.json` (or existing `config.json`):
+
+```json
+{
+  "activity": { "enabled": true }
+}
+```
+
+Run `vendor/bin/kirby-mcp update` after upgrading to copy the Panel assets, then reload the Panel.
+No frontend build, custom Panel stylesheet, public status URL, or additional secret is needed.
+
+Panel admins see a tiny, top-center robot indicator after a successful MCP tool call or resource read:
+
+| Time since activity               | Appearance   |
+| --------------------------------- | ------------ |
+| Under 30 seconds                  | Orange       |
+| 30 seconds–2 minutes              | Muted orange |
+| 2–5 minutes                       | Grey         |
+| 5 minutes or more, or no activity | Hidden       |
+
+Hover, focus, or tap the indicator for the elapsed time. It polls every 15 seconds while the Panel tab
+is visible and hides on authentication/network failure. This indicates **recent successful activity**,
+not an open connection, a running operation, or a count of agents. Initialization, discovery, ping,
+failed requests, and Panel polling do not refresh it; the `kirby_init` tool itself does count.
+
+The feature is disabled by default. When enabled, project-local stdio and HTTP calls share one timestamp
+at `.kirby-mcp/activity`; global reference mode never records project activity. The MCP process and PHP
+web process must share this project directory and have the necessary file permissions. This is a
+best-effort, single-filesystem signal, not an audit log or multi-server presence service. Keep
+`.kirby-mcp/` outside the public document root or deny web access to it, as for the other MCP state files.
+
+`GET /api/kirby-mcp/activity` uses Kirby's normal API authentication and requires a Kirby admin. It
+returns only `state` and `ageSeconds`, never identities, tool names, arguments, or content. There is
+no public endpoint or token embedded in CSS. The Panel integration uses Kirby's `created` hook and
+an isolated DOM element; it does not replace core Panel components.
 
 ## Debug dumps (`mcp_dump`)
 

@@ -218,6 +218,47 @@ it('serves discover and tools without a session while enforcing modern headers a
     }
 });
 
+it('records dispatched activity but not discovery, denied calls, or unknown resources', function (): void {
+    $root = kirbyMcpStatelessRoot();
+    $previousRoot = getenv('KIRBY_MCP_PROJECT_ROOT');
+    putenv('KIRBY_MCP_PROJECT_ROOT=' . $root);
+    mkdir($root . '/.kirby-mcp');
+    file_put_contents($root . '/.kirby-mcp/mcp.json', '{"activity":{"enabled":true}}');
+    $path = $root . '/.kirby-mcp/activity';
+    $factory = new HttpFactory();
+    $handler = kirbyMcpStatelessHandler($root, new SharedTokenValidator('local-secret', [HttpAuthScopes::READ]));
+
+    try {
+        $handler->handle(kirbyMcpStatelessRequest($factory, 'tools/list', 1));
+        expect(is_file($path))->toBeFalse();
+
+        $denied = $handler->handle(kirbyMcpStatelessRequest($factory, 'tools/call', 2, [
+            'name' => 'kirby_eval', 'arguments' => ['code' => 'return 1;'],
+        ], 'kirby_eval'));
+        expect($denied->getStatusCode())->toBe(403)
+            ->and(is_file($path))->toBeFalse();
+
+        foreach (['kirby://kb', 'kirby://tools'] as $uri) {
+            $response = $handler->handle(kirbyMcpStatelessRequest($factory, 'resources/read', 3, ['uri' => $uri], $uri));
+            expect(kirbyMcpStatelessDecode($response))->not->toHaveKey('error')
+                ->and(is_file($path))->toBeTrue();
+            unlink($path);
+        }
+
+        $handler->handle(kirbyMcpStatelessRequest($factory, 'resources/read', 4, ['uri' => 'kirby://missing'], 'kirby://missing'));
+        expect(is_file($path))->toBeFalse();
+
+        $response = $handler->handle(kirbyMcpStatelessRequest($factory, 'tools/call', 5, [
+            'name' => 'kirby_tool_suggest', 'arguments' => ['query' => 'pages', 'limit' => 1],
+        ], 'kirby_tool_suggest'));
+        expect(kirbyMcpStatelessDecode($response)['result']['isError'] ?? null)->toBeFalse()
+            ->and(is_file($path))->toBeTrue();
+    } finally {
+        putenv($previousRoot === false ? 'KIRBY_MCP_PROJECT_ROOT' : 'KIRBY_MCP_PROJECT_ROOT=' . $previousRoot);
+        removeKirbyMcpStatelessRoot($root);
+    }
+});
+
 it('ignores stale confirmation input and re-asks on a fresh stateless call', function (): void {
     $root = kirbyMcpStatelessRoot();
     $factory = new HttpFactory();

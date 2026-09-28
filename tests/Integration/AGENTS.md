@@ -24,6 +24,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Remote-token fixtures must bind each token to an existing Kirby `userId`; shared-token and local stdio fixtures remain intentionally unbound trusted access.
 - Verify private zero-TTL tool-index reads across users/role changes and legacy subscription GET authorization with a narrower token than the token that created the subscription.
 - Include dynamic blueprint allow/deny decisions, NUL-containing subjects, and empty listener token overrides in OAuth regression coverage.
+- Activity coverage must exercise dispatched tool and bundled/non-bundled resource reads; discovery, failed lookups, and scope-denied calls must not record. Run Panel browser checks after the PHP suite, which modifies the generated fixture, then rerun `.agents/prepare-panel.php`.
 
 ## Guardrails
 
