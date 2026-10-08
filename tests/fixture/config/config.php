@@ -23,7 +23,7 @@ if (!class_exists(\Bnomei\KirbyMcp\Mcp\Plugin::class)) {
 }
 
 if (PHP_SAPI === 'cli-server' && getenv('KIRBY_MCP_FIXTURE_HTTP_ROUTE') === '1') {
-    $mcpRoutes = KirbyMcpRoutes::mcp(projectRoot: dirname(__DIR__, 2));
+    $mcpRoutes = KirbyMcpRoutes::routes(projectRoot: dirname(__DIR__, 2));
 }
 
 return [

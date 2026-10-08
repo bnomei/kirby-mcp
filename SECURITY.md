@@ -9,6 +9,13 @@
 
 ## Authentication and permission boundaries
 
+The built-in OAuth provider delegates login to Kirby's Panel, including its configured login methods
+and two-factor authentication. Pending login handoffs are browser-session-bound, expire after ten
+minutes, and require explicit CSRF-protected consent before a code is issued. Approval and denial
+consume the handoff once; a new handoff in the same browser replaces the previous one. Consent
+pages disallow framing, including when rendered by a custom snippet. Public OAuth endpoints require
+HTTPS; plaintext HTTP is allowed only with an actual loopback peer and loopback request host.
+
 OAuth and remote-token authentication resolve an existing Kirby user. Remote-token records require
 `userId` (or `KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID` for the environment token). Both modes apply the
 hierarchical `bnomei.kirby-mcp` capability map: every parent and leaf must allow the operation, custom

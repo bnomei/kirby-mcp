@@ -97,10 +97,10 @@ final class KirbyMcpRoutes
                 'name' => 'kirby-mcp.oauth-jwks',
             ],
             [
-                'pattern' => self::patternFromPath($oauthPath . '/login'),
-                'method' => 'GET|POST',
+                'pattern' => self::patternFromPath($oauthPath . '/resume'),
+                'method' => 'GET',
                 'action' => fn () => KirbyMcpOAuthRoute::handle($projectRoot),
-                'name' => 'kirby-mcp.oauth-login',
+                'name' => 'kirby-mcp.oauth-resume',
             ],
         ];
     }

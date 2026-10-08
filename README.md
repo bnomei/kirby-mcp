@@ -636,8 +636,13 @@ This setting controls who can authorize a connection; it does not assign or chan
 > [!IMPORTANT]
 > Consent defaults to `snippet`. A logged-in Kirby user must approve or deny the client before Claude
 > gets a token. If the user is not logged in, Kirby MCP stores the authorize request under
-> `.kirby-mcp/oauth/sessions`, redirects through `/mcp/oauth/login`, and resumes the OAuth flow
-> after login. Use `auto` only for trusted private deployments.
+> `.kirby-mcp/oauth/sessions` and redirects to Kirby's Panel login, respecting its configured
+> login methods and two-factor authentication. Panel must be enabled. A fixed `/mcp/oauth/resume`
+> route restores the request from the same browser's Kirby session (Panel strips return-URL query
+> strings). Login handoffs expire after ten minutes; starting another handoff in the same browser
+> replaces the previous one. Resumed requests always require explicit consent, even with `auto`.
+> Use `auto` only for trusted private deployments. Recopy the route bundle when upgrading from
+> the former `/mcp/oauth/login` credential form.
 
 For a custom approval screen, create a new snippet. The default snippet name is `kirby-mcp/oauth-consent`, which maps to `site/snippets/kirby-mcp/oauth-consent.php` in a Kirby project. The snippet receives `client`, `scopes`, `user`, `approveUrl`, `denyUrl`, and `error`:
 

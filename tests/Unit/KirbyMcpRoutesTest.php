@@ -30,8 +30,8 @@ it('builds the copied Kirby route bundle for HTTP MCP', function (): void {
         ->and($routes[6]['method'])->toBe('POST')
         ->and($routes[7]['pattern'])->toBe('mcp/oauth/jwks.json')
         ->and($routes[7]['method'])->toBe('GET')
-        ->and($routes[8]['pattern'])->toBe('mcp/oauth/login')
-        ->and($routes[8]['method'])->toBe('GET|POST');
+        ->and($routes[8]['pattern'])->toBe('mcp/oauth/resume')
+        ->and($routes[8]['method'])->toBe('GET');
 });
 
 it('returns route actions that Kirby can bind to its route instance', function (): void {

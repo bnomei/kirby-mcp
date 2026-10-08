@@ -5,6 +5,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-08
+
+- Replaced the built-in OAuth credential form with native Kirby Panel login, preserving configured login methods and two-factor authentication. Login returns through `/mcp/oauth/resume`; installations with copied route definitions must refresh their OAuth routes.
+- Bound pending OAuth handoffs to the initiating browser session with ten-minute expiry, explicit post-login consent, and atomic single-use consumption. Starting another handoff in the same browser replaces the previous one.
+- Added anti-framing headers to built-in and custom-snippet consent pages, and rejected deceptive `127.*` public hostnames from the OAuth provider's loopback HTTP exemption.
+
 ## [1.14.0] - 2026-09-28
 
 - Added an opt-in, admin-only Panel robot indicator for recent successful MCP tool/resource activity. It fades from orange to grey and disappears after five minutes, using authenticated polling and a single shared timestamp rather than session tracking.

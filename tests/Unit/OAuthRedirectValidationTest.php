@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\OAuth\KirbyOAuthProvider;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
+use Bnomei\KirbyMcp\Project\KirbyMcpOAuthProviderConfig;
 use GuzzleHttp\Psr7\HttpFactory;
 
 function oauthRedirectProvider(): KirbyOAuthProvider
@@ -34,3 +35,26 @@ it('rejects deceptive 127.* hostnames that are not loopback addresses', function
     expect(oauthRedirectIsValid(['http://127.0.0.1.evil.example/cb']))->toBeFalse();
     expect(oauthRedirectIsValid(['http://evil.example/cb']))->toBeFalse();
 });
+
+it('requires HTTPS for OAuth provider requests unless both host and peer are loopback', function (string $host, string $peer, int $status): void {
+    $request = (new HttpFactory())->createServerRequest('POST', 'http://' . $host . '/mcp/oauth/token', [
+        'REMOTE_ADDR' => $peer,
+    ]);
+    $provider = new KirbyOAuthProvider('/tmp', new KirbyMcpHttpConfig(
+        enabled: true,
+        authMode: 'oauth',
+        oauthProvider: new KirbyMcpOAuthProviderConfig(enabled: true),
+    ), $request);
+
+    // A transport-allowed request reaches the missing grant_type check (400).
+    expect($provider->handle()->code())->toBe($status);
+})->with([
+    ['127.0.0.1.evil.example', '127.0.0.1', 503],
+    ['127.evil.example', '127.0.0.1', 503],
+    ['127.999.1.1', '127.0.0.1', 503],
+    ['localhost', '203.0.113.5', 503],
+    ['localhost', '127.not-an-ip', 503],
+    ['localhost', '127.0.0.1', 400],
+    ['127.5.6.7', '127.0.0.1', 400],
+    ['[::1]', '::1', 400],
+]);

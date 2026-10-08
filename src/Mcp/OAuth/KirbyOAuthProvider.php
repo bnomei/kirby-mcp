@@ -9,6 +9,7 @@ use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Firebase\JWT\JWT;
 use Kirby\Cms\App as Kirby;
 use Kirby\Http\Response as KirbyResponse;
+use Kirby\Panel\Panel;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class KirbyOAuthProvider
@@ -17,6 +18,7 @@ final class KirbyOAuthProvider
     private const ACCESS_TOKEN_TTL = 3600;
     private const REFRESH_TOKEN_TTL = 2592000;
     private const SESSION_TTL = 600;
+    private const PENDING_SESSION = 'bnomei.kirby-mcp.oauth.pending';
     private const INVALID_JSON_REQUEST = '__kirby_mcp_invalid_json';
 
     public function __construct(
@@ -60,8 +62,8 @@ final class KirbyOAuthProvider
             return $this->token();
         }
 
-        if (in_array($method, ['GET', 'POST'], true) && $path === $providerPath . '/login') {
-            return $this->login();
+        if ($method === 'GET' && $path === $providerPath . '/resume') {
+            return $this->resume();
         }
 
         return $this->error(404, 'OAuth provider endpoint not found.');
@@ -147,7 +149,22 @@ final class KirbyOAuthProvider
 
     private function authorize(): KirbyResponse
     {
-        $params = $this->authorizationParams();
+        $kirby = Kirby::instance();
+        // Kirby may commit the session while resolving its current user.
+        $user = $kirby->user();
+        // Reload and lock existing browser state before resolving or replacing a handoff.
+        $kirby->session()->prepareForWriting();
+        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
+        if ($sessionId !== null) {
+            $session = $this->readSession($sessionId);
+            if ($session === null || !is_array($session['params'] ?? null)) {
+                return $this->error(400, 'OAuth login session is missing or expired.');
+            }
+            $params = $session['params'];
+        } else {
+            $params = $this->authorizationParams();
+        }
+
         if (($error = $this->invalidJsonResponse($params)) instanceof KirbyResponse) {
             return $error;
         }
@@ -157,15 +174,25 @@ final class KirbyOAuthProvider
             return $validation;
         }
 
-        $user = Kirby::instance(lazy: true)?->user();
         if ($user === null) {
+            if ($kirby->option('panel') === false) {
+                return $this->error(503, 'OAuth login requires the Kirby Panel.');
+            }
+
+            $previous = $kirby->session()->get(self::PENDING_SESSION);
+            if (is_string($previous)) {
+                $this->store()->delete('sessions', $previous);
+            }
             $sessionId = $this->randomToken(18);
             $this->store()->write('sessions', $sessionId, [
                 'params' => $params,
                 'expires_at' => time() + self::SESSION_TTL,
             ]);
+            $kirby->session()->set(self::PENDING_SESSION, $sessionId);
+            // Panel strips query strings from its remembered post-login destination.
+            $kirby->session()->set('panel.path', $this->providerUrl('/resume'));
 
-            return KirbyResponse::redirect($this->providerUrl('/login', ['session' => $sessionId]));
+            return KirbyResponse::redirect(Panel::url('login'));
         }
 
         $client = $this->client((string) $params['client_id']);
@@ -189,7 +216,7 @@ final class KirbyOAuthProvider
 
         $scopes = $this->finalizeScopesForClient((string) ($params['scope'] ?? ''), $client);
 
-        $requireConsent = $this->isResumedFromLoginSession()
+        $requireConsent = $sessionId !== null
             || $this->needsConsent($user->id(), (string) $client['client_id'], $scopes);
 
         if ($requireConsent) {
@@ -221,39 +248,19 @@ final class KirbyOAuthProvider
         };
     }
 
-    private function login(): KirbyResponse
+    private function resume(): KirbyResponse
     {
-        $data = $this->requestData();
-        if (($error = $this->invalidJsonResponse($data)) instanceof KirbyResponse) {
-            return $error;
+        $kirby = Kirby::instance();
+        if ($kirby->user() === null) {
+            return $this->error(401, 'Log in through the Kirby Panel before resuming OAuth authorization.');
         }
 
-        $sessionId = $this->stringValue($data['session'] ?? $this->queryParams()['session'] ?? null);
+        $sessionId = $this->stringValue($kirby->session()->get(self::PENDING_SESSION));
         if ($sessionId === null || $this->readSession($sessionId) === null) {
             return $this->error(400, 'OAuth login session is missing or expired.');
         }
 
-        if ($this->request->getMethod() === 'POST') {
-            if (function_exists('csrf') && \csrf($this->stringValue($data['csrf'] ?? null) ?? '') !== true) {
-                return $this->loginForm($sessionId, 'Invalid CSRF token.');
-            }
-
-            $email = $this->stringValue($data['email'] ?? null);
-            $password = $this->stringValue($data['password'] ?? null);
-            if ($email === null || $password === null) {
-                return $this->loginForm($sessionId, 'Email and password are required.');
-            }
-
-            try {
-                Kirby::instance()->auth()->login($email, $password);
-            } catch (\Throwable) {
-                return $this->loginForm($sessionId, 'Login failed.');
-            }
-
-            return KirbyResponse::redirect($this->providerUrl('/authorize', ['session' => $sessionId]));
-        }
-
-        return $this->loginForm($sessionId);
+        return KirbyResponse::redirect($this->providerUrl('/authorize', ['session' => $sessionId]));
     }
 
     /**
@@ -545,33 +552,25 @@ final class KirbyOAuthProvider
         return hash_equals($challenge, $actual);
     }
 
-    private function isResumedFromLoginSession(): bool
-    {
-        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
-
-        return $sessionId !== null && $this->readSession($sessionId) !== null;
-    }
-
-    private function consumeLoginSession(): void
+    private function consumeLoginSession(): bool
     {
         $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
         if ($sessionId !== null) {
-            $this->store()->delete('sessions', $sessionId);
+            if (Kirby::instance()->session()->get(self::PENDING_SESSION) !== $sessionId) {
+                return false;
+            }
+            $session = $this->store()->take('sessions', $sessionId);
+            if ($session === null || (int) ($session['expires_at'] ?? 0) < time()) {
+                return false;
+            }
+            Kirby::instance()->session()->remove(self::PENDING_SESSION);
         }
+
+        return true;
     }
 
     private function authorizationParams(): array
     {
-        $sessionId = $this->stringValue($this->queryParams()['session'] ?? null);
-        if ($sessionId !== null) {
-            $session = $this->readSession($sessionId);
-            if ($session !== null && is_array($session['params'] ?? null)) {
-                /** @var array<string, mixed> $params */
-                $params = $session['params'];
-                return $params;
-            }
-        }
-
         $queryParams = $this->queryParams();
         if ($this->request->getMethod() !== 'POST') {
             return $queryParams;
@@ -590,6 +589,10 @@ final class KirbyOAuthProvider
      */
     private function readSession(string $sessionId): ?array
     {
+        if (Kirby::instance()->session()->get(self::PENDING_SESSION) !== $sessionId) {
+            return null;
+        }
+
         $session = $this->store()->read('sessions', $sessionId);
         if ($session === null || (int) ($session['expires_at'] ?? 0) < time()) {
             $this->store()->delete('sessions', $sessionId);
@@ -626,8 +629,14 @@ final class KirbyOAuthProvider
             return $error;
         }
 
+        // Recheck CSRF and pending membership against the same locked browser state.
+        Kirby::instance()->session()->prepareForWriting();
         if (function_exists('csrf') && \csrf($this->stringValue($data['csrf'] ?? null) ?? '') !== true) {
             return $this->consentForm($this->client($clientId) ?? [], $scopes, 'Invalid CSRF token.');
+        }
+
+        if ($this->consumeLoginSession() === false) {
+            return $this->error(400, 'OAuth login session is missing or expired.');
         }
 
         if (isset($data['deny'])) {
@@ -641,7 +650,6 @@ final class KirbyOAuthProvider
         }
 
         $this->rememberConsent($userId, $clientId, $scopes);
-        $this->consumeLoginSession();
 
         return $this->redirectWithCode($params, $userId, $scopes);
     }
@@ -675,6 +683,10 @@ final class KirbyOAuthProvider
      */
     private function consentForm(array $client, array $scopes, ?string $error = null): KirbyResponse
     {
+        $headers = [
+            'Content-Security-Policy' => "frame-ancestors 'none'",
+            'X-Frame-Options' => 'DENY',
+        ];
         $data = [
             'client' => $client,
             'scopes' => $scopes,
@@ -687,7 +699,7 @@ final class KirbyOAuthProvider
         if ($this->config->oauthProvider->consent === 'snippet' && function_exists('snippet')) {
             $html = \snippet($this->config->oauthProvider->consentSnippet, $data, true);
             if (is_string($html) && trim($html) !== '') {
-                return new KirbyResponse($html, 'text/html', 200);
+                return new KirbyResponse($html, 'text/html', 200, $headers);
             }
         }
 
@@ -696,15 +708,7 @@ final class KirbyOAuthProvider
         $scopeText = htmlspecialchars(implode(', ', $scopes), ENT_QUOTES, 'UTF-8');
         $errorHtml = $error === null ? '' : '<p>' . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</p>';
 
-        return new KirbyResponse('<!doctype html><meta charset="utf-8"><title>Authorize Kirby MCP</title>' . $errorHtml . '<h1>Authorize ' . $clientName . '</h1><p>' . $scopeText . '</p><form method="post"><input type="hidden" name="csrf" value="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '"><button type="submit" name="approve" value="1">Approve</button><button type="submit" name="deny" value="1">Deny</button></form>', 'text/html', 200);
-    }
-
-    private function loginForm(string $sessionId, ?string $error = null): KirbyResponse
-    {
-        $csrf = function_exists('csrf') ? (string) \csrf() : '';
-        $errorHtml = $error === null ? '' : '<p>' . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . '</p>';
-
-        return new KirbyResponse('<!doctype html><meta charset="utf-8"><title>Kirby MCP Login</title>' . $errorHtml . '<h1>Kirby MCP Login</h1><form method="post"><input type="hidden" name="session" value="' . htmlspecialchars($sessionId, ENT_QUOTES, 'UTF-8') . '"><input type="hidden" name="csrf" value="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '"><label>Email <input type="email" name="email" required></label><label>Password <input type="password" name="password" required></label><button type="submit">Log in</button></form>', 'text/html', 200);
+        return new KirbyResponse('<!doctype html><meta charset="utf-8"><title>Authorize Kirby MCP</title>' . $errorHtml . '<h1>Authorize ' . $clientName . '</h1><p>' . $scopeText . '</p><form method="post"><input type="hidden" name="csrf" value="' . htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8') . '"><button type="submit" name="approve" value="1">Approve</button><button type="submit" name="deny" value="1">Deny</button></form>', 'text/html', 200, $headers);
     }
 
     /**
@@ -1103,8 +1107,9 @@ final class KirbyOAuthProvider
         $remoteAddress = strtolower(trim($remoteAddress, " \t\n\r\0\x0B[]"));
         $host = strtolower(trim($this->request->getUri()->getHost(), " \t\n\r\0\x0B[]"));
 
-        return ($remoteAddress === '::1' || $remoteAddress === '127.0.0.1' || str_starts_with($remoteAddress, '127.'))
-            && ($host === 'localhost' || $host === '::1' || $host === '127.0.0.1' || str_starts_with($host, '127.'));
+        return filter_var($remoteAddress, FILTER_VALIDATE_IP) !== false
+            && $this->isLoopbackRedirectHost($remoteAddress)
+            && $this->isLoopbackRedirectHost($host);
     }
 
     private function isHttpsRequest(): bool

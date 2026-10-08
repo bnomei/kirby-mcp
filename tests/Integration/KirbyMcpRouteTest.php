@@ -706,7 +706,7 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
     }
 });
 
-it('forces explicit consent when an authorize flow is resumed from a login session', function (): void {
+it('binds Panel login handoffs and requires explicit consent', function (string $decision): void {
     $projectRoot = cmsPath();
     $oauthStorage = $projectRoot . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'oauth';
     kirbyMcpRouteRemoveDirectory($oauthStorage);
@@ -729,7 +729,7 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
             'KIRBY_MCP_HTTP_OAUTH_PROVIDER_ENABLED' => '1',
             'KIRBY_MCP_HTTP_OAUTH_PROVIDER_CONSENT' => 'auto',
             'KIRBY_MCP_HTTP_SCOPES' => 'kirby-mcp:read,kirby-mcp:runtime',
-        ], function () use ($projectRoot, $app): void {
+        ], function () use ($projectRoot, $app, $decision): void {
             $factory = new HttpFactory();
 
             $registerRequest = $factory->createServerRequest('POST', 'https://example.test/mcp/oauth/register', [
@@ -764,11 +764,24 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
             $unauthResponse = KirbyMcpOAuthRoute::handle($projectRoot, $unauthRequest);
             expect($unauthResponse->code())->toBe(302);
             $loginLocation = kirbyMcpRouteLocation($unauthResponse);
-            parse_str((string) parse_url($loginLocation, PHP_URL_QUERY), $loginQuery);
-            $sessionId = $loginQuery['session'] ?? null;
+            expect($loginLocation)->toBe(\Kirby\Panel\Panel::url('login'));
+            expect($app->session()->get('panel.path'))->toBe('https://example.test/mcp/oauth/resume');
+            $sessionId = $app->session()->get('bnomei.kirby-mcp.oauth.pending');
             expect($sessionId)->toBeString();
 
+            $callbackRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/resume');
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $callbackRequest)->code())->toBe(401);
+
+            // Starting a second login replaces the first browser-bound transaction.
+            KirbyMcpOAuthRoute::handle($projectRoot, $unauthRequest);
+            $replacedId = $sessionId;
+            $sessionId = $app->session()->get('bnomei.kirby-mcp.oauth.pending');
+            expect($sessionId)->not->toBe($replacedId);
+
             $app->impersonate('mcp-oauth-fixation@example.com');
+            $callbackResponse = KirbyMcpOAuthRoute::handle($projectRoot, $callbackRequest);
+            expect($callbackResponse->code())->toBe(302)
+                ->and(kirbyMcpRouteLocation($callbackResponse))->toBe('https://example.test/mcp/oauth/authorize?session=' . $sessionId);
             $resumeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . http_build_query([
                 'session' => $sessionId,
             ], '', '&', PHP_QUERY_RFC3986), [
@@ -778,6 +791,60 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
 
             expect($resumeResponse->code())->toBe(200);
             expect($resumeResponse->body())->toContain('Authorize Evil Connector');
+            expect($resumeResponse->headers()['Content-Security-Policy'] ?? null)->toBe("frame-ancestors 'none'")
+                ->and($resumeResponse->headers()['X-Frame-Options'] ?? null)->toBe('DENY');
+
+            $app->session()->remove('bnomei.kirby-mcp.oauth.pending');
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $resumeRequest)->code())->toBe(400);
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $callbackRequest)->code())->toBe(400);
+            $app->session()->set('bnomei.kirby-mcp.oauth.pending', $sessionId);
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $resumeRequest)->code())->toBe(200);
+            $oldRequest = $resumeRequest->withUri($factory->createUri('https://example.test/mcp/oauth/authorize?session=' . $replacedId));
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $oldRequest)->code())->toBe(400);
+
+            $decisionRequest = $resumeRequest->withMethod('POST')->withParsedBody([
+                $decision => '1',
+                'csrf' => csrf(),
+            ]);
+
+            // Simulate replacement after the old request resolved its saved parameters.
+            $store = new \Bnomei\KirbyMcp\Mcp\OAuth\OAuthFileStore($projectRoot . '/.kirby-mcp/oauth');
+            $saved = $store->read('sessions', $sessionId);
+            $app->session()->set('bnomei.kirby-mcp.oauth.pending', 'newer-handoff');
+            $provider = new \Bnomei\KirbyMcp\Mcp\OAuth\KirbyOAuthProvider(
+                $projectRoot,
+                KirbyMcpConfig::load($projectRoot)->http(),
+                $decisionRequest,
+            );
+            $complete = new ReflectionMethod($provider, 'completeConsent');
+            $user = $app->user();
+            assert($user instanceof \Kirby\Cms\User);
+            $staleResponse = $complete->invoke($provider, $saved['params'], $user->id(), $client['client_id'], ['kirby-mcp:read']);
+            expect($staleResponse->code())->toBe(400)
+                ->and($app->session()->get('bnomei.kirby-mcp.oauth.pending'))->toBe('newer-handoff')
+                ->and($store->read('sessions', $sessionId))->toBe($saved);
+            $app->session()->set('bnomei.kirby-mcp.oauth.pending', $sessionId);
+
+            $invalidCsrf = $decisionRequest->withParsedBody([$decision => '1', 'csrf' => 'invalid']);
+            $invalidResponse = KirbyMcpOAuthRoute::handle($projectRoot, $invalidCsrf);
+            expect($invalidResponse->body())->toContain('Invalid CSRF token.');
+            expect($invalidResponse->headers()['Content-Security-Policy'] ?? null)->toBe("frame-ancestors 'none'")
+                ->and($invalidResponse->headers()['X-Frame-Options'] ?? null)->toBe('DENY');
+            $decisionResponse = KirbyMcpOAuthRoute::handle($projectRoot, $decisionRequest);
+            expect($decisionResponse->code())->toBe(302)
+                ->and(kirbyMcpRouteLocation($decisionResponse))->toContain($decision === 'deny' ? 'error=access_denied' : 'code=');
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $resumeRequest)->code())->toBe(400);
+
+            $app->impersonate(null);
+            KirbyMcpOAuthRoute::handle($projectRoot, $unauthRequest);
+            $expiredId = $app->session()->get('bnomei.kirby-mcp.oauth.pending');
+            $store = new \Bnomei\KirbyMcp\Mcp\OAuth\OAuthFileStore($projectRoot . '/.kirby-mcp/oauth');
+            $expired = $store->read('sessions', $expiredId);
+            expect($expired)->toBeArray();
+            $expired['expires_at'] = time() - 1;
+            $store->write('sessions', $expiredId, $expired);
+            $app->impersonate('mcp-oauth-fixation@example.com');
+            expect(KirbyMcpOAuthRoute::handle($projectRoot, $callbackRequest)->code())->toBe(400);
         });
     } finally {
         kirbyMcpRouteCommitSession($app);
@@ -789,7 +856,7 @@ it('forces explicit consent when an authorize flow is resumed from a login sessi
         restoreErrorHandlers($previousErrorHandlers);
         kirbyMcpRouteRemoveDirectory($oauthStorage);
     }
-});
+})->with(['approve', 'deny']);
 
 it('denies OAuth authorization for Panel users below the configured role', function (): void {
     $projectRoot = cmsPath();
@@ -1030,6 +1097,8 @@ PHP);
                 ->toContain('mcp-oauth-snippet@example.com')
                 ->toContain('kirby-mcp:read')
                 ->toContain('snippet-consent');
+            expect($authorizeResponse->headers()['Content-Security-Policy'] ?? null)->toBe("frame-ancestors 'none'")
+                ->and($authorizeResponse->headers()['X-Frame-Options'] ?? null)->toBe('DENY');
             expect(preg_match('/name="csrf" value="([^"]*)"/', $authorizeResponse->body(), $matches))->toBe(1);
 
             $approveRequest = $factory->createServerRequest('POST', $authorizeUrl, [

@@ -20,6 +20,12 @@ If integration tests require a Kirby fixture, run `composer cms:plainkit` first.
   Verify remote discovery and direct-call enforcement without changing trusted local behavior.
 - Follow repo guidelines in `AGENTS.md`.
 
+## Releases
+
+- Record the version and date in `CHANGELOG.md`; Composer versions come from annotated `vX.Y.Z` Git tags, not a manifest version field.
+- Validate tests, static analysis, and formatting before committing and pushing the release commit and tag together.
+- OAuth changes also need browser validation of native Panel login, second-factor completion, consent, and token exchange; keep real credentials and tokens out of logs.
+
 ## Code of Conduct
 
 Be kind and constructive in issues, reviews, and discussions.
