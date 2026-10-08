@@ -14,6 +14,7 @@ Keep GitHub Actions fast, reproducible, and aligned with local `composer` script
 
 - If you change PHP support or `composer.json` scripts (`test`, `analyse`, `format`), update workflows to match.
 - Install steps in CI currently run `composer install`; keep this in sync with how deps are installed for CI.
+- PHPStan must run `composer cms:patch-kirby-helpers` after installation, as fixture setup does for Pest. Its parallel workers load Composer before the custom autoload file; relying only on helper constants in that file can crash a clean install with duplicate `e()` declarations.
 
 ## Guardrails
 

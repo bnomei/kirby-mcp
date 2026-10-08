@@ -5,6 +5,7 @@ on:
     paths:
       - '**.php'
       - 'phpstan.neon.dist'
+      - '.github/workflows/phpstan.yml'
 
 jobs:
   phpstan:
@@ -29,6 +30,9 @@ jobs:
 
       - name: Install
         run: composer install
+
+      - name: Patch conflicting Kirby development helpers
+        run: composer cms:patch-kirby-helpers
 
       - name: Run PHPStan
         run: composer analyse -- --error-format=github
