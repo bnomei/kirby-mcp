@@ -51,7 +51,7 @@ Use Panel dropdown components and load options from the backend:
 - `click` can trigger a global event for custom handling.
 - Option settings include `text`, `icon`, `dialog`, `click`, `link`, `target`, and `disabled`.
 - `dialog` can be a string pattern or a full dialog config array.
-- `click` can be a string or `['global' => 'myEvent', 'payload' => [...]]` and listened to with `this.$events.on('myEvent', ...)`.
+- `click` can be a string or `['global' => 'myEvent', 'payload' => [...]]`. Subscribe through `this.$panel.events` and unsubscribe on unmount; beta.1 also retains the component `$events` helper.
 
 ## Common UI components
 
@@ -62,7 +62,7 @@ Use Panel dropdown components and load options from the backend:
 
 - Patterns are matched against the dropdown path; keep them unique and predictable.
 - Use `(:any)` (or other route tokens) when you need dynamic IDs in the pattern.
-- Reuse core dropdowns with `$page->panel()->dropdown()` or `$kirby->core()->area('site')['dropdowns']['page']['options']`.
+- Core dropdowns are controller classes, not callable array handlers. Use the matching `Kirby\Panel\Controller\Dropdown` controller and call `factory(...)->load()`; do not call the Kirby 5 legacy core `['options']` closure. Custom dropdowns can keep options closures or register a controller under `action`.
 - Use `click` events when you need to handle a custom action in Vue.
 - Core dropdown names: `site/page`, `site/page.file`, `site/site.file`, `users/user`, `users/user.file`.
 
@@ -79,8 +79,6 @@ Use Panel dropdown components and load options from the backend:
 - https://getkirby.com/docs/reference/plugins/ui
 - https://lab.getkirby.com/public/lab
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; dropdown helpers are Vue 2 based.
-- K6: Vue 3 Panel runtime; dropdown helpers are Vue 3 based.
-- K5 -> K6: update any custom dropdown components to Vue 3 syntax.
+Rebuild legacy Vue 2 components for Vue 3 and check controller signatures against the installed tag. See `kirby://kb/panel/compat-k5-k6-migration`.

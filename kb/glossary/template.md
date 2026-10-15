@@ -6,6 +6,8 @@ Templates are PHP files that **render pages**. In a standard setup they live in 
 
 Template selection is tied to the page’s template name (usually derived from the content filename and blueprint/template setup). Kirby falls back to `default.php` if no matching template exists.
 
+Kirby 6 adds template stacks with `push()`, `endpush()` and `stack()`; do not declare application helpers with those names. Templates now receive `$slot` and `$slots`, so rename any controller/template data that used those reserved names. See https://getkirby.com/releases/6/template-stacks and the site migration guide.
+
 ## In prompts (what it usually implies)
 
 - “Edit the template” means: change the matching PHP file and re-render the page to verify output.

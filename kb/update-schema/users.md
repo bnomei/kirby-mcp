@@ -1,4 +1,6 @@
-# Users field (type: users)
+# Kirby 5 legacy: users picker field (type: users)
+
+For Kirby 6 use `userpicker` and `kirby://field/userpicker/update-schema`. Keep the stored field key and references; the type rename is not a content-key migration. The historical storage notes below remain useful when migrating legacy content.
 
 ## Field summary
 

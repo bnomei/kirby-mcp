@@ -12,7 +12,7 @@ Move logic out of snippets/blocks into dedicated controller files, similar to pa
 - Which snippets/blocks need controllers
 - Controller data requirements (queries, computed fields)
 - Whether snippet output must stay cacheable/deterministic
-- Kirby version (snippet controllers are supported from Kirby 5.1 via plugin pattern)
+- Installed Kirby 6 version and snippet-controller plugin compatibility (do not assume a legacy Kirby 5 plugin works unchanged)
 
 ## Internal tools/resources to use
 

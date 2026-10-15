@@ -1,4 +1,6 @@
-# Pages field (type: pages)
+# Kirby 5 legacy: pages picker field (type: pages)
+
+For Kirby 6 use `pagepicker` and `kirby://field/pagepicker/update-schema`. Keep the stored field key and references; only the picker type changes. A Kirby 5 **pages section** instead becomes `pagelist`, which stores no value and must not receive a content update. The historical storage notes below describe the picker, not the section.
 
 ## Field summary
 
@@ -43,7 +45,7 @@ With `store: id`, values are page ids like `notes/my-first-note`. Keep `multiple
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/pages`.
 - Check UUID generation settings via `kirby://config/content.uuid`.
-- If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `page://`.
+- Resolve an existing target page and use its actual reference; generating a UUID alone does not create a relationship target.
 
 ## Glossary quick refs
 

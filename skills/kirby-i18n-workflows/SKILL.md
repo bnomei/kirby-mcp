@@ -5,6 +5,8 @@ description: Manages Kirby multi-language workflows, translations, and localized
 
 # Kirby i18n Workflows
 
+Target Kirby 6 / MCP 6.x; confirm `kirby://info`. MCP 1.x is the legacy Kirby 5 line. Quote YAML date-like and reserved-leading scalars, use `true`/`false`, and keep query/API option settings nested under `options`. Invalid options are retained, not automatically cleaned on save. See `kirby://kb/scenarios/83-migrate-kirby-5-to-6`.
+
 ## KB entry points
 
 - `kirby://kb/scenarios/46-i18n-field-options-and-labels`

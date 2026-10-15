@@ -1,59 +1,24 @@
-# Scenario: Create a custom Panel section (plugin + Vue section)
+# Scenario: Replace a Kirby 5 custom section with a Kirby 6 display field
 
 ## Goal
 
-Add a new section type for blueprints (Panel layout), e.g. to show computed data, dashboards, or custom listings.
+Show computed data, a dashboard or a custom listing without storing content. Kirby 5 legacy custom sections are removed in Kirby 6 and do not auto-convert. Use `DisplayField`; do not register another `sections` extension.
 
-## Inputs to ask for
+## Implementation
 
-- Section type name and props
-- What data the section displays (Kirby content, external API, computed stats)
-- Whether the section needs backend endpoints
-
-## Internal tools/resources to use
-
-- Panel section reference: `kirby://sections` + `kirby://section/{type}`
-- Inventory plugins: `kirby_plugins_index`
-- Confirm roots: `kirby://roots`
-
-## Implementation steps
-
-1. Register the section type in PHP (`sections` extension).
-   - define `props`/`computed` (and optional `api` endpoints) for data
-2. Register the Vue section component in `src/index.js`.
-3. Implement the Vue section component (usually uses `k-section`, `k-items`, etc.).
-   - sections load async; call `this.load()` to fetch props/computed values
-4. Add the section to a blueprint and test.
-
-## Examples
-
-```php
-Kirby::plugin('acme/stats-section', [
-  'sections' => [
-    'stats' => [
-      'props' => [
-        'totalPages' => fn () => site()->index()->count(),
-      ],
-    ],
-  ],
-]);
-```
+1. Inspect the original blueprint and plugin with `kirby_blueprint_read` and `kirby_plugins_index`. Check whether a built-in `info`, `stats`, `pagelist`, `filelist` or `buttons` field already meets the need.
+2. For custom UI, follow the PHP class and Vue registration in `kirby://kb/panel/reference-sections`: extend `Kirby\Form\Field\DisplayField`, register it under `fields` in both PHP and JavaScript.
+3. Replace props/computed closures with typed `#[Prop]` properties/getters or `props()` merged with parent props. Compute cheap data lazily; move expensive work into `api()`.
+4. Replace `this.load()` with direct props or fetch `this.endpoints.field`; see `kirby://kb/panel/patterns-section-load`.
+5. Place the component under blueprint `fields`, use `label` instead of `headline`, and check case-insensitive name collisions with stored fields.
+6. Rebuild for Vue 3 with kirbyup 4. Display trusted text; use explicit trusted-HTML APIs only after escaping user data.
 
 ## Verification
 
-- Open the Panel page that uses the blueprint and confirm the section renders.
-- Confirm the section respects permissions and doesn’t leak data.
-
-## Glossary quick refs
-
-- kirby://glossary/panel
-- kirby://glossary/kirbyuse
-- kirby://glossary/section
-- kirby://glossary/plugin
-- kirby://glossary/blueprint
+Test allowed and denied roles, loading/error/empty states and multiple models/languages. Saving the surrounding form must not create a stored value for this display. Runtime `fieldSchemas` should mark it `hasValue: false`. Endpoint authorization belongs on the backend even when a button is hidden.
 
 ## Links
 
-- Cookbook: First Panel section: https://getkirby.com/docs/cookbook/panel/first-panel-section
-- Reference: Sections extension: https://getkirby.com/docs/reference/plugins/extensions/sections
-- Guide: Panel plugin setup: https://getkirby.com/docs/guide/plugins/plugin-setup-panel
+- `kirby://kb/scenarios/panel-section-custom`
+- `kirby://kb/panel/reference-fields`
+- https://getkirby.com/releases/6/migration/plugin-developers/sections

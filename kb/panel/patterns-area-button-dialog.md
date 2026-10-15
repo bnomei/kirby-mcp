@@ -43,11 +43,14 @@ Add custom buttons to a Panel area (for example the site area) that open dialogs
 - A dropdown button that renders a list of external profile links.
 - A dialog that posts to multiple services based on checkbox selection.
 
-## Panel JS (K5)
+## Panel JS (Kirby 6 / Vue 3)
+
+Bundle kirbyuse with kirbyup 4, leaving Vue external; see `kirby://kb/panel/tooling-kirbyuse`.
 
 ```js
 // site/plugins/example-area-tools/src/index.js
-import { computed, ref, usePanel } from 'kirbyuse';
+import { computed, ref } from 'vue';
+import { usePanel } from 'kirbyuse';
 
 const ActionMenuButton = {
   name: 'KActionMenuButton',
@@ -126,8 +129,6 @@ panel.plugin('example/area-tools', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dialogs
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 components; avoid Vue 3-only syntax.
-- K6: Vue 3 components; recheck any custom button wrappers and dialog components.
-- K5 -> K6: if the plugin shipped prebuilt JS, rebuild with the correct Vue runtime.
+Rebuild Kirby 5 legacy Vue 2 bundles. Declare component events and use the Panel instance APIs; see `kirby://kb/panel/compat-k5-k6-migration`. Test button wrappers and dialog components against the installed beta.

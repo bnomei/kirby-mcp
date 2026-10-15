@@ -1,4 +1,4 @@
-# Scenario: Add “related content” via a `pages` field (`toPages()`)
+# Scenario: Add related content via a `pagepicker` field (`toPages()`)
 
 ## Goal
 
@@ -15,13 +15,13 @@ Let editors select related pages in the Panel and render them in templates.
 ## Internal tools/resources to use
 
 - Blueprint inspection: `kirby_blueprint_read` / `kirby://blueprint/{encodedId}`
-- Panel field reference: `kirby://field/pages`
+- Panel field reference: `kirby://field/pagepicker`
 - Render and inspect: `kirby_render_page`
 - Confirm stored references: `kirby_read_page_content`
 
 ## Implementation steps
 
-1. Add a `pages` field to the blueprint (limit candidates via `query:`). Default storage is UUID; set `store: id` only when you need path-based ids.
+1. Add a `pagepicker` field to the blueprint (limit candidates via `query:`). Default storage is UUID; set `store: id` only when you need path-based ids. Kirby 5's legacy `pages` picker maps to this field, not to the non-value `pagelist`.
 2. In the template, convert the stored YAML list to a pages collection via `->toPages()`.
 3. Render the related list only when non-empty.
 
@@ -32,7 +32,7 @@ Let editors select related pages in the Panel and render them in templates.
 ```yaml
 related:
   label: Related articles
-  type: pages
+  type: pagepicker
   query: page.siblings(false)
 ```
 
@@ -75,5 +75,5 @@ if ($related->isNotEmpty()):
 ## Links
 
 - Cookbook: Related articles: https://getkirby.com/docs/cookbook/collections/related-articles
-- Reference: Pages field: https://getkirby.com/docs/reference/panel/fields/pages
+- Kirby 6 picker names: https://getkirby.com/releases/6/blueprints
 - Reference: `toPages()`: https://getkirby.com/docs/reference/templates/field-methods/to-pages

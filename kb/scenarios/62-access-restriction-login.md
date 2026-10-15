@@ -28,6 +28,7 @@ Restrict parts of the site to logged-in users (or specific roles), including:
    - `content/login/login.txt`
    - `site/templates/login.php`
    - `site/controllers/login.php`
+   - use Kirby 6 `authenticate()` and handle `Status`/`State::Pending` before redirecting; see `kirby://kb/scenarios/43-user-registration-and-login`
 3. Add a logout route in `config.php` that calls `$user->logout()` and redirects.
 4. Protect pages:
    - template-level gate (`if (!$kirby->user()) go('/')`)
@@ -70,6 +71,7 @@ return [
 
 ## Verification
 
+- After a Kirby 5→6 upgrade, old login cookies are rejected; verify a fresh login and any configured second factor.
 - As a guest, confirm protected pages redirect to login (or show 403).
 - As an authorized user, confirm protected pages render normally.
 - Confirm protected pages are not cached.

@@ -1,8 +1,10 @@
-# Panel pattern - map field with geocoding
+# Map/geocoding field: Kirby 5 legacy sketch and Kirby 6 port
 
 ## Goal
 
 Create a map-based field that lets editors search for locations, drop a marker, and store a structured location object.
+
+Kirby 6: use a PHP `InputField`/`ObjectField` subclass with typed props and explicit `fill()`/`toStoredValue()` behavior for the location. See `kirby://kb/panel/reference-fields`. Secret provider tokens belong in a server-side endpoint, not a field prop.
 
 ## Inputs to ask for
 
@@ -40,7 +42,9 @@ Create a map-based field that lets editors search for locations, drop a marker, 
 - Marker drag that updates lat/lon and clears address fields until reverse geocoding is added.
 - Optional zoom persistence stored alongside the location data.
 
-## Panel JS (K5)
+## Kirby 5 legacy frontend sketch (migration reference)
+
+For Kirby 6, replace private `this._uid` with a template ref for the map element, declare `emits: ['input']`, import/bundle the map library for Vue 3 and clean up its instance in `beforeUnmount()`. Test latitude zero explicitly (the legacy truthiness check drops it), debounce requests and ignore stale results. The sketch below documents the old flow, not a verified Kirby 6 component.
 
 ```js
 // site/plugins/example-map-field/src/components/MapField.vue (K5/Vue 2)
@@ -126,8 +130,6 @@ panel.plugin('example/map-field', {
 - https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Migration acceptance
 
-- K5: Vue 2 component; map libraries may rely on older bundlers.
-- K6: Vue 3 component; confirm the map library works in the Panel iframe.
-- K5 -> K6: rebuild the map bundle and re-test geocoding requests.
+Test initial values, zero coordinates, drag/search updates, denied API access, navigation cleanup and persisted object values. Rebuild with kirbyup 4; check the exact map library version rather than assuming Vue 2 wrappers work.

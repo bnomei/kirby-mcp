@@ -4,6 +4,8 @@
 
 Panel areas are top-level Panel apps with their own routes, views, menu item, icon, and breadcrumb. They can be simple single-view pages or full mini apps with custom dialogs, dropdowns, and searches.
 
+Kirby 6 exposes `$kirby->panel()` as an object. Area closures and component/props arrays still work; `action` can also name a route-specific controller class returning a UI object. See `kirby://kb/panel/compat-k5-k6-migration` for instance APIs, controller factories and core override rules.
+
 ## Default areas
 
 Core Panel areas include: `account`, `installation`, `lab`, `languages`, `login`, `logout`, `search`, `site`, `system`, `users`.
@@ -79,10 +81,10 @@ Use the Panel Lab to inspect component props and examples.
 
 ## Gotchas
 
-- `menu` can be a boolean or a callback (`function ($areas, $permissions, $current): bool|array`).
+- Use a boolean `menu` for simple visibility; check callback signatures against the installed Kirby 6 `Area` API before porting legacy callbacks.
 - If you don't need `$kirby`, the area config can be an array instead of a callback.
 - Hidden areas can be added via `panel.menu`, and visible areas are hidden if not listed there.
-- `link` can be an absolute URL; use `target` to open in a new tab.
+- Verify external-link behavior against the installed area API; do not assume arbitrary legacy area keys are accepted.
 - Use `t()` for labels, titles, and breadcrumb labels when you need translations.
 - When extending core areas, only override the view parts you need to change.
 
@@ -102,8 +104,6 @@ Use the Panel Lab to inspect component props and examples.
 - https://lab.getkirby.com/public/lab
 - https://github.com/getkirby/kirby/tree/main/panel
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; use `kirbyup` 3.x with HMR.
-- K6: Vue 3 Panel runtime; use `kirbyup` 4.x and HMR/watch-mode builds as supported.
-- K5 -> K6: update Vue components to Vue 3 syntax and recheck any core view overrides.
+Use Vue 3 and kirbyup 4 (`dev` for HMR). Rebuild Kirby 5 legacy bundles and replace calls into core closure arrays with controller `factory()` calls. See `kirby://kb/panel/compat-k5-k6-migration`.

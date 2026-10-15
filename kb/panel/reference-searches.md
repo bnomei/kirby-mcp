@@ -16,7 +16,7 @@ Kirby::plugin('vendor/todos', [
           'todos' => [
             'label' => 'Todos',
             'icon' => 'check',
-            'query' => function (string|null $query, int $limit, int $page) {
+            'action' => function (string|null $query, int $limit, int $page) {
               return [
                 'results' => [],
                 'pagination' => [
@@ -45,11 +45,11 @@ const panel = usePanel();
 const results = await panel.search('todos', 'Search query');
 ```
 
-In Options API you can also call `this.$search('todos', query)`.
+In Options API you can also call `this.$panel.search('todos', query)`.
 
 ## Data flow (props/events/load)
 
-- `query` receives `(query, limit, page)` and returns a results array plus pagination.
+- The search action receives `(query, limit, page)` and returns results plus pagination; a `SearchController` class can also handle it.
 - Result items can include `text`, `link`, `info`, `icon`, `image`, and `uuid`.
 - Set `search` in the area to control the default search type.
 - For simple searches, returning a flat array of results is acceptable; pagination is optional.
@@ -61,7 +61,7 @@ In Options API you can also call `this.$search('todos', query)`.
 ## Gotchas
 
 - The search key must match the type used in `panel.search()`.
-- When overriding core searches, call `$kirby->core()->area('site')['searches']['pages']['query']` for fallback behavior.
+- Kirby 5 legacy `query` overrides lose to the core Kirby 6 `action`. Override `action` and use `Kirby\Panel\Controller\Search\PagesSearchController` for fallback behavior rather than calling a removed core closure.
 - Core search types are `site/pages`, `site/files`, and `users/users`.
 
 ## MCP: Inspect/verify
@@ -75,8 +75,6 @@ In Options API you can also call `this.$search('todos', query)`.
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; searches return Vue 2-friendly payloads.
-- K6: Vue 3 Panel runtime; searches return Vue 3-friendly payloads.
-- K5 -> K6: re-test custom searches and pagination shapes.
+Re-test result shapes, pagination and controller fallback after porting legacy `query` handlers to `action`. Bundle kirbyuse and leave Vue external; see `kirby://kb/panel/tooling-kirbyuse`.

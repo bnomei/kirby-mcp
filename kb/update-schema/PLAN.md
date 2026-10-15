@@ -1,4 +1,6 @@
-# Kirby KB content creation — plan
+# Historical Kirby 5 legacy authoring plan: content storage
+
+This is unverified historical seed material, not a storage reference. Use the individual guides under `kirby://fields/update-schema`, especially `kirby://field/pagepicker/update-schema`, `kirby://field/filepicker/update-schema` and `kirby://field/userpicker/update-schema`. Kirby 6 pickers store YAML lists even for single selections; `pagelist`/`filelist` are display-only and never receive writes. The old link/entries sketches below are superseded by `kirby://field/link/update-schema` and `kirby://field/entries/update-schema`. Migration entry: `kirby://kb/scenarios/83-migrate-kirby-5-to-6`.
 
 We are creating a new KB collection under `/kb/content` focused on content creation guidance for Kirby Panel fields. This KB explains how each field stores data in content files and how to write back safely with `kirby_update_page_content`.
 

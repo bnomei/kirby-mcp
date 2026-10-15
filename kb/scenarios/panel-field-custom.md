@@ -20,6 +20,7 @@ Create a custom Panel field type with a Vue component and register it in PHP.
 ## Implementation steps
 
 1. Create a plugin folder and register the field in `index.php`.
+   - Kirby 6 requires a PHP field class; Kirby 5 legacy array definitions must be rewritten (see `kirby://kb/panel/reference-fields`).
 2. Create `src/index.js` and register the field component with `panel.plugin`.
 3. Implement a Vue component that binds `value` and emits `input`.
 4. Reference the field type in a blueprint.
@@ -36,7 +37,7 @@ Create a custom Panel field type with a Vue component and register it in PHP.
 
 Kirby::plugin('vendor/doifield', [
   'fields' => [
-    'doi' => [],
+    'doi' => Kirby\Form\Field\TextField::class,
   ],
 ]);
 ```
@@ -66,6 +67,8 @@ panel.plugin('vendor/doifield', {
 
 <script>
 export default {
+  inheritAttrs: false,
+  emits: ['input'],
   props: {
     value: String,
   },
@@ -109,8 +112,6 @@ fields:
 - Panel tooling: kirby://kb/panel/tooling-kirbyup
 - Panel composables: kirby://kb/panel/tooling-kirbyuse
 
-## Version notes (K5/K6)
+## Kirby 6 build contract
 
-- K5: Vue 2 Panel runtime; `kirbyup` 3.x targets Vue 2.7.
-- K6: Vue 3 Panel runtime; `kirbyup` 4.x targets Vue 3, and `kirbyuse` 2.x requires an import map entry.
-- K5 -> K6: upgrade to `kirbyuse` 2.x (if used), update Vue component syntax if needed, and switch bundler versions.
+Use kirbyup 4 with Vue 3, leaving Vue external. Kirby inputs still use `value`/`input`, not Vue 3's default component `v-model`. If using kirbyuse, bundle its Kirby-6-compatible version; tagged beta.1 only supplies the `vue` import map. See `kirby://kb/panel/tooling-kirbyuse`.

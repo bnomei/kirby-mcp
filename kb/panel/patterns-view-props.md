@@ -62,8 +62,6 @@ panel.plugin('vendor/reports', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 props handling; serialize only JSON-safe data.
-- K6: Vue 3 props handling; keep props shallow for performance.
-- K5 -> K6: recheck complex prop shapes and date serialization.
+Use Vue 3 components with explicit props. Recheck complex values and dates when migrating legacy Vue 2 views; Symfony YAML can turn unquoted dates into timestamps. Send only the data needed by the view, not whole user/account objects.

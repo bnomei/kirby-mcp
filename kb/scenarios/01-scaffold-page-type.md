@@ -12,7 +12,7 @@ Add a new Kirby “page type” with:
 
 - Page type/template name (lowercase; e.g. `event`, `project`, `article.video`)
 - Required fields (e.g. `headline`, `text`, `date`, `cover`, `gallery`)
-- Panel UI expectations (tabs? files section? subpages?)
+- Panel UI expectations (tabs? filelist? subpages?)
 - Any existing page type to copy/extend
 
 ## Internal tools/resources to use
@@ -22,7 +22,7 @@ Add a new Kirby “page type” with:
   - `kirby_templates_index`, `kirby_controllers_index`, `kirby_models_index`
   - `kirby_blueprints_index` + `kirby://blueprint/{encodedId}` (or `kirby_blueprint_read`)
 - Panel building blocks reference:
-  - `kirby://fields`, `kirby://sections`
+  - `kirby://fields` (including display fields such as `pagelist` and `filelist`)
 - Validate rendering: `kirby_render_page`
 
 ## Implementation steps
@@ -59,21 +59,18 @@ tabs:
     columns:
       main:
         width: 2/3
-        sections:
-          fields:
-            type: fields
-            fields:
-              headline:
-                label: Headline
-                type: text
-              text:
-                label: Text
-                type: textarea
+        fields:
+          headline:
+            label: Headline
+            type: text
+          text:
+            label: Text
+            type: textarea
       sidebar:
         width: 1/3
-        sections:
+        fields:
           files:
-            type: files
+            type: filelist
             label: Files
 ```
 

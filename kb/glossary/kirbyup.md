@@ -2,7 +2,7 @@
 
 ## Meaning
 
-kirbyup is a Vite-based bundler for Kirby Panel plugin assets with HMR (K5) and watch builds (K6).
+kirbyup is a Vite-based bundler for Kirby Panel plugin assets. Kirby 6 beta.1 uses kirbyup 4 (published under `next` at this baseline), Node.js 24+ and Vue 3, including HMR via `dev`. Kirby 5 legacy kirbyup 3/`serve` builds must be rebuilt with version 4 for Kirby 6.
 
 ## In prompts (what it usually implies)
 
@@ -13,7 +13,7 @@ kirbyup is a Vite-based bundler for Kirby Panel plugin assets with HMR (K5) and 
 ```json
 {
   "scripts": {
-    "dev": "kirbyup serve src/index.js",
+    "dev": "kirbyup dev src/index.js",
     "build": "kirbyup src/index.js"
   }
 }

@@ -1,9 +1,11 @@
 ---
 name: kirby-scaffold-page-type
-description: Scaffolds a new Kirby page type (blueprint + template, optional controller/model) using project roots, index tools, and Panel field/section references. Use when creating a new page type or extending an existing blueprint/template.
+description: Scaffolds a Kirby 6 page type (blueprint + template, optional controller/model) using project roots, index tools, and value/display field references. Use when creating or extending a page type.
 ---
 
 # Kirby Scaffold Page Type
+
+Target Kirby 6 / MCP 6.x; MCP 1.x is the legacy Kirby 5 line. Use `pagelist`/`filelist` for display lists and `pagepicker`/`filepicker`/`userpicker` for stored selections. Remove presets and section wrappers in new blueprints; root-field placements use list references, with case-insensitively unique names. See `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 baseline.
 
 ## Quick start
 
@@ -80,9 +82,9 @@ class ExamplePage extends Page
    - `kirby:kirby_controllers_index`
    - `kirby:kirby_models_index`
 4. If extending an existing type, read it with `kirby:kirby_blueprint_read` before generating new files.
-5. Use Panel reference resources for field and section choices:
+5. Use Panel reference resources for value and display field choices:
    - `kirby://fields`
-   - `kirby://sections`
+   - `kirby://sections` only for legacy migration reference
 6. Search the KB with `kirby:kirby_search` (examples: "scaffold page type", "blueprints reuse extends", "custom post types", "create a blog section", "one pager site sections").
 7. Create minimal, convention-aligned files; prefer snippets for reusable view logic.
 8. Verify with `kirby:kirby_render_page(noCache=true)` when runtime is available; otherwise run `kirby:kirby_runtime_status` and `kirby:kirby_runtime_install` first.

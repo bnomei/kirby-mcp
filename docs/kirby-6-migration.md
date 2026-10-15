@@ -30,13 +30,19 @@ The branch includes origin/main's v1.15.1. Existing MCP 1.x releases remain the 
   invocation. Plugins using kirbyuse must bundle it while keeping Vue external (kirbyup 4@next,
   Node 24+, `dev`, `index.dev.js`). `Panel::go()` remains static; do not blanket-rewrite it.
 
-## Deferred knowledge/content work (separate documentation branch)
+## Integrated knowledge/content work
 
-- Canonical picker storage guides and display-only list guidance; label retained Kirby 5 articles.
-- Blueprint layout/root references, removed presets/custom sections, shared case-insensitive names,
-  field-class extensions, new query runner, authentication challenges and Panel/Vue 3 migration advice.
-- Reconcile all KB/skills examples and reference/schema links after merging `kirby-6-docs`.
-  Technical code intentionally omits missing guides rather than advertising nonexistent resources.
+- Integrated `kirby-6-docs` ([documentation commit](https://github.com/bnomei/kirby-mcp/commit/ff8e906ff2c45401e48011e61e9472e3bacf0845)):
+  canonical picker storage guides, display-only lists, the Kirby 5-to-6 migration guide and all 15 skills.
+- Coverage includes blueprint root references, removed presets/custom sections, shared names,
+  field classes, queries, authentication challenges and Panel/Vue 3 tooling. Published paths remain.
+- Combined regression checks require all three canonical picker links and nested picker links;
+  display fields (including info with an existing guide) and unresolved types omit write-guide links.
+  An independent audit resolved all 958 concrete KB/glossary/schema URI occurrences.
+- Integration review corrected dropdown controller `factory(...)->load()`, Options API
+  `$panel.search()` and the inaccurate claim that beta.1 removes the `$events` helper.
+- Four specialized frontend sketches remain explicitly Kirby 5 legacy with Kirby 6 port instructions,
+  not tested Kirby 6 components. Third-party recipe bundles and future beta tooling need verification.
 - Online documentation/marketplace availability is upstream-dependent; catalog entries do not prove
   every upstream URL or Kirby 6 plugin listing exists.
 
@@ -47,7 +53,7 @@ The branch includes origin/main's v1.15.1. Existing MCP 1.x releases remain the 
 - Targeted runtime command tests cover picker/list distinction, root refs, legacy built-in section
   conversion, nested block schemas, existing guide resolution, invalid options with validation on/off,
   multilingual isolation, UUID query contexts, operators and unknown field methods.
-- Full suite on both PHP 8.3 and PHP 8.5: **505 tests / 4,977 assertions**.
+- Combined full suite on both PHP 8.3 and PHP 8.5: **505 tests / 4,982 assertions**.
   Both pinned kit setup scripts passed; the final PHP 8.5 run used a freshly regenerated Starterkit.
   PHPStan: no errors. Composer validate and audit pass; Pint dirty-file check passes.
 - Browser: native password login → resume → explicit consent → approval → PKCE token exchange;
@@ -59,5 +65,5 @@ The branch includes origin/main's v1.15.1. Existing MCP 1.x releases remain the 
   `js/sortable.min.js`, causing a 404 dynamic-import error on case-sensitive filesystems.
   Account Panel renders normally. Resolve upstream or select a corrected release before shipping;
   do not silently patch vendor assets in fixture setup.
-- Release remains blocked on documentation integration, final upstream version selection and explicit
+- Release remains blocked on the upstream Site asset error, final upstream version selection and explicit
   release approval. Beta.1 verification is not a promise of compatibility with future beta API changes.

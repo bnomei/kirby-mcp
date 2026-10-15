@@ -1,4 +1,6 @@
-# Kirby KB scenarios (task playbooks) — plan
+# Historical Kirby 5 legacy authoring plan: scenarios
+
+This is a historical inventory, not current implementation guidance. Use `kirby://kb/scenarios/83-migrate-kirby-5-to-6` and the individual updated articles. Kirby 6 uses `pagepicker`/`filepicker`/`userpicker` for selections, `pagelist`/`filelist` for non-value lists, and PHP display fields instead of custom sections. Published article paths remain stable even where old names occur in filenames.
 
 We are creating a **new** set of knowledgebase documents as Markdown files under `/kb`.
 

@@ -1,55 +1,33 @@
-# Section (aliases: “Panel section”, “blueprint section”)
+# Section (Kirby 5 legacy blueprint concept)
 
-## Meaning
+## Kirby 6 replacement
 
-Sections are blueprint building blocks used to organize content and UI in the Panel. A section can display fields, pages lists, files lists, stats, info text, etc.
+Use fields for all Panel UI. A legacy `pages` section becomes `pagelist`, `files` becomes `filelist`, and `info`/`stats` keep their names as non-value fields. A `fields` section wrapper is unwrapped. Built-in sections convert automatically; custom plugin sections do not and must become PHP `DisplayField` classes registered under `fields`.
 
-Sections live inside blueprints and are defined by `type` (e.g. `pages`, `files`, `fields`, …). Kirby also supports custom section types via plugins.
+Do not confuse a **picker field** with a section: legacy `pages`/`files`/`users` picker fields become `pagepicker`/`filepicker`/`userpicker` and store selected references. Lists do not store values.
 
-Since Kirby 5.2, files sections support `create: false` to hide the upload button, useful when a query would exclude newly uploaded files. This is a UI control, not a replacement for upload permissions. Stats reports can open a `dialog` or `drawer` as alternatives to a URL link.
-
-## In prompts (what it usually implies)
-
-- “Add a pages/files list to the Panel” means: add a `pages` or `files` section to the blueprint.
-- “Split drafts/unlisted/listed in the Panel” means: multiple `pages` sections with different `status` filters.
-- “Custom section” means: plugin development (register a section extension).
-
-## Variants / aliases
-
-- Built-in section catalog:
-  - `kirby://sections`
-  - `kirby://section/{type}`
-- Custom sections via plugin extension: `sections`
-
-## Example
+## Canonical example
 
 ```yaml
-sections:
+fields:
   drafts:
-    type: pages
-    status: draft
+    type: pagelist
+    status: drafts
   published:
-    type: pages
+    type: pagelist
     status: listed
 ```
 
-## MCP: Inspect/verify
+When migrating, replace `headline` with `label`, remove `rawvalues`, and resolve case-insensitive name collisions between former sections and fields. Hiding an upload/create control is not an authorization check. Stats reports can open a dialog or drawer rather than a URL.
 
-- Read the resolved blueprint via `kirby_blueprint_read` (or `kirby://blueprint/{encodedId}`).
-- Discover available built-in section types via `kirby://sections` and drill into details with `kirby://section/{type}`.
-- If a project uses custom sections, inspect plugins with `kirby_plugins_index` and consult `kirby://extension/sections`.
+## Inspect and migrate
 
-## Related terms
-
-- kirby://glossary/panel
-- kirby://glossary/blueprint
-- kirby://glossary/extends
-- kirby://glossary/query-language
+- `kirby_blueprint_read` reads raw blueprint configuration; model `blueprint()->fields()` gives normalized fields including display fields.
+- `kirby://fields` lists canonical types; `kirby://sections` is legacy migration reference.
+- `kirby://kb/panel/reference-sections` explains custom-section ports.
+- `kirby://kb/scenarios/83-migrate-kirby-5-to-6` covers the full site migration.
 
 ## Links
 
-- https://getkirby.com/docs/reference/panel/sections
-- https://getkirby.com/docs/guide/blueprints/layout
-- https://getkirby.com/docs/reference/plugins/extensions/sections
-- https://getkirby.com/docs/reference/panel/sections/files
-- https://getkirby.com/docs/reference/panel/sections/stats
+- https://getkirby.com/releases/6/blueprints
+- https://getkirby.com/releases/6/migration/plugin-developers/sections

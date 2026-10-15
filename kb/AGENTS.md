@@ -24,8 +24,10 @@ Maintain the bundled Markdown knowledge base shipped with Kirby MCP (used by too
 
 ## Maintenance baseline
 
-- The October 15, 2026 maintenance pass reviewed official documentation changes since January 10, 2026 and stable Kirby 5 releases through 5.6.1 (January baseline: 5.2.2), with a feature-coverage look-back at 5.1/5.2.
-- Keep one canonical KB and update existing articles in place. Existing K6 notes may remain; this is not a separate migration-guide collection.
+- Canonical guidance targets Kirby 6, verified against release migration docs and `6.0.0-beta.1` on October 15, 2026. Label beta-sensitive APIs and tooling; do not imply production readiness or frozen/version-selected online docs.
+- Preserve the v1.15.1 maintenance improvements. Keep one canonical KB and published article paths where practical; label retained Kirby 5 examples as legacy and immediately explain the Kirby 6 replacement. MCP 1.x is the legacy Kirby 5 line; MCP 6.x is the Kirby 6 line.
+- Entry point: `scenarios/83-migrate-kirby-5-to-6.md`. A `pages` section becomes `pagelist`, but a `pages` picker becomes `pagepicker` (likewise files/filelist/filepicker). Built-in sections auto-convert; custom sections require a field-class port.
+- Display fields never receive content update payloads. Schema `hasValue` can be true, false or null; null is unresolved, not writable. Generated update-schema links require `hasValue === true` and an actual guide; unknown/static fields omit links and aliases are not guessed. Direct reference resources remain readable. Blueprint load data is raw; model fields are normalized.
 - For future passes, prioritize `docs:` commits in `getkirby/getkirby.com`, relevant documentation fixes with other prefixes, and stable release notes in `getkirby/kirby`. Verify claims against linked official pages and use runtime checks for storage/payload changes.
 - `PLAN.md` files are historical authoring plans, not verified reference material. In particular, the old update-schema seed examples for entries/link are superseded by `entries.md` and `link.md`.
 

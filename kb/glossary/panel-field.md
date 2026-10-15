@@ -2,7 +2,7 @@
 
 ## Meaning
 
-A Panel field is a blueprint field type backed by a plugin. It defines PHP props and a Vue component used in the Panel.
+A Panel field is a built-in or plugin blueprint field type. In Kirby 6 its PHP class extends `Kirby\Form\Field\DisplayField` (no stored value), `ValueField` (value without input) or `InputField` (editor input). Options use typed `#[Prop]` properties/getters; Vue 3 renders the UI. Kirby 5 legacy array definitions must be rewritten as classes, not just rebuilt in JavaScript. See `kirby://kb/panel/reference-fields` for the class and registration pattern.
 
 ## In prompts (what it usually implies)
 

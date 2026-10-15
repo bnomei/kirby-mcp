@@ -1893,10 +1893,15 @@ it('distinguishes Kirby 6 display fields and pickers through content and raw blu
         foreach (['related', 'assets', 'authors', 'body'] as $name) {
             expect($schemas[$name]['hasValue'])->toBeTrue();
         }
+        foreach (['related' => 'pagepicker', 'assets' => 'filepicker', 'authors' => 'userpicker'] as $name => $type) {
+            expect($schemas[$name]['_schemaRef']['updateSchema'])->toBe('kirby://field/' . $type . '/update-schema');
+        }
         expect($schemas['listing']['hasValue'])->toBeFalse();
         expect($schemas['listing']['_schemaRef'])->not()->toHaveKey('updateSchema');
         expect($schemas['body']['_nestedBlockFields']['card']['target']['hasValue'])->toBeTrue();
         expect($schemas['body']['_nestedBlockFields']['card']['notice']['hasValue'])->toBeFalse();
+        expect($schemas['body']['_nestedBlockFields']['card']['target']['_schemaRef']['updateSchema'])->toBe('kirby://field/pagepicker/update-schema');
+        expect($schemas['body']['_nestedBlockFields']['card']['notice']['_schemaRef'])->not()->toHaveKey('updateSchema');
         foreach ($schemas as $schema) {
             if (isset($schema['_schemaRef']['updateSchema'])) {
                 expect((new \Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources())->contentField($schema['type']))->not()->toBe('');

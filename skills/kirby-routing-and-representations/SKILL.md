@@ -5,6 +5,8 @@ description: Implements custom Kirby routes and content representations (.json/.
 
 # Kirby Routing and Representations
 
+Target Kirby 6 / MCP 6.x; verify `kirby://info`. MCP 1.x is the legacy Kirby 5 line. Reserve template data names `$slot`/`$slots` and helper names `push()`/`endpush()`/`stack()` for Kirby 6. Online docs are unversioned; check the installed tag for beta-sensitive APIs.
+
 ## KB entry points
 
 - `kirby://kb/scenarios/13-custom-routes`

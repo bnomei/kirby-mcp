@@ -2,11 +2,11 @@
 
 ## Meaning
 
-kirbyuse provides Panel composables and typings for plugin development. Major versions align with Kirby versions (1.x for K5, 2.x for K6).
+kirbyuse provides Panel composables and typings. Use the Kirby-6/Vue-3 prerelease line for Kirby 6; legacy 1.x targets Kirby 4/5. Bundle kirbyuse and leave Vue external: tagged Kirby 6 beta.1 supplies a `vue` import map, not a plugin import-map registration API.
 
 ## In prompts (what it usually implies)
 
-- "Use kirbyuse" means importing Panel composables and, in K6, adding an import map entry.
+- "Use kirbyuse" means importing compatible composables into the plugin build; see `kirby://kb/panel/tooling-kirbyuse` before changing loaders.
 
 ## Example
 

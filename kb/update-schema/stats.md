@@ -22,7 +22,7 @@ Not applicable.
 
 ## Edge cases
 
-Stats values are computed in the Panel, not persisted in content files.
+Stats values are computed for display, not persisted in content files. Kirby 6 normalizes former built-in stats sections into this field. MCP retains it with `hasValue: false` and emits no update-schema link. This retained guide explains why to exclude it from writes.
 
 ## MCP: Inspect/verify
 

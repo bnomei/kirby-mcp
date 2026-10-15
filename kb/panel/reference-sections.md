@@ -1,109 +1,72 @@
-# Panel sections (type: sections)
+# Kirby 5 legacy sections: port to Kirby 6 display fields
 
-## What it is
+Kirby 6 beta.1 removes custom sections. Rebuilding the old Vue component is insufficient: move both PHP and JavaScript registrations from `sections` to `fields`, extend `Kirby\Form\Field\DisplayField`, and change blueprint placements to `fields`.
 
-Sections are layout blocks in blueprints for listing, navigation, or informational UI. Use sections for display and actions, fields for storing content. Section plugins typically ship `index.php`, `index.js`, and optional `index.css`.
+Built-in sections auto-convert: `pages` → `pagelist`, `files` → `filelist`, `info`/`stats` → same-named fields; `fields` wrappers are unwrapped. Picker fields are different: use `pagepicker`/`filepicker`/`userpicker` for stored selections. Never send content updates for display fields.
 
-## PHP registration
+## A computed display field
 
 ```php
-Kirby::plugin('vendor/modified', [
-  'sections' => [
-    'modified' => [
-      'props' => [
-        'label' => function ($label = null) {
-          return $label;
-        },
-      ],
-      'computed' => [
-        'text' => function () {
-          return 'Last update: ' . $this->model()->modified('Y-m-d H:i');
-        },
-      ],
-      'api' => function () {
+<?php
+
+use Kirby\Form\Field\DisplayField;
+
+class ModifiedField extends DisplayField
+{
+    public function props(): array
+    {
         return [
-          [
-            'pattern' => '/say-hello',
-            'action' => function () {
-              return ['message' => 'Hello, world'];
-            },
-          ],
+            ...parent::props(),
+            'text' => 'Last update: ' . $this->model()->modified('Y-m-d H:i'),
         ];
-      },
-    ],
-  ],
+    }
+}
+
+Kirby::plugin('example/modified', [
+    'fields' => ['modified' => ModifiedField::class],
 ]);
 ```
 
-## Vue registration
-
 ```js
-import { ref, useSection } from 'kirbyuse';
-
-panel.plugin('vendor/modified', {
-  sections: {
+panel.plugin('example/modified', {
+  fields: {
     modified: {
-      setup() {
-        const label = ref(null);
-        const text = ref(null);
-        const { load } = useSection();
-
-        load().then((response) => {
-          label.value = response.label;
-          text.value = response.text;
-        });
-
-        return { label, text };
-      },
-      template: `
-        <section class="k-modified-section">
-          <k-label>{{ label }}</k-label>
-          <k-text>{{ text }}</k-text>
-        </section>
-      `,
+      inheritAttrs: false,
+      props: { label: String, text: String },
+      template: `<k-field :label="label"><p>{{ text }}</p></k-field>`,
     },
   },
 });
 ```
 
-## Data flow (props/events/load)
+```yaml
+fields:
+  modified:
+    type: modified
+    label: Last update
+```
 
-- Blueprint options map to PHP `props` setters and become JSON in the Panel response.
-- Sections load asynchronously. Use `useSection().load()` to fetch the data from the backend.
-- Populate reactive refs with the response from `load()`.
-- `useSection().load()` needs `parent` and `name`; use the `section` helper from `kirbyuse/props` when using Composition API.
-- Custom API endpoints are namespaced under `/pages/<id>/sections/<section>/...` and accessed via `useApi()`.
+## Where section code goes
 
-## Common UI components
+| Kirby 5 legacy                   | Kirby 6 replacement                              |
+| -------------------------------- | ------------------------------------------------ |
+| `props` closures                 | Typed `#[Prop]` properties and getters           |
+| `computed`                       | Getters or lazy API methods                      |
+| `methods`                        | PHP methods                                      |
+| `toArray`                        | `props()` merged with parent props               |
+| `this.load()` / section endpoint | Cheap data as props; expensive data from `api()` |
+| API root response                | Field route with `pattern: ''`                   |
+| `sections` JS registry           | `fields` JS registry                             |
+| `headline`                       | `label`                                          |
 
-- `k-section`, `k-collection`, `k-item`
-- `k-label`, `k-text`, `k-button`
+For asynchronous data, expose a GET `api()` route and fetch `this.endpoints.field` in Vue. See `kirby://kb/panel/patterns-section-load`. Don't compute a site-wide index in a constructor; field creation also happens on saves. Implement `errors()` if the display needs to report model errors, and enforce authorization on every action endpoint.
 
-## Gotchas
+## Verify the port
 
-- Sections do not receive props directly; define `data()` and set values after `load()`.
-- Use sections for UI that does not write content; use fields when you need stored values.
-- Keep `data()` keys in sync with PHP props and computed values.
-- Use `I18n::translate()` in prop setters if you expect translation arrays.
-- `index.css` is auto-loaded; reuse Panel UI styles when possible.
-
-## MCP: Inspect/verify
-
-- Find usage: `kirby_blueprints_index` + `kirby_blueprint_read`
-- Verify plugin load: `kirby_plugins_index`
-- Core section reference: `kirby://section/{type}`
-- Extension reference: `kirby://extension/sections`
+Use `kirby_plugins_index`, inspect the raw blueprint, open the Panel and test loading/error/empty states. Confirm no field content key is written after saving. Check names against all other fields case-insensitively. Existing paths for this article and the section recipes are retained for migration discovery, not as a recommendation to build new sections.
 
 ## Links
 
-- https://getkirby.com/docs/reference/plugins/extensions/sections
-- https://getkirby.com/docs/reference/panel/sections
-- https://getkirby.com/docs/cookbook/panel/first-panel-section
-- https://getkirby.com/docs/reference/plugins/ui
-- https://lab.getkirby.com/public/lab
-
-## Version notes (K5/K6)
-
-- K5: Vue 2 Panel runtime; `kirbyup` 3.x and `kirbyuse` 1.x.
-- K6: Vue 3 Panel runtime; `kirbyup` 4.x and `kirbyuse` 2.x with import maps.
-- K5 -> K6: update component syntax and re-test async loading.
+- https://getkirby.com/releases/6/migration/plugin-developers/sections
+- https://getkirby.com/releases/6/migration/plugin-developers/fields
+- https://getkirby.com/releases/6/blueprints

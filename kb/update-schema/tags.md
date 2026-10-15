@@ -28,6 +28,8 @@ Read existing tags, merge unique items, then write back as array or comma-separa
 
 The `separator` option controls string storage. Tags may be normalized to lowercase.
 
+Kirby 6 moves query/API option-source settings inside `options`. Option values are no longer silently discarded when absent from the source; preserve or explicitly transform old values according to the migration plan. See `kirby://glossary/query-language`.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

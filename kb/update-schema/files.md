@@ -1,4 +1,6 @@
-# Files field (type: files)
+# Kirby 5 legacy: files picker field (type: files)
+
+For Kirby 6 use `filepicker` and `kirby://field/filepicker/update-schema`. Keep the stored field key and references; only the picker type changes. A Kirby 5 **files section** instead becomes `filelist`, which stores no value and must not receive a content update. The historical storage notes below describe the picker, not the section.
 
 ## Field summary
 
@@ -41,7 +43,7 @@ With `store: id`, values are filenames or paths. Cross-page file references may 
 - Inspect stored values with `kirby_read_page_content`.
 - Confirm Panel options via `kirby://field/files`.
 - Check UUID generation settings via `kirby://config/content.uuid`.
-- If you need a fresh reference, generate a UUID via `kirby://uuid/new` and prefix with `file://`.
+- Resolve an existing file and use its actual reference; generating a UUID alone does not upload or create a file.
 
 ## Glossary quick refs
 

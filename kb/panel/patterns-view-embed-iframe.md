@@ -40,11 +40,14 @@ Add a lightweight Panel view that embeds an external dashboard in an iframe and 
 - The view renders an iframe only after the URL is loaded.
 - Missing config shows a bold warning in the view.
 
-## Panel JS (K5)
+## Panel JS (Kirby 6 / Vue 3)
+
+Bundle this entry with kirbyup 4, leaving Vue external. The API must validate the iframe URL against an allowed origin and protocol before returning it.
 
 ```js
-// site/plugins/example-analytics/index.js
-import { ref, useApi } from 'kirbyuse';
+// site/plugins/example-analytics/src/index.js
+import { ref } from 'vue';
+import { useApi } from 'kirbyuse';
 
 panel.plugin('example/analytics', {
   components: {
@@ -88,8 +91,6 @@ panel.plugin('example/analytics', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Inline view components are common; keep Vue 2 syntax.
-- K6: Vue 3 view components; consider moving to SFCs with kirbyup.
-- K5 -> K6: rebuild any prebuilt JS for the new runtime.
+Rebuild Kirby 5 legacy Vue 2 bundles for Vue 3. Plain ESM can import `vue`, but beta.1 does not map bare `kirbyuse` imports: bundle kirbyuse as described in `kirby://kb/panel/tooling-kirbyuse`.

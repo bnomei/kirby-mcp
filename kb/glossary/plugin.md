@@ -10,7 +10,7 @@ Plugins are registered with `Kirby::plugin('vendor/name', [...])` and can contri
 
 - “Create a plugin” means: create a folder in the plugins root and register extensions in `index.php`.
 - “This is from a plugin” means: runtime truth may differ from filesystem (plugins can register templates/snippets/blueprints programmatically).
-- “Add a custom field/section” means: Panel plugin development (PHP + Vue).
+- “Add a custom field/section” means Panel plugin development: in Kirby 6 use a PHP field class and Vue 3 component. Kirby 5 legacy custom sections must become `DisplayField` classes; array-based fields must also be rewritten. See `kirby://kb/panel/compat-k5-k6-migration`.
 
 ## Variants / aliases
 

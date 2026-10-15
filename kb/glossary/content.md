@@ -20,9 +20,11 @@ Content files are `.txt` by default, but the extension can be configured (e.g. `
 
 ## Saved content, changes, and previews
 
-Kirby 5 distinguishes saved content (`latest`) from the Panel's unpublished edits (`changes`). These content versions are separate from a page's draft/unlisted/listed status and from its content language. A published page can still have unpublished edits.
+Kirby distinguishes saved content (`latest`) from the Panel's unpublished edits (`changes`). These content versions are separate from a page's draft/unlisted/listed status and from its content language. A published page can still have unpublished edits.
 
-Use `$model->version('latest')->read($language)` when a migration needs only the saved values for an exact language without fallback; `null` means no saved content exists for that language. Do not treat a Panel preview as proof that edits have been published. Editing locks are also separate: since 5.5, leaving a Panel view releases its lock; unlocking does not publish or discard changes.
+Use `$model->version('latest')->read($language)` when a migration needs only the saved values for an exact language without fallback; `null` means no saved content exists for that language. Do not treat a Panel preview as proof that edits have been published. Editing locks are also separate: leaving a Panel view releases its lock; unlocking does not publish or discard changes.
+
+Kirby 6 uses Symfony YAML by default; audit stored YAML dates, booleans and reserved-leading-character strings before bulk migration. Display fields such as `pagelist`/`filelist` are not content values; picker fields store references. See `kirby://glossary/yaml`.
 
 ## Example
 

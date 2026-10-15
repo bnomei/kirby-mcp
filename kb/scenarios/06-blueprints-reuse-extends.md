@@ -7,14 +7,14 @@ Reduce duplication across blueprints by factoring repeated parts into reusable �
 Common outcomes:
 
 - consistent SEO/meta fields across many page types
-- reusable page/file sections (e.g. “Articles” list)
+- reusable display fields (e.g. an “Articles” pagelist)
 - reusable tab/layout structures
 
 ## Inputs to ask for
 
 - Which blueprint(s) to refactor (ids like `pages/article`, `pages/blog`, `site`, `files/...`)
-- Which parts are repeated (fields, field groups, sections, tabs, entire layout)
-- Where mixins should live (`site/blueprints/fields`, `sections`, `tabs`, `layouts`)
+- Which parts are repeated (fields, field groups, tabs, entire layout)
+- Where mixins should live (`site/blueprints/fields`, `tabs`, `layouts`)
 - Any customization points (labels, query, status, hiding/unsetting fields)
 
 ## Internal tools/resources to use
@@ -22,16 +22,16 @@ Common outcomes:
 - Discover where blueprints are loaded from: `kirby_blueprints_index` (and optionally `kirby_blueprints_loaded`)
 - Read individual blueprints (including plugin overrides): `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`
 - Panel reference for building blocks:
-  - `kirby://fields`, `kirby://sections`
+  - `kirby://fields`
 - Render for sanity: `kirby_render_page` (frontend) + open Panel manually for blueprint UI
 
 ## Implementation steps
 
 1. Identify duplication:
-   - find repeated tabs/sections/fields across multiple blueprints
+   - find repeated tabs/fields across multiple blueprints
 2. Create mixin blueprints in the right folder:
    - `site/blueprints/fields/*.yml` (single field or `type: group`)
-   - `site/blueprints/sections/*.yml`
+   - display lists also belong in `site/blueprints/fields/*.yml`
    - `site/blueprints/tabs/*.yml`
    - `site/blueprints/layouts/*.yml`
 3. Replace inline definitions with mixin references:
@@ -88,22 +88,19 @@ fields:
     time: true
 ```
 
-Inside a `fields` section:
+Inside the blueprint's `fields`:
 
 ```yaml
-sections:
-  meta:
-    type: fields
-    fields:
-      meta: fields/meta
+fields:
+  meta: fields/meta
 ```
 
-### Reuse and extend a pages section
+### Reuse and extend a page list display field
 
-`/site/blueprints/sections/articles.yml`
+`/site/blueprints/fields/articles.yml`
 
 ```yaml
-type: pages
+type: pagelist
 parent: site.find("blog")
 label: Blog
 layout: list
@@ -112,10 +109,10 @@ layout: list
 `/site/blueprints/pages/blog.yml`
 
 ```yaml
-sections:
+fields:
   drafts:
-    extends: sections/articles
-    status: draft
+    extends: fields/articles
+    status: drafts
 ```
 
 ### Reuse a tab mixin
@@ -137,9 +134,13 @@ Use it:
 tabs:
   content:
     label: Content
-    preset: page
+    fields:
+      text:
+        type: textarea
   seo: tabs/seo
 ```
+
+Kirby 5 legacy `preset` shortcuts are removed in Kirby 6; explicitly declare their fields. Built-in sections auto-convert, but custom sections must be ported to display fields. Root-level field definitions can also be placed in tabs/columns with list references (`fields: [text]`), not a mapping such as `text: true`. Keep names unique case-insensitively across the whole blueprint.
 
 ### Unset parts of an extended mixin
 
@@ -166,7 +167,7 @@ fields:
 ## Verification
 
 - `kirby_blueprint_read` the target blueprint and confirm it resolves without errors.
-- In the Panel, open a page that uses the blueprint and confirm tabs/sections/fields render as expected.
+- In the Panel, open a page that uses the blueprint and confirm tabs and fields render as expected.
 
 ## Glossary quick refs
 

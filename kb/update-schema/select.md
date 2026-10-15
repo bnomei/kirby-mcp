@@ -28,6 +28,8 @@ Replace the stored option key with the new selection.
 
 If option keys are numeric, they are stored as strings. Labels are not stored.
 
+Kirby 6 preserves invalid option values instead of dropping them on save. Validate and map removed options explicitly. Legacy `options: query`/`options: api` plus separate settings must become nested `options` configuration; see `kirby://glossary/query-language`.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

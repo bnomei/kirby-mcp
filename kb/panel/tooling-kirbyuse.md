@@ -1,78 +1,36 @@
-# kirbyuse (Panel composables and typings)
+# kirbyuse for Kirby 6 Panel plugins
 
-## When to use
+kirbyuse provides composables and typings. Use its Kirby-6/Vue-3 prerelease line, not the Kirby 5 legacy 1.x package. The official beta.1 migration guide points to the `next` tag; verify and pin the package version in your lockfile. The inspected `feat/kirby-6` source declares `2.0.0-beta.2`; that source version alone is not proof of an npm dist-tag.
 
-- Add typed access to `window.panel` in Panel plugins.
-- Use Composition API helpers without relying on global `Vue` imports.
-- Reuse Panel-specific composables for blocks, content, dialogs, and sections.
+## Build setup
 
-## Minimal setup
-
-Install and import in your Panel plugin build:
+Bundle kirbyuse into the plugin JavaScript and leave `vue` external. Kirby `6.0.0-beta.1` provides an import map for `vue` only. It does **not** register plugin `importMaps` or invoke a `panel.extend` callback to modify assets. Earlier speculative examples of those hooks must not be used for this tag.
 
 ```js
-import { ref, usePanel, useContent } from 'kirbyuse';
+import { ref } from 'vue';
+import { usePanel, useContent } from 'kirbyuse';
 ```
 
-Kirby 6 requires an import map entry (added once during Panel bootstrap):
+The example is build input. Do not leave a bare browser import from `kirbyuse` unless you have separately verified a supported mapping mechanism for your installed version. Do not bundle Vue itself: the Panel and plugin must share one runtime.
+
+Kirby automatically loads a registered plugin's root `index.js` and optional `index.css`:
 
 ```php
-<?php
-
-use Kirby\Cms\App as Kirby;
-
-Kirby::plugin('vendor/plugin', [
-  'panel' => [
-    'extend' => function (Kirby $kirby, array &$assets): void {
-      $assets['import-maps'] = array_merge(
-        $assets['import-maps'] ?? [],
-        [
-          'kirbyuse' => url('media/plugins/vendor/plugin/kirbyuse/index.js'),
-        ]
-      );
-    },
-  ],
-]);
+Kirby::plugin('example/plugin', []);
 ```
 
-The import-map URL should point to a bundled copy of `kirbyuse/dist/index.mjs` (or your own build artifact).
-Confirm the import map registration API for your Kirby version; the example shows one possible pattern.
+For no-build plugins, prefer the Panel's built-in APIs and direct imports from `vue` instead of inventing a kirbyuse loader. See `kirby://kb/panel/tooling-bundling`.
 
-## Core features
+## Migration checks
 
-- Type augmentation for `window.panel` to improve IntelliSense.
-- Composables: `usePanel`, `useApi`, `useApp`, `useBlock`, `useContent`, `useDialog`, `useI18n`, `useSection`, `useHelpers`, `useLibrary`.
-- Re-exports of Vue Composition API functions (`ref`, `computed`, `watch`, etc.).
-- Props helpers in `kirbyuse/props` (for example `section` for custom sections).
-- `useDialog` exposes helpers like `openTextDialog`/`openFieldsDialog`; `useHelpers` and `useLibrary` wrap `window.panel.app.$helper`/`$library` (see Panel Lab).
-- Import `kirbyuse` once in your entry file to augment `window.panel` types globally when desired.
+- Replace legacy section composables with field props or `endpoints.field` requests; custom sections no longer exist. See `kirby://kb/panel/patterns-section-load`.
+- Remove legacy `useStore` and Kirby 4/5 compatibility helpers rather than keeping a parallel old runtime.
+- Check the exact package's exports/types before using helpers; a 1.x recipe is not evidence that a 2.x helper still exists.
+- Verify production asset loading, one Vue runtime, field input events and cleanup of watchers/listeners.
 
-## Dev workflow
+## Sources
 
-- Use a bundler (kirbyup or other) to include `kirbyuse` in your plugin assets.
-- Keep `kirbyuse` version aligned with the Kirby major version you target.
-- For Kirby 6, ensure the import map entry exists before any Panel JS imports `kirbyuse`.
-
-## Compatibility notes
-
-- `useContent` uses `window.panel.content` and expects Kirby 5.0.0-rc.1+ in the Kirby 5 line.
-- `useBlock` mirrors the default block component methods (`field`, `open`, `update`) for Composition API use.
-- `useStore` and `isKirby4`/`isKirby5` exist only in 1.x for Kirby 4/5 compatibility.
-- Kirby 6 removes the global `Vue`; use ESM imports from `vue` or `kirbyuse` with an import map.
-
-## MCP: Inspect/verify
-
-- `kirby_roots` to locate the plugin root and assets path.
-- `kirby_plugins_index` to confirm the plugin loads at runtime.
-- `kirby_blueprints_index` to verify where custom fields/sections are used.
-
-## Links
-
-- https://github.com/johannschopplich/kirbyuse
+- https://getkirby.com/releases/6/migration/plugin-developers/vue-3
 - https://github.com/johannschopplich/kirbyuse/tree/feat/kirby-6
-
-## Version notes (K5/K6)
-
-- K5: `kirbyuse` 1.x targets Kirby 4/5 and uses Vue 2.7 via the global `window.Vue`. It includes `isKirby4`/`isKirby5` and the deprecated `useStore` (Vuex removed in Kirby 5).
-- K6: `kirbyuse` 2.x (feat/kirby-6, `v2.0.0-beta.1`) targets Kirby 6+ and Vue 3. It uses native ESM imports from `vue` and requires an import map entry for `kirbyuse`.
-- K5 -> K6: remove `useStore`/compatibility checks, switch to `kirbyuse` 2.x, register the import map, and ensure your bundler targets Vue 3.
+- https://github.com/getkirby/kirby/blob/6.0.0-beta.1/src/Panel/Assets.php
+- https://github.com/getkirby/kirby/blob/6.0.0-beta.1/src/Panel/Response/ViewDocumentResponse.php

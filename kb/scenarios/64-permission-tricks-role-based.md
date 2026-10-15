@@ -23,6 +23,8 @@ Implement advanced role-based permissions, such as:
 
 ## Implementation steps
 
+Kirby 6 model guards replace deprecated Kirby 5 model `permissions()` and Rules APIs: use `$page->guards()->isAvailable('update')` for availability and `ensureExecutable()` for execution checks. Role `permissions:` configuration and `$role->permissions()` remain separate and should not be mechanically rewritten. UI restrictions do not protect custom backend routes.
+
 1. Decide if the rule is UI-only (blueprints) or enforcement (permissions/model).
 2. Implement the restriction:
    - role-specific blueprint sets via custom roots (loads a different `blueprints` folder)

@@ -5,6 +5,16 @@ description: Plans and applies safe Kirby content migrations using runtime conte
 
 # Kirby Content Migration
 
+Target Kirby 6 / MCP 6.x; existing MCP 1.x is the legacy Kirby 5 line. Confirm CMS/runtime versions before writes and read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 migration baseline.
+
+## Schema safety
+
+- Inspect normalized model fields, not only raw `kirby_blueprint_read` configuration. `hasValue: false` excludes display fields; `null` means unresolved, not writable.
+- Never write `pagelist`, `filelist`, `info`, `stats` or `buttons` values. Picker selections use `pagepicker`, `filepicker`, `userpicker`; read their canonical update-schema guides.
+- Renaming a legacy picker type does not rename its stored key. Resolve existing targets; a new random UUID is not a relationship target.
+- Audit Symfony YAML changes in nested content: quote dates/reserved scalars and use real booleans. Invalid options now survive saves; transform removed keys explicitly.
+- Only follow actual update-schema links or entries in `kirby://fields/update-schema`; do not invent guides for arbitrary/display types.
+
 ## Quick start
 
 - Follow the workflow below for safe, confirm-first migrations.
@@ -56,7 +66,7 @@ description: Plans and applies safe Kirby content migrations using runtime conte
 4. Search the KB with `kirby:kirby_search` for related playbooks (examples: "batch update content", "update blocks programmatically", "content file cleanup script", "update file metadata").
 5. Read field storage rules before writing:
    - `kirby://fields/update-schema`
-   - `kirby://field/{type}/update-schema` for each involved field type.
+   - existing `kirby://field/{type}/update-schema` links for involved value fields; resolve custom storage when no guide exists.
 6. Read a small sample with `kirby:kirby_read_page_content` (or `kirby://page/content/{encodedIdOrUuid}`) and produce a diff-style preview.
 7. Use `kirby://tool-examples` for safe, copy-ready `kirby:kirby_update_page_content` payloads.
 
