@@ -28,6 +28,8 @@ Replace the numeric value. For increments, read the current value, compute, then
 
 Panel validation enforces min/max/step. Use dot decimals (e.g., 3.14).
 
+Non-numeric input stores an empty value, not zero. Reject invalid input before writes when clearing would be destructive. PHP number/range `toNumber()` returns null for an empty value; do not conflate null, zero and invalid input.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

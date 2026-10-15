@@ -119,6 +119,12 @@ Kirby::plugin('your-project/faq-block', [
 ]);
 ```
 
+## Panel previews and block assets
+
+Image, gallery and video block previews receive file UUIDs, not full file objects. Use `k-image-frame` with its `file` prop or resolve IDs through `this.$helper.items('items/files', ids)`. Respect ratio/cover settings and handle missing/inaccessible files. See `kirby://kb/panel/reference-runtime` for batched item requests and selection payloads.
+
+For frontend assets, push a block's stylesheet/script to a named template stack with `unique: true`; render the stack in the header/footer. The header may appear before the block. See `kirby://glossary/template` for the exact pattern. This avoids loading every block's assets on every page.
+
 ## Verification
 
 - Add a blocks field to a page blueprint and include your custom block types in `fieldsets`.

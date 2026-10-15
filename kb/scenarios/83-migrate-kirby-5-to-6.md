@@ -10,7 +10,7 @@ Preserve content and published URLs. Renaming a blueprint field's **type** is no
 
 1. Back up content, accounts, configuration, plugins and the Composer lockfile. Keep secrets out of logs. Verify restoration before bulk writes.
 2. First update the legacy site to a patched Kirby 5 release and resolve deprecations. Inventory every plugin, especially Panel plugins and custom auth.
-3. Use PHP 8.3 or newer. Install the exact Kirby beta version on the copy; do not relax stability constraints globally just to resolve it.
+3. Use supported PHP 8.3, 8.4 or 8.5 at this baseline. Verify required extensions: `ctype`, `curl`, `dom`, `filter`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `openssl`, `SimpleXML`. Install the exact Kirby beta version on the copy; do not relax stability constraints globally just to resolve it.
 4. Inspect `kirby://info`, `kirby://roots`, plugin inventory and runtime status. Do not infer the CMS version from the MCP version.
 5. Enable debug only on the test copy; exercise templates, routes, Panel views, content saves, uploads and login with representative roles and languages.
 
@@ -86,7 +86,7 @@ Symfony YAML replaces Spyc as default. Use `true`/`false`, not `yes`/`no`/`on`/`
 
 ## Queries, templates and PHP
 
-- Remove `query.runner`: Kirby 6 always uses the new runner. Use `page.content.get("my-field")` for dashed field names; `-` is subtraction. Unknown field methods now throw instead of returning the field unchanged. Test query results as well as syntax.
+- Remove `query.runner`: Kirby 6 always uses the new runner. Inspect actual content keys: TXT decoding normalizes `My-field:` to `my_field`, accessed with `page.content.get("my_field")`; `-` in query expressions is subtraction. Quoting a key does not reverse storage-key normalization. Unknown field methods now throw instead of returning the field unchanged. Test query results as well as syntax.
 - Use `Kirby\Blueprint\Blueprint` and related blueprint classes. `Blueprint::factory($page, 'pages/article')` takes the model first. `tabs()` returns a `Tabs` collection; `tab()` returns a `Tab` object. Replace removed `section()`/`sections()` with `field()`/`fields()`.
 - `Blueprint::load()` data is raw; model `$page->blueprint()->fields()` data is normalized and includes display fields. MCP `fieldSchemas` retain them with `hasValue: false`; `true` means a value field and `null` means unresolved/static, not permission to write. Generated update-schema links require `hasValue === true` and an actual bundled guide; unknown/static fields omit links too. Direct reference resources remain readable, but their availability does not establish writability.
 - Forms use named arguments, `fill()`/`submit()`, `toFormValues()` and `toStoredValues()`, not removed props-array constructors or `data()`/`content()` methods.
@@ -116,9 +116,32 @@ Follow `kirby://kb/panel/compat-k5-k6-migration` for PHP field classes, Vue 3, E
 - Frontend login handles success, pending challenge, failure, logout and expired sessions; editors can recover access.
 - Representative templates, query results and content representations match expectations; no production deployment is implied by passing beta tests.
 
+## Coverage map for current development
+
+The release overview, full beta.1 changelog, feature guides, site/editor migration guides and all six plugin migration subguides were reconciled on October 15, 2026. Use current contracts first; consult migration notes for existing code:
+
+| Topic                                                                 | Canonical guidance                                                                                                           |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Fields, sections, root references, options and YAML                   | `kirby://kb/panel/reference-fields`, `kirby://glossary/blueprint`, `kirby://glossary/yaml`                                   |
+| Picker storage and display exclusion                                  | `kirby://field/pagepicker/update-schema`, `kirby://field/filepicker/update-schema`, `kirby://field/userpicker/update-schema` |
+| Query operators, escaping and lazy branches                           | `kirby://glossary/query-language`                                                                                            |
+| Template stacks and content negotiation                               | `kirby://glossary/template`, `kirby://glossary/content-representation`                                                       |
+| PHP types, forms, serialization, UUIDs, exceptions, MIME and sessions | `kirby://kb/scenarios/84-kirby-6-core-contracts`                                                                             |
+| Guards and role permissions                                           | `kirby://glossary/permissions`                                                                                               |
+| Auth policy, passkeys, pending challenges and recovery                | `kirby://kb/scenarios/43-user-registration-and-login`                                                                        |
+| Live editor, date input, feedback and buttons                         | `kirby://kb/panel/reference-editor`                                                                                          |
+| Vue components, ID previews, selection, state requests and CSS        | `kirby://kb/panel/reference-runtime`                                                                                         |
+| Plugin build, PHP field/auth classes and controller ports             | `kirby://kb/panel/compat-k5-k6-migration`                                                                                    |
+
+The advanced embed, SVG, map and barcode articles now describe Kirby 6 implementation contracts instead of copyable Vue 2 sketches. They are recipes, not certified third-party plugin builds. This coverage includes developer-facing features and breaking contracts; the upstream changelog remains the source for every internal refactor and cosmetic fix. Documentation/link checks do not prove every integration runs.
+
+Known baseline limits: direct-request buttons and the YAML migration CLI are announced future work, not available beta.1 APIs. Online docs are unversioned; verify source when an example disagrees with the installed tag. Preserve these specific limits without adding generic warnings to every ordinary article.
+
 ## Authoritative sources
 
 - https://getkirby.com/releases/6
+- https://getkirby.com/releases/6/changelog
+- https://getkirby.com/releases/6/more-details
 - https://getkirby.com/releases/6/blueprints
 - https://getkirby.com/releases/6/migration/site-developers
 - https://getkirby.com/releases/6/migration/plugin-developers

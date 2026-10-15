@@ -2,10 +2,11 @@
 
 ## Supported Versions
 
-| Version | Supported |
-| ------- | --------- |
-| 1.x     | yes       |
-| < 1.0   | no        |
+| Version | Supported     |
+| ------- | ------------- |
+| 6.x     | yes (Kirby 6) |
+| 1.x     | yes           |
+| < 1.0   | no            |
 
 ## Authentication and permission boundaries
 

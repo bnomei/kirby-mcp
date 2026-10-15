@@ -55,9 +55,10 @@ function runtimeTestTempDir(string $suffix): string
     return $dir;
 }
 
-function writeRuntimeTestScript(string $path, string $body): void
+function writeRuntimeTestScript(string $path, string $body, string $version = '6.0.0-beta.1'): void
 {
-    $contents = "#!/usr/bin/env php\n<?php\n" . $body . "\n";
+    $preflight = 'if (($argv[1] ?? null) === "version") { echo ' . var_export($version, true) . '; exit(0); }';
+    $contents = "#!/usr/bin/env php\n<?php\n" . $preflight . "\n" . $body . "\n";
     file_put_contents($path, $contents);
     chmod($path, 0755);
 }
@@ -110,6 +111,26 @@ function withKirbyCliBinary(string $path, callable $callback): void
         }
     }
 }
+
+it('rejects unsupported target runtimes before executing project-local wrappers', function (string $version): void {
+    $root = runtimeTestTempDir('unsupported');
+    $commandsRoot = $root . '/commands';
+    writeRuntimeCommandFile($commandsRoot, 'mcp/test.php');
+    $binary = $root . '/kirby-cli';
+    writeRuntimeTestScript($binary, 'file_put_contents(__DIR__ . "/executed", "yes");', $version);
+
+    try {
+        withKirbyCliBinary($binary, function () use ($root, $commandsRoot): void {
+            $runner = new RuntimeCommandRunner(new FakeRuntimeContext($root, $commandsRoot));
+            $result = $runner->runMarkedJson('mcp/test.php', ['mcp:test']);
+            expect($result->payload)->toBeNull();
+            expect($result->parseError)->toContain('requires Kirby 6.0.0-beta.1');
+            expect(is_file($root . '/executed'))->toBeFalse();
+        });
+    } finally {
+        removeRuntimeTestDir($root);
+    }
+})->with(['5.6.1', '7.0.0', 'unknown']);
 
 it('skips parsing when CLI exits non-zero and includes stderr', function (): void {
     $root = runtimeTestTempDir('fail');

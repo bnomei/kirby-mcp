@@ -5,7 +5,7 @@ description: Builds Kirby listings, pagination, search, filtering/sorting/groupi
 
 # Kirby Collections and Navigation
 
-Use Kirby 6 conventions for new work. Store selected relationships in `pagepicker`/`filepicker`/`userpicker`; display lists (`pagelist`/`filelist`) do not store selections. Access dashed query fields with `page.content.get("my-field")`.
+Use Kirby 6 conventions for new work. Store selected relationships in `pagepicker`/`filepicker`/`userpicker`; display lists (`pagelist`/`filelist`) do not store selections. Inspect actual content keys: TXT decoding normalizes `My-field:` to `my_field`, accessed with `page.content.get("my_field")`.
 
 ## KB entry points
 

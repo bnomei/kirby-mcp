@@ -2,7 +2,7 @@
 
 Use Kirby 6 conventions for new Panel work: PHP field classes and Vue 3 components.
 
-Existing built-in sections remain supported through automatic conversion; prefer `pagelist`/`filelist` for new lists and picker fields for stored selections. Custom sections require a port. For existing code, use `kirby://kb/scenarios/83-migrate-kirby-5-to-6` and the Panel migration guide below; retained Kirby 5 sketches are labelled at the example.
+Existing built-in sections remain supported through automatic conversion; prefer `pagelist`/`filelist` for new lists and picker fields for stored selections. Custom sections require a port. Recipes teach current contracts; compatibility notes explain existing Kirby 5 code. Start upgrades at `kirby://kb/scenarios/83-migrate-kirby-5-to-6`.
 
 ## Tooling
 
@@ -12,6 +12,9 @@ Existing built-in sections remain supported through automatic conversion; prefer
 
 ## References
 
+- `kirby://kb/panel/reference-editor` - live editor, feedback and buttons
+- `kirby://kb/panel/reference-runtime` - component, selection and request contracts
+- `kirby://kb/scenarios/84-kirby-6-core-contracts` - PHP, serialization and HTTP
 - `kirby://kb/panel/reference-areas`
 - `kirby://kb/panel/reference-fields`
 - `kirby://kb/panel/reference-sections`

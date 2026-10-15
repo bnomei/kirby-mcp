@@ -5,7 +5,7 @@ root="$(cd -- "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 kit="${1:-starterkit}"
 case "$kit" in starterkit|plainkit) ;; *) echo 'Unsupported fixture kit' >&2; exit 1 ;; esac
 version=6.0.0-beta.1
-archive="$(mktemp --suffix=.zip)"
+archive="$(mktemp)"
 staging="$(mktemp -d)"
 trap 'rm -f "$archive"; rm -rf "$staging"' EXIT
 curl --fail --location --retry 3 "https://github.com/getkirby/$kit/archive/refs/tags/$version.zip" -o "$archive"

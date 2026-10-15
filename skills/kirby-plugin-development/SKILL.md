@@ -17,6 +17,8 @@ Use Kirby 6 conventions for new work. For existing Panel plugins, consult `kirby
 
 ## KB entry points
 
+- `kirby://kb/scenarios/84-kirby-6-core-contracts`
+- `kirby://kb/panel/reference-runtime`
 - `kirby://kb/scenarios/04-share-templates-controllers-via-plugin`
 - `kirby://kb/scenarios/05-kirbytext-kirbytags-hooks`
 - `kirby://kb/scenarios/15-custom-blocks-nested-blocks`

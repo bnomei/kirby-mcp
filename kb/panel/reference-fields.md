@@ -1,6 +1,6 @@
 # Panel fields in Kirby 6
 
-Baseline: Kirby `6.0.0-beta.1`. Every custom field is a PHP class plus a Vue 3 component. Kirby 5 legacy arrays of `props`/`computed`/`methods` are removed; rewrite them as properties/getters/methods before rebuilding the frontend.
+Every custom field is a PHP class plus a Vue 3 component. Define options as typed properties/getters and behavior as methods. For an existing Kirby 5 array-based field, follow `kirby://kb/panel/compat-k5-k6-migration` before rebuilding its frontend.
 
 ## Choose the storage contract
 
@@ -33,6 +33,8 @@ Kirby::plugin('example/hello', [
 ```
 
 For packaged plugins, namespace/autoload the class. Properties with `#[Prop]` become blueprint options and exported props; use getters for translations/templates and `#[Prop(export: false)]` for backend-only options. Merge `parent::props()` if adding computed props. Do not do expensive work in constructors/setters: fields are created during content updates too.
+
+Use `config()` for configuration defaults; blueprint options take precedence. Resolve a field class with `Field::resolve($type)` and construct it with named arguments. If a custom constructor is necessary, accept and forward `mixed ...$args`; pass model/siblings at construction, not via later setters. The registered name determines the field type. More PHP/storage contracts: `kirby://kb/scenarios/84-kirby-6-core-contracts`.
 
 `src/components/HelloField.vue`:
 

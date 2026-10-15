@@ -6,6 +6,7 @@ namespace Bnomei\KirbyMcp\Mcp\Support;
 
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
+use Bnomei\KirbyMcp\Project\RuntimeCompatibility;
 
 final class RuntimeCommandRunner
 {
@@ -42,6 +43,25 @@ final class RuntimeCommandRunner
         }
 
         $timeoutSeconds = max(5, min(300, $timeoutSeconds));
+
+        $versionResult = $this->cliRunner->run($projectRoot, ['version'], $this->runtime->env(), $timeoutSeconds);
+        try {
+            if ($versionResult->timedOut || $versionResult->exitCode !== 0) {
+                throw new \RuntimeException('Unable to detect Kirby runtime version: ' . trim($versionResult->stderr));
+            }
+            preg_match('/\b(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)\b/', $versionResult->stdout, $matches);
+            RuntimeCompatibility::requireSupported($matches[1] ?? null);
+        } catch (\RuntimeException $exception) {
+            return new RuntimeCommandResult(
+                projectRoot: $projectRoot,
+                host: $host,
+                commandsRoot: $commandsRoot,
+                expectedCommandFile: $expectedCommandFile,
+                installed: true,
+                cliResult: $versionResult,
+                parseError: $exception->getMessage(),
+            );
+        }
 
         $cliResult = $this->cliRunner->run(
             projectRoot: $projectRoot,

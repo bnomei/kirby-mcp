@@ -1,8 +1,8 @@
 # Panel pattern: display field with formatter API
 
-## Kirby 6 replacement for a legacy section
+## Contract
 
-Kirby 5 custom sections and their `/sections/...` endpoints are removed. Port the preview to a `Kirby\Form\Field\DisplayField` class registered under `fields`, and a Vue 3 field component. It displays derived text without storing a value. For the base pattern see `kirby://kb/panel/reference-sections`.
+Use a `Kirby\Form\Field\DisplayField` class registered under `fields` and a Vue 3 component to display derived text without storing a value. For the base pattern see `kirby://kb/panel/reference-sections`. When porting a Kirby 5 custom section, replace its `/sections/...` endpoint with the field endpoint below.
 
 ## Implementation
 

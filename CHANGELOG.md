@@ -5,10 +5,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
-- Prepare the next major, Kirby MCP 6, for Kirby 6.0.0-beta.1 and PHP 8.3+. Existing 1.x tags remain the Kirby 5 line; no 6.x release has been published.
+## [6.0.0] - 2026-10-15
+
+- Target Kirby 6 (verified CMS baseline 6.0.0-beta.1) and require PHP 8.3+. Kirby 5 projects should install MCP `^1.15`; Kirby 7+ is excluded. The stable MCP version does not certify the upstream CMS beta for production.
 - Pin kit fixtures and Composer to the same Kirby release, resolve dependencies for PHP 8.3, and test both PHP 8.3 and 8.5 in CI.
-- Reject unsupported project runtimes while preserving reference access; use Kirby 6 Panel URLs, blueprint namespace, and UUID string resolution.
-- Distinguish value-bearing picker fields from display fields in content schemas and omit unavailable update-schema links. Add canonical Kirby 6 technical reference entries; track deferred KB work in `docs/kirby-6-migration.md`.
+- Reject unsupported project runtimes before dispatching project-local wrappers, including older MCP installations, while preserving reference access; use Kirby 6 Panel URLs, blueprint namespace, and UUID string resolution.
+- Distinguish value-bearing picker fields from display fields in content schemas. Generate update-schema links only for known value fields with bundled guides; preserve existing built-in section support via automatic conversion.
+- Migrate the bundled KB and all 15 skills to canonical Kirby 6 guidance, including picker storage, blueprint references, Vue 3 fields, authentication, live editor, core PHP/storage/HTTP contracts and an actionable Kirby 5 migration guide.
+- Fix portable fixture temporary-file creation and document TXT dashed-key normalization. Record upstream Starterkit asset casing and remaining browser/integration limitations in `docs/kirby-6-migration.md`.
 
 ## [1.15.1] - 2026-10-15
 

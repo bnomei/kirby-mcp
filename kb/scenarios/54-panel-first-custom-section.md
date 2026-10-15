@@ -1,8 +1,8 @@
-# Scenario: Replace a Kirby 5 custom section with a Kirby 6 display field
+# Scenario: Build a custom display field
 
 ## Goal
 
-Show computed data, a dashboard or a custom listing without storing content. Kirby 5 legacy custom sections are removed in Kirby 6 and do not auto-convert. Use `DisplayField`; do not register another `sections` extension.
+Show computed data, a dashboard or a custom listing without storing content. Use `DisplayField` and register it under `fields`. For existing Kirby 5 custom sections, the same pattern is the required port; only built-in section configurations auto-convert.
 
 ## Implementation
 

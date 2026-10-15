@@ -1,6 +1,6 @@
-# Async display-field loading (replaces Kirby 5 section load)
+# Async display-field loading
 
-Kirby 5 legacy sections used `this.load()`/`useSection()`. Kirby 6 removes custom sections: use a `DisplayField`, send cheap settings as props and fetch expensive data through `api()`. Do not retain a `/sections/...` route.
+Use a `DisplayField`, send cheap settings as props and fetch expensive data through `api()`. For existing Kirby 5 custom sections, this replaces `this.load()`/`useSection()` and `/sections/...` routes; see `kirby://kb/panel/compat-k5-k6-migration`.
 
 ## PHP endpoint
 

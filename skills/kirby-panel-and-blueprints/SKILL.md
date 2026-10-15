@@ -16,6 +16,8 @@ Use Kirby 6 conventions for new work. For existing blueprints, consult `kirby://
 
 ## KB entry points
 
+- `kirby://kb/panel/reference-editor`
+- `kirby://kb/panel/reference-runtime`
 - `kirby://kb/scenarios/06-blueprints-reuse-extends`
 - `kirby://kb/scenarios/19-programmable-blueprints`
 - `kirby://kb/scenarios/53-panel-first-custom-field`

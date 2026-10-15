@@ -7,7 +7,7 @@ Kirby's blueprint query language queries pages/files/users and formats values wi
 ## In prompts (what it usually implies)
 
 - “Set options from pages” means: use a query to fetch pages and map them to select options.
-- “Show extra info in a pages section” is legacy terminology: use query templates in a Kirby 6 `pagelist` field.
+- “Show extra info in a pages section” means inspect the existing section and its normalized `pagelist` field; use query templates for the displayed text.
 - “Query is slow” means inspect the collection scope and work done by custom methods, not switch runners.
 
 ## Variants / aliases
@@ -31,7 +31,15 @@ fields:
 
 ## Runner and option-source behavior
 
-Kirby 6 supports logical/comparison/math operators, closure arguments and subscript access without an opt-in. A dash is subtraction: access dashed fields with `page.content.get("my-field")`, not `page.my-field`. Unknown field methods throw. Test both values and errors with the installed beta.
+Queries support logical/comparison/math operators, closure arguments and subscript access. A dash is subtraction. Inspect the actual content key: TXT decoding normalizes `My-field:` to `my_field`, so use `page.content.get("my_field")`, not `page.my-field`. Quoting a key avoids subtraction but does not reverse storage-key normalization. Unknown field methods throw.
+
+- Negation and unary minus work: `!page.isListed`, `-page.price`, `-(1 + 2)`.
+- Comparisons return booleans: `page.price.toFloat > 5 && page.stock.toInt > 0`.
+- `??`, `?:`, ternaries, `&&` and `||` evaluate only the operands they need. Do not rely on side effects in an unused branch.
+- String backslashes are preserved except for escaped quotes and backslashes. Check both YAML quoting and query-string escaping when passing regex patterns.
+- `{{ 0 }}` resolves to `0`; an empty placeholder `{{ }}` remains unchanged.
+
+For custom query integrations, use `Kirby\Query\Query::resolve()` or a `Runners\Runner`, not the removed Argument/Expression/Segment classes. A custom `Visitors\Visitor` must implement its abstract methods and accept closures for lazy right operands/branches.
 
 Kirby 5 legacy `options: query` plus a separate `query.fetch` block becomes the nested `options.type`/`options.query` example above. API sources likewise move under `options`. Associative option queries use keys as values by default; explicit `text`/`value` mappings remain useful for model collections. Invalid option values are preserved in Kirby 6 rather than silently deleted on save.
 

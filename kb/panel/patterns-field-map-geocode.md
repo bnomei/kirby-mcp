@@ -1,135 +1,30 @@
-# Map/geocoding field: Kirby 5 legacy sketch and Kirby 6 port
+# Map and geocoding field
 
-## Goal
+## Contract
 
-Create a map-based field that lets editors search for locations, drop a marker, and store a structured location object.
+Use a PHP `InputField` subclass with explicit structured conversion, or an `ObjectField` subclass with matching subfields. Define a location value such as `{ lat, lon, address, city, country, zoom }`. Register a Vue 3 component with an object `value` and `emits: ['input']`.
 
-Kirby 6: use a PHP `InputField`/`ObjectField` subclass with typed props and explicit `fill()`/`toStoredValue()` behavior for the location. See `kirby://kb/panel/reference-fields`. Secret provider tokens belong in a server-side endpoint, not a field prop.
+Choose the map/geocoding provider, attribution, token visibility, coordinate precision and whether zoom is saved. Keep secret tokens in backend configuration; only deliberately public, origin-restricted map tokens may reach the browser.
 
-## Inputs to ask for
+## Implementation
 
-- Tile provider and geocoding provider
-- API tokens and allowed origins
-- Default center, zoom limits, and marker behavior
-- Value shape to store (lat, lon, address, city, country, etc.)
-
-## MCP tools/resources to use
-
-- kirby://roots
-- kirby_plugins_index
-- kirby_blueprints_index
-- kirby_blueprint_read
-- kirby://extension/fields
-
-## Files to touch
-
-- site/plugins/<plugin>/index.php
-- site/plugins/<plugin>/index.js or site/plugins/<plugin>/src/index.js
-- site/plugins/<plugin>/src/components/<MapField>.vue
-- site/plugins/<plugin>/index.css
-
-## Implementation steps
-
-1. Define field props for tokens, providers, and display options; decode stored YAML into an object.
-2. Embed a map library in the field component and initialize with center and zoom props.
-3. On search input, call external geocoding endpoints (or proxy via Kirby API if tokens must stay secret).
-4. Keep UI state for collapse, marker drag, and zoom persistence.
-5. Prefer kirbyup for bundling the map library; if prebundled, isolate map logic in the field component.
-
-## Examples
-
-- Autocomplete search that selects a geocoding result and updates the marker.
-- Marker drag that updates lat/lon and clears address fields until reverse geocoding is added.
-- Optional zoom persistence stored alongside the location data.
-
-## Kirby 5 legacy frontend sketch (migration reference)
-
-For Kirby 6, replace private `this._uid` with a template ref for the map element, declare `emits: ['input']`, import/bundle the map library for Vue 3 and clean up its instance in `beforeUnmount()`. Test latitude zero explicitly (the legacy truthiness check drops it), debounce requests and ignore stale results. The sketch below documents the old flow, not a verified Kirby 6 component.
-
-```js
-// site/plugins/example-map-field/src/components/MapField.vue (K5/Vue 2)
-const MapField = {
-  props: {
-    value: Object,
-    token: String,
-    center: Object,
-    zoom: Object,
-    tiles: String,
-  },
-  data() {
-    return {
-      map: null,
-      marker: null,
-      query: '',
-    };
-  },
-  computed: {
-    mapId() {
-      return `map-${this._uid}`;
-    },
-    tileUrl() {
-      return `https://api.mapbox.com/styles/v1/${this.tiles}/tiles/256/{z}/{x}/{y}?access_token=${this.token}`;
-    },
-  },
-  mounted() {
-    this.map = L.map(this.mapId).setView([this.center.lat, this.center.lon], this.zoom.default);
-    L.tileLayer(this.tileUrl, { attribution: 'Map data' }).addTo(this.map);
-    if (this.value && this.value.lat) this.setMarker(this.value.lat, this.value.lon);
-  },
-  methods: {
-    async geocode() {
-      if (!this.query) return;
-      const url = `https://geocode.example/v1?q=${encodeURIComponent(this.query)}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const hit = data.results[0];
-      if (!hit) return;
-      this.updateValue({
-        lat: hit.lat,
-        lon: hit.lon,
-        address: hit.address,
-        city: hit.city,
-        country: hit.country,
-      });
-      this.setMarker(hit.lat, hit.lon);
-    },
-    setMarker(lat, lon) {
-      if (this.marker) this.map.removeLayer(this.marker);
-      this.marker = L.marker([lat, lon], { draggable: true }).addTo(this.map);
-      this.marker.on('dragend', () => {
-        const pos = this.marker.getLatLng();
-        this.updateValue({ ...this.value, lat: pos.lat, lon: pos.lng });
-      });
-    },
-    updateValue(next) {
-      this.$emit('input', next);
-    },
-  },
-};
-
-panel.plugin('example/map-field', {
-  fields: {
-    map: MapField,
-  },
-});
-```
+1. Implement stored YAML→form object→stored YAML conversion. Validate finite latitude in −90…90 and longitude in −180…180. Treat zero as a valid coordinate and null/empty as no location; do not use truthiness to detect a marker.
+2. Import the map library and its CSS through kirbyup 4. Use a template ref for the map element, initialize on mount and destroy the instance/listeners in `beforeUnmount()` or `onBeforeUnmount()`. Do not use private Vue identifiers or assume a global `L`.
+3. Hydrate the initial marker and watch external value changes (including reset/discard). Emit a new object only for editor actions; avoid a watch→emit loop. Resize the map after a hidden tab or collapsed field becomes visible.
+4. Send searches through an authorized field `api()` endpoint when secrets are required. Use `endpoints.field`, allowlisted provider URLs, timeouts and rate limits. Debounce searches and ignore stale responses after newer input, marker dragging or unmount.
+5. On result selection, update coordinates and address together. On marker drag, either reverse-geocode or clear the now-stale address. Preserve unrelated value properties and optional zoom consistently.
+6. Show empty, loading, no-result and error states without silently erasing a saved location. Bind Kirby inputs with `:value`/`@input`; do not mutate `value` directly.
 
 ## Verification
 
-- Map renders with correct tiles and attribution.
-- Search results update the marker and stored value.
-- Value storage matches the expected object shape in content files.
+Test latitude/longitude zero, negative coordinates, bounds, malformed stored strings, initial hydration, reset, search/drag races, denied API calls and navigation cleanup. Verify tiles and attribution, then save/reload the exact object. Verify hidden-tab sizing and keyboard alternatives to dragging.
 
-## Gotchas
+## Existing Kirby 5 plugins
 
-- Public map tokens are OK; secret tokens should be proxied server-side (custom API endpoint).
-- Rate limits are common; add debouncing to search inputs.
+Port array-based PHP fields to classes and rebuild Vue 2/map wrappers for Vue 3. Replace `this._uid` with a template ref, add unmount cleanup, and replace `if (value.lat)` with explicit coordinate validation. Keep content keys stable and migrate incompatible value shapes deliberately.
 
-## Links
+## References
 
-- https://getkirby.com/docs/reference/plugins/extensions/fields
-- https://getkirby.com/docs/reference/plugins/ui
-
-## Migration acceptance
-
-Test initial values, zero coordinates, drag/search updates, denied API access, navigation cleanup and persisted object values. Rebuild with kirbyup 4; check the exact map library version rather than assuming Vue 2 wrappers work.
+- `kirby://kb/panel/reference-fields`
+- `kirby://kb/panel/tooling-kirbyup`
+- https://getkirby.com/releases/6/migration/plugin-developers/vue-3

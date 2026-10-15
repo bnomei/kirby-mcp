@@ -10,7 +10,7 @@ Thanks for helping improve Kirby MCP.
 - Run tests: `composer test` (use `composer analyse` for static analysis).
 - Format code: `composer format` and `npm run format`.
 
-If integration tests require a Kirby fixture, run `composer cms:plainkit` first.
+Before the full suite, run `composer cms:starterkit` to install the pinned Kirby 6 fixture matching the development lockfile. `composer cms:plainkit` is available for focused fixture checks, not the full-suite baseline.
 
 ## Pull Requests
 

@@ -1,6 +1,6 @@
-# Scenario: Custom display field (replaces Kirby 5 Panel sections)
+# Scenario: Custom display field
 
-Kirby 5 legacy `sections` plugins are unsupported in Kirby 6. For a list of links, use a `DisplayField` class and a Vue 3 field component. This preserves the old article path for migration discovery.
+For a list of links, use a `DisplayField` class and a Vue 3 field component. This article also provides the replacement for Kirby 5 custom `sections` plugins, which require a port; built-in section configuration still auto-converts.
 
 ## PHP class and registration
 

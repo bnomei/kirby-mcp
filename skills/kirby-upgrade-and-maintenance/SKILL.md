@@ -21,6 +21,8 @@ Use Kirby 6 conventions for new work. Check the installed CMS version and the mi
 
 ## KB entry points
 
+- `kirby://kb/scenarios/84-kirby-6-core-contracts`
+- `kirby://kb/panel/reference-editor`
 - `kirby://kb/panel/compat-k5-k6-migration`
 - `kirby://kb/scenarios/83-migrate-kirby-5-to-6`
 - `kirby://kb/panel/tooling-kirbyup`

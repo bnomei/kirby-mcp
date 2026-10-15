@@ -6,8 +6,16 @@ Date picker stored as a string (default format YYYY-MM-DD).
 
 ## Storage format
 
+At the top level of a Kirby content text file:
+
+```text
+Date: 2025-12-19
+```
+
+Inside serialized YAML (for example a structure row), quote the date string:
+
 ```yaml
-date: 2025-12-19
+date: '2025-12-19'
 ```
 
 ## Runtime value
@@ -27,6 +35,8 @@ Replace the date string. For adjustments, read, parse, modify, then update.
 ## Edge cases
 
 The `format` option changes the stored value. Keep payloads in the configured format.
+
+Panel `display` controls input parsing and can contain bracketed literal text, such as `D. MMMM [in the year] YYYY`. It is separate from storage `format`. Month names work in English and the current Panel language; invalid input is retained and marked invalid. In nested YAML, quote date strings so Symfony YAML does not convert them to timestamps.
 
 ## MCP: Inspect/verify
 

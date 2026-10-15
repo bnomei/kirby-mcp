@@ -6,6 +6,8 @@ In multi-language Kirby installations, a “language” is a configured locale (
 
 You typically get a language object from `$kirby` (current, default, or by code).
 
+Use `$language->isLastLanguage()` to check whether only one configured language remains. `$language->isLast()` checks its position in the collection, not whether it is the only language. Kirby 5 code that used `isLast()` as a deletion safeguard needs `isLastLanguage()` instead; still enforce the language's guards when performing an action.
+
 ## In prompts (what it usually implies)
 
 - “Current language” means: `$kirby->language()` (or `$kirby->currentLanguage()` depending on context).

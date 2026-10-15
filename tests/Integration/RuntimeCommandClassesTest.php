@@ -1916,7 +1916,7 @@ it('distinguishes Kirby 6 display fields and pickers through content and raw blu
         expect($raw['data']['tabs']['content']['fields'][0])->toBe('related');
 
         $query = runRuntimeCommand(static fn () => QueryDot::run(new RuntimeCommandIntegrationCli([
-            'query' => 'page["dash_key"].value', 'confirm' => true,
+            'query' => 'page.content.get("dash_key").value', 'confirm' => true,
         ], $app)));
         expect($query['error'] ?? null)->toBeNull();
         expect($query['ok'])->toBeTrue();

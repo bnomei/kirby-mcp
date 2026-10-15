@@ -6,6 +6,19 @@ Content representations let you render the **same page** in different formats by
 
 This is commonly used for lightweight project-local JSON endpoints (e.g. “load more” Ajax) or RSS feeds.
 
+## Request a format with Accept
+
+Kirby 6 also selects existing representation templates from the HTTP `Accept` header. For `article.json.php`, request `Accept: application/json` at the page's ordinary URL; for `article.md.php`, use `Accept: text/markdown`. Explicit `.json`/`.md` URLs remain available. The representation must exist and its MIME type must be recognized.
+
+```sh
+curl -i -H 'Accept: application/json' https://example.com/blog/article
+curl -i -H 'Accept: text/markdown' https://example.com/blog/article
+```
+
+Verify body and Content-Type against the explicit-extension request and an HTML control. Configure shared caches/CDNs to distinguish negotiated representations (for example through an appropriate `Vary: Accept` policy); do not assume a cache keyed only by URL is safe. Render-tool `contentType` tests do not exercise HTTP negotiation.
+
+For Kirby 5 clients, retain explicit-extension requests until the CMS is upgraded; adding an Accept header alone does not create this behavior there. Source: https://getkirby.com/releases/6/more-details#content-negotiation.
+
 ## In prompts (what it usually implies)
 
 - “Add JSON output” usually means: create a `<template>.json.php` template (and optionally a `<template>.json.php` controller).

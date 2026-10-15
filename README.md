@@ -11,7 +11,7 @@
 
 CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
 
-This branch prepares **Kirby MCP 6**, targeting **Kirby 6.0.0-beta.1** and PHP **8.3+**; it is not a published release. Kirby 5 projects should use the existing MCP 1.x tags. Composer rejects unsupported installed CMS versions without making the CMS a production dependency. Runtime operations reject unsupported Kirby versions; static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for validation and release blockers.
+**Kirby MCP v6.0.0** targets **Kirby 6**, with the currently verified CMS baseline **6.0.0-beta.1**, and requires PHP **8.3+**. The stable MCP package version does not make the CMS beta production-certified. Kirby 7+ is not supported. Composer rejects unsupported installed CMS versions without making the CMS a production dependency; runtime operations enforce the same boundary while static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for verification and known limitations.
 
 Content `fieldSchemas` retain display fields for inspection and expose `hasValue` (`true`, `false`, or `null` when unresolved). `pagelist`/`filelist` are display fields; `pagepicker`/`filepicker`/`userpicker` store selections. `hasValue` is not write permission or per-language storability. Update-schema links require a bundled guide and `hasValue: true`; unresolved/static types omit them, while guides remain directly accessible through reference resources. Raw blueprint reads do not normalize layouts or validate model-bound blueprints.
 
@@ -25,6 +25,17 @@ The server uses MCP SDK v0.8 dual-era dispatch: existing clients negotiate state
 > Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
 
 ## Quickstart
+
+### Choose the version for your project
+
+| Installed CMS | Project-local development install                                                             |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Kirby 5       | `composer require --dev bnomei/kirby-mcp:"^1.15"`                                             |
+| Kirby 6       | `composer require --dev bnomei/kirby-mcp` or `composer require --dev bnomei/kirby-mcp:"^6.0"` |
+
+`^1.15` stays on MCP 1.x, including 1.15.1 and later compatible updates. An unversioned install selects the latest compatible **available** release; it does not promise support for future CMS majors. Use `^6.0` to keep MCP updates within major 6.
+
+The CMS is installed separately. For the current beta, opt in explicitly in the consumer project's Composer requirements, for example `composer require getkirby/cms:"6.0.0-beta.1" --with-all-dependencies`, before installing MCP. An explicit beta version permits that package under Composer's default `minimum-stability: stable`; MCP's development dependency does not opt a consumer into CMS betas. Review the dependency changes on a test copy first.
 
 From your Kirby project root:
 
