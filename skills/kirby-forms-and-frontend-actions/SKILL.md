@@ -5,7 +5,7 @@ description: Implements frontend forms and actions in Kirby (contact forms, file
 
 # Kirby Forms and Frontend Actions
 
-Target Kirby 6 / MCP 6.x; verify `kirby://info` (MCP 1.x is the legacy Kirby 5 line). If using `Kirby\Form\Form`, use named arguments, `fill()`/`submit()` and `toStoredValues()` rather than removed array constructors/`data()`. Authentication must handle pending second factors. See `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 baseline.
+Use Kirby 6 conventions for new work. With `Kirby\Form\Form`, use named arguments, `fill()`/`submit()` and `toStoredValues()`. Authentication must handle pending second factors.
 
 ## KB entry points
 

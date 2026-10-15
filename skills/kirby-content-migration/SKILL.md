@@ -5,7 +5,7 @@ description: Plans and applies safe Kirby content migrations using runtime conte
 
 # Kirby Content Migration
 
-Target Kirby 6 / MCP 6.x; existing MCP 1.x is the legacy Kirby 5 line. Confirm CMS/runtime versions before writes and read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 migration baseline.
+Use Kirby 6 conventions for new work. For CMS upgrades, read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` before planning content writes.
 
 ## Schema safety
 

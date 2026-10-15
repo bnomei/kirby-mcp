@@ -1,8 +1,8 @@
-# Section (Kirby 5 legacy blueprint concept)
+# Section (existing blueprint configuration)
 
-## Kirby 6 replacement
+## Support and preferred syntax
 
-Use fields for all Panel UI. A legacy `pages` section becomes `pagelist`, `files` becomes `filelist`, and `info`/`stats` keep their names as non-value fields. A `fields` section wrapper is unwrapped. Built-in sections convert automatically; custom plugin sections do not and must become PHP `DisplayField` classes registered under `fields`.
+Existing built-in sections remain supported in Kirby 6 through automatic conversion. A `pages` section becomes `pagelist`, `files` becomes `filelist`, and `info`/`stats` keep their names as non-value fields. A `fields` section wrapper is unwrapped. Prefer these field forms for new blueprints; a working built-in section does not need an immediate rewrite. Custom plugin sections do not auto-convert and require PHP `DisplayField` classes registered under `fields`.
 
 Do not confuse a **picker field** with a section: legacy `pages`/`files`/`users` picker fields become `pagepicker`/`filepicker`/`userpicker` and store selected references. Lists do not store values.
 
@@ -23,7 +23,7 @@ When migrating, replace `headline` with `label`, remove `rawvalues`, and resolve
 ## Inspect and migrate
 
 - `kirby_blueprint_read` reads raw blueprint configuration; model `blueprint()->fields()` gives normalized fields including display fields.
-- `kirby://fields` lists canonical types; `kirby://sections` is legacy migration reference.
+- `kirby://fields` lists canonical types; `kirby://sections` documents existing section configuration and migration.
 - `kirby://kb/panel/reference-sections` explains custom-section ports.
 - `kirby://kb/scenarios/83-migrate-kirby-5-to-6` covers the full site migration.
 

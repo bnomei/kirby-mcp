@@ -5,7 +5,7 @@ description: Improves Kirby performance and media delivery (cache tuning, CDN, r
 
 # Kirby Performance and Media
 
-Target Kirby 6 / MCP 6.x; verify `kirby://info`. MCP 1.x is the legacy Kirby 5 line. The new query runner is always enabled in Kirby 6; do not tune performance by setting removed `query.runner`. For upgrades consult `kirby://kb/scenarios/83-migrate-kirby-5-to-6` and measure on the installed beta.
+Use Kirby 6 conventions for new work. Measure against the installed CMS; the query runner is fixed, so optimize query scope and custom methods rather than configuring `query.runner`.
 
 ## Quick start
 

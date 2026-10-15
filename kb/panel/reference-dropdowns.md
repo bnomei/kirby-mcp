@@ -79,6 +79,4 @@ Use Panel dropdown components and load options from the backend:
 - https://getkirby.com/docs/reference/plugins/ui
 - https://lab.getkirby.com/public/lab
 
-## Kirby 6 migration
-
-Rebuild legacy Vue 2 components for Vue 3 and check controller signatures against the installed tag. See `kirby://kb/panel/compat-k5-k6-migration`.
+- Migration: `kirby://kb/panel/compat-k5-k6-migration`

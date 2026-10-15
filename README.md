@@ -11,9 +11,11 @@
 
 CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
 
-This branch prepares **Kirby MCP 6**, targeting **Kirby 6.0.0-beta.1** and PHP **8.3+**; it is not a published release. Kirby 5 projects should use the existing MCP 1.x tags. Composer rejects unsupported installed CMS versions without making the CMS a production dependency. Runtime operations reject unsupported Kirby versions; static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for validation and deferred documentation.
+This branch prepares **Kirby MCP 6**, targeting **Kirby 6.0.0-beta.1** and PHP **8.3+**; it is not a published release. Kirby 5 projects should use the existing MCP 1.x tags. Composer rejects unsupported installed CMS versions without making the CMS a production dependency. Runtime operations reject unsupported Kirby versions; static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for validation and release blockers.
 
 Content `fieldSchemas` retain display fields for inspection and expose `hasValue` (`true`, `false`, or `null` when unresolved). `pagelist`/`filelist` are display fields; `pagepicker`/`filepicker`/`userpicker` store selections. `hasValue` is not write permission or per-language storability. Update-schema links require a bundled guide and `hasValue: true`; unresolved/static types omit them, while guides remain directly accessible through reference resources. Raw blueprint reads do not normalize layouts or validate model-bound blueprints.
+
+Existing built-in sections remain supported through automatic conversion and need no immediate rewrite. Prefer canonical fields for new blueprints; custom sections require ports. Section resources remain available for existing configuration and migration guidance.
 
 It can also run as a projectless global reference MCP (`kirby-mcp --global`) for always-on Kirby docs/KB research. Global reference mode is intentionally separate from project-local MCP servers and cannot inspect, render, update, or run commands in a Kirby project.
 

@@ -5,7 +5,7 @@ description: Designs Kirby 6 blueprints and Panel UI, including reuse/extends, p
 
 # Kirby Panel and Blueprints
 
-Target Kirby 6 / MCP 6.x; confirm `kirby://info`. Existing MCP 1.x is the legacy Kirby 5 line. For upgrades read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` (verified beta.1 baseline).
+Use Kirby 6 conventions for new work. For existing blueprints, consult `kirby://kb/scenarios/83-migrate-kirby-5-to-6` when migration is needed.
 
 ## Kirby 6 rules
 
@@ -63,7 +63,7 @@ extends: pages/default
    - `kirby:kirby_blueprint_read`
 4. Use Panel reference resources for field choices:
    - `kirby://fields`
-   - `kirby://sections` only for legacy migration reference
+   - `kirby://sections` for existing section configuration and migration guidance
 5. Check plugin surface when custom Panel UI is needed:
    - `kirby:kirby_plugins_index`
    - `kirby://extensions`

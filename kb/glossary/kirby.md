@@ -6,7 +6,7 @@ In Kirby, “Kirby” often refers to the **application/runtime object** (`Kirby
 
 In templates/snippets/controllers, Kirby exposes this object as the `$kirby` variable. Outside of that context, you can fetch it with the `kirby()` helper.
 
-This KB's canonical target is Kirby 6 (verified baseline `6.0.0-beta.1`, PHP 8.3+). MCP 6.x serves Kirby 6; existing MCP 1.x releases are the legacy Kirby 5 target. Start a 5→6 upgrade at `kirby://kb/scenarios/83-migrate-kirby-5-to-6`. Online docs are unversioned and may differ from your installed beta.
+This KB uses Kirby 6 conventions for new work. When existing code differs, inspect the installed CMS version and `kirby://kb/scenarios/83-migrate-kirby-5-to-6` before replacing it. The migration guide records the verified baseline; unfamiliar APIs may also come from plugins or newer releases.
 
 ## In prompts (what it usually implies)
 

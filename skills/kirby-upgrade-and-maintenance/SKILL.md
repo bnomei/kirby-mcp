@@ -5,7 +5,7 @@ description: Upgrades Kirby and maintains dependencies safely using composer aud
 
 # Kirby Upgrade and Maintenance
 
-Target Kirby 6 / MCP 6.x; existing MCP 1.x releases target legacy Kirby 5. Verified baseline: `6.0.0-beta.1`, PHP 8.3+. Test beta upgrades on a backed-up copy, not production. Online documentation is unversioned; compare claims to the installed tag.
+Use Kirby 6 conventions for new work. Check the installed CMS version and the migration guide's verified baseline before upgrading; test on a backed-up copy.
 
 ## Kirby 5 to 6 acceptance
 

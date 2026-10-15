@@ -5,7 +5,7 @@ description: Exposes Kirby content to headless clients using the API, KQL, and J
 
 # Kirby Headless API
 
-Target Kirby 6 / MCP 6.x; verify `kirby://info`. MCP 1.x is the legacy Kirby 5 line. Basic Auth cannot complete Kirby 6 second factors; use dedicated least-privilege API users rather than disabling 2FA on editor accounts. Online docs are unversioned; see `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 baseline.
+Use Kirby 6 conventions for new work. Basic Auth cannot complete second factors; use dedicated least-privilege API users rather than disabling 2FA on editor accounts.
 
 ## KB entry points
 

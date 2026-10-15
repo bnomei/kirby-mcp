@@ -23,7 +23,7 @@ it('lists Kirby Panel section resources', function (): void {
 
     expect($markdown)->toContain('kirby://section/fields');
     expect($markdown)->toContain('kirby://section/files');
-    expect($markdown)->toContain('legacy; use the filelist field in Kirby 6');
+    expect($markdown)->toContain('supported; automatically converted to filelist');
 });
 
 it('validates field types as slugs', function (): void {

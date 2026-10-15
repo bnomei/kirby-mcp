@@ -129,6 +129,6 @@ panel.plugin('example/area-tools', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dialogs
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Kirby 6 migration
+## Component checks
 
-Rebuild Kirby 5 legacy Vue 2 bundles. Declare component events and use the Panel instance APIs; see `kirby://kb/panel/compat-k5-k6-migration`. Test button wrappers and dialog components against the installed beta.
+Declare component events and test button wrappers and dialog components. For existing plugins, see `kirby://kb/panel/compat-k5-k6-migration`.

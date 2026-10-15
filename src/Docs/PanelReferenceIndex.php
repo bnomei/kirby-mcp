@@ -58,10 +58,10 @@ final class PanelReferenceIndex
      * @var array<string, string>
      */
     public const SECTION_TYPES = [
-        'fields' => 'Fields section (legacy; use fields directly in Kirby 6)',
-        'files' => 'Files section (legacy; use the filelist field in Kirby 6)',
-        'info' => 'Info section (legacy; use the info field in Kirby 6)',
-        'pages' => 'Pages section (legacy; use the pagelist field in Kirby 6)',
-        'stats' => 'Stats section (legacy; use the stats field in Kirby 6)',
+        'fields' => 'Fields section (supported; automatically unwrapped into fields)',
+        'files' => 'Files section (supported; automatically converted to filelist)',
+        'info' => 'Info section (supported; automatically converted to info field)',
+        'pages' => 'Pages section (supported; automatically converted to pagelist)',
+        'stats' => 'Stats section (supported; automatically converted to stats field)',
     ];
 }

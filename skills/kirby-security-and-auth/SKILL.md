@@ -5,7 +5,7 @@ description: Secures Kirby sites with access restriction, user roles, permission
 
 # Kirby Security and Auth
 
-Target Kirby 6 / MCP 6.x; MCP 1.x is the legacy Kirby 5 line. Read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 auth/session changes.
+Use Kirby 6 conventions for new work. For existing authentication integrations, consult `kirby://kb/scenarios/83-migrate-kirby-5-to-6` before changing login or session handling.
 
 ## Kirby 6 authorization and login
 

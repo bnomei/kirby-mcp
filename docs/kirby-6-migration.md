@@ -32,13 +32,16 @@ The branch includes origin/main's v1.15.1. Existing MCP 1.x releases remain the 
 
 ## Integrated knowledge/content work
 
-- Integrated `kirby-6-docs` ([documentation commit](https://github.com/bnomei/kirby-mcp/commit/ff8e906ff2c45401e48011e61e9472e3bacf0845)):
+- Integrated `kirby-6-docs` through its [wording follow-up](https://github.com/bnomei/kirby-mcp/commit/25d0717d26ded357eec928e8a9ddef6b67ed35bb):
   canonical picker storage guides, display-only lists, the Kirby 5-to-6 migration guide and all 15 skills.
+- Task guidance teaches Kirby 6 directly; baseline and general version caveats stay in migration guides.
+  Existing built-in sections remain supported by automatic conversion and need no immediate rewrite;
+  custom sections require ports. Section resources remain discoverable.
 - Coverage includes blueprint root references, removed presets/custom sections, shared names,
   field classes, queries, authentication challenges and Panel/Vue 3 tooling. Published paths remain.
 - Combined regression checks require all three canonical picker links and nested picker links;
   display fields (including info with an existing guide) and unresolved types omit write-guide links.
-  An independent audit resolved all 958 concrete KB/glossary/schema URI occurrences.
+  An independent audit resolved all 954 concrete KB/glossary/schema URI occurrences.
 - Integration review corrected dropdown controller `factory(...)->load()`, Options API
   `$panel.search()` and the inaccurate claim that beta.1 removes the `$events` helper.
 - Four specialized frontend sketches remain explicitly Kirby 5 legacy with Kirby 6 port instructions,
