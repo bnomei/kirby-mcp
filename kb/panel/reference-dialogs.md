@@ -84,6 +84,4 @@ Plain text props are escaped in Kirby 6. For markup, use trusted `HtmlString` va
 - https://getkirby.com/docs/reference/plugins/ui
 - https://lab.getkirby.com/public/lab
 
-## Kirby 6 migration
-
-Rebuild legacy Vue 2 dialog components for Vue 3, declare emitted events and preserve Kirby inputs' `value`/`input` contract. See `kirby://kb/panel/compat-k5-k6-migration`.
+- Migration: `kirby://kb/panel/compat-k5-k6-migration`

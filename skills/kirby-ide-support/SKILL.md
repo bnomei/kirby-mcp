@@ -5,7 +5,7 @@ description: Improves IDE autocomplete and static analysis in Kirby projects wit
 
 # Kirby IDE Support
 
-Target Kirby 6 / MCP 6.x; confirm `kirby://info`. MCP 1.x is the legacy Kirby 5 line. Use canonical `Kirby\Blueprint` and `Kirby\Auth` namespaces; blueprint tabs are objects and display fields have no content value. Regenerate helpers against the installed version, not an assumed legacy API.
+Use Kirby 6 conventions for new work. Use `Kirby\Blueprint` and `Kirby\Auth` namespaces; blueprint tabs are objects and display fields have no content value. Generate helpers against the installed version.
 
 ## Quick start
 

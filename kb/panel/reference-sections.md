@@ -1,8 +1,8 @@
-# Kirby 5 legacy sections: port to Kirby 6 display fields
+# Panel sections: existing configuration and custom-field ports
 
-Kirby 6 beta.1 removes custom sections. Rebuilding the old Vue component is insufficient: move both PHP and JavaScript registrations from `sections` to `fields`, extend `Kirby\Form\Field\DisplayField`, and change blueprint placements to `fields`.
+Existing built-in sections remain supported through automatic conversion. For new blueprints, prefer their field equivalents: `pages` → `pagelist`, `files` → `filelist`, and `info`/`stats` → same-named fields; `fields` wrappers are unwrapped. Picker fields are different: use `pagepicker`/`filepicker`/`userpicker` for stored selections. Never send content updates for display fields.
 
-Built-in sections auto-convert: `pages` → `pagelist`, `files` → `filelist`, `info`/`stats` → same-named fields; `fields` wrappers are unwrapped. Picker fields are different: use `pagepicker`/`filepicker`/`userpicker` for stored selections. Never send content updates for display fields.
+Custom sections require a port, not just a frontend rebuild: move both PHP and JavaScript registrations from `sections` to `fields`, extend `Kirby\Form\Field\DisplayField`, and change blueprint placements to `fields`.
 
 ## A computed display field
 

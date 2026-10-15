@@ -2,7 +2,7 @@
 
 ## Baseline and scope
 
-This KB targets Kirby 6; the verified migration baseline is **6.0.0-beta.1** (checked October 15, 2026). Beta APIs and tooling can change. Test on a disposable copy, not production. Existing Kirby MCP 1.x releases target legacy Kirby 5 projects; MCP 6.x targets Kirby 6. Official online documentation is unversioned: a fetched page is not a frozen version-specific reference. Compare it with the installed version and the tagged source.
+This KB targets Kirby 6; the verified migration baseline is **6.0.0-beta.1** (checked October 15, 2026). Beta APIs and tooling can change. Test on a disposable copy, not production. Official online documentation is unversioned: compare it with the installed version and tagged source.
 
 Preserve content and published URLs. Renaming a blueprint field's **type** is not renaming its content key, and converting a display section is not a content migration.
 
@@ -27,7 +27,7 @@ Preserve content and published URLs. Renaming a blueprint field's **type** is no
 | `users` **picker field**  | `userpicker`                   | Yes, selected user references      |
 | Custom plugin section     | Port to a `DisplayField` class | No, unless deliberately redesigned |
 
-Built-in sections auto-convert when Kirby 6 loads a blueprint. **Custom sections do not.** Deprecated picker aliases still resolve, but use canonical picker names in new code. Never mechanically replace every `pages` or `files` type with a list.
+Existing built-in sections remain supported through automatic conversion when Kirby 6 loads a blueprint; they do not need an immediate rewrite. **Custom sections do not auto-convert.** Deprecated picker aliases still resolve, but use canonical picker names in new code. Never mechanically replace every `pages` or `files` type with a list.
 
 When rewriting, replace section layout entries with fields, unwrap `fields` sections and replace section `headline` with `label`. Remove the obsolete `rawvalues` workaround. All names now share a case-insensitive namespace: a section called `Gallery` and a stored field called `gallery` collide. Rename the display entry first to avoid an unnecessary stored-content migration.
 

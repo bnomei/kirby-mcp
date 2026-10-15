@@ -2,7 +2,7 @@
 
 ## Meaning
 
-In Kirby blueprints, `extends` is used to **reuse and compose blueprint parts** (fields, tabs, layouts). This keeps blueprints DRY and makes large Panel setups maintainable. Kirby 5 legacy section mixins should become field mixins: built-in sections auto-convert, but custom sections need `DisplayField` ports. See `kirby://kb/scenarios/06-blueprints-reuse-extends`.
+In Kirby blueprints, `extends` is used to **reuse and compose blueprint parts** (fields, tabs, layouts). This keeps blueprints DRY and makes large Panel setups maintainable. Existing built-in section mixins remain supported through automatic conversion; prefer field mixins for new work. See `kirby://kb/scenarios/06-blueprints-reuse-extends`.
 
 Because `extends` composition is resolved at runtime, reading the raw YAML file often isn’t enough to know what the Panel actually sees.
 
@@ -15,7 +15,7 @@ Because `extends` composition is resolved at runtime, reading the raw YAML file 
 ## Variants / aliases
 
 - Mixins by folder convention (within the blueprints root):
-  - `fields/*`, `tabs/*`; retained legacy `sections/*` paths need content migration, not just renaming
+  - `fields/*`, `tabs/*`; existing blueprints can also reference `sections/*` mixins
 - `extends:` can also be used to override parts of a reused structure
 
 ## Example
@@ -30,7 +30,7 @@ tabs:
 
 - Use `kirby_blueprint_read` (or `kirby://blueprint/{encodedId}`) to inspect loaded blueprint data. `Blueprint::load()` is not model normalization: use model `blueprint()->fields()`/content schemas to see normalized fields and root references.
 - Use `kirby_blueprints_index` to discover blueprint and mixin ids that exist in the project.
-- Confirm a Panel field type inside a mixin with `kirby://field/{type}`; section resources are legacy migration references.
+- Confirm a Panel field type inside a mixin with `kirby://field/{type}`; use `kirby://section/{type}` for existing section configuration.
 
 ## Related terms
 

@@ -58,6 +58,4 @@ Create a modal dialog with `load` and `submit` callbacks.
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dialogs
 - https://lab.getkirby.com/public/lab
 
-## Kirby 6 migration
-
-Custom dialogs use Vue 3. Kirby 5 legacy core callback reuse must become controller `factory()` calls; see `kirby://kb/panel/reference-dialogs`. Escape text by default and use trusted HTML only for intentionally constructed markup.
+- Controller reuse and trusted HTML: `kirby://kb/panel/reference-dialogs`

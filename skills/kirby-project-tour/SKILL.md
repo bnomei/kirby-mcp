@@ -5,7 +5,7 @@ description: Maps a Kirby project using Kirby MCP tools/resources, including roo
 
 # Kirby Project Tour
 
-These workflows target Kirby 6 / MCP 6.x; existing MCP 1.x is the legacy Kirby 5 line. Report the actual installed CMS version separately from MCP. For legacy projects point to `kirby://kb/scenarios/83-migrate-kirby-5-to-6`; the verified baseline is beta.1, not a production-readiness claim.
+Use Kirby 6 conventions for new work. When existing code differs, inspect the installed CMS version and `kirby://kb/scenarios/83-migrate-kirby-5-to-6` before recommending changes.
 
 ## Quick start
 

@@ -144,6 +144,6 @@ panel.plugin('example/app', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Kirby 6 migration
+## Authentication checks
 
-Rebuild Kirby 5 legacy Vue 2 assets and re-test auth routes, CSRF and view routing. If integrating Kirby login too, use the new auth status/challenge flow; pending 2FA is not a completed login. See `kirby://kb/panel/compat-k5-k6-migration`.
+Test auth routes, CSRF and view routing. If integrating Kirby login too, use its status/challenge flow; pending 2FA is not a completed login. See `kirby://kb/scenarios/43-user-registration-and-login`.

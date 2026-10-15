@@ -111,6 +111,6 @@ panel.plugin('example/api-ops', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Kirby 6 migration
+## Authorization checks
 
-Rebuild Kirby 5 legacy Vue 2 bundles with kirbyup 4. Test authenticated POST requests and authorization independently of menu visibility. See `kirby://kb/panel/tooling-kirbyuse` for package and import constraints.
+Test authenticated POST requests and authorization independently of menu visibility. Package and import setup: `kirby://kb/panel/tooling-kirbyuse`.

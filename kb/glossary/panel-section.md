@@ -1,6 +1,6 @@
-# Panel section (Kirby 5 legacy)
+# Panel section (existing blueprint configuration)
 
-Kirby 6 replaces sections with fields. Use `pagelist`/`filelist` for page/file listings and `info`/`stats` for informational displays. These fields store no content. Existing built-in sections auto-convert; custom plugin sections do not.
+Existing built-in sections remain supported in Kirby 6 through automatic conversion. For new blueprints, prefer `pagelist`/`filelist` for page/file listings and `info`/`stats` for informational displays. These fields store no content. Custom plugin sections require a port; they do not auto-convert.
 
 For a custom display, extend `Kirby\Form\Field\DisplayField`, register the class under PHP `fields` and the Vue 3 component under JavaScript `fields`. Replace section `this.load()` with direct field props for cheap data or a field `api()` endpoint for expensive data. See `kirby://kb/panel/reference-sections` and `kirby://kb/panel/reference-fields` for implementation.
 

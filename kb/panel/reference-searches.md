@@ -75,6 +75,6 @@ In Options API you can also call `this.$search('todos', query)`.
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Kirby 6 migration
+## Search checks
 
-Re-test result shapes, pagination and controller fallback after porting legacy `query` handlers to `action`. Bundle kirbyuse and leave Vue external; see `kirby://kb/panel/tooling-kirbyuse`.
+Test result shapes, pagination and controller fallback. Bundle kirbyuse and leave Vue external; see `kirby://kb/panel/tooling-kirbyuse`.

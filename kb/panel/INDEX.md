@@ -1,8 +1,8 @@
 # Kirby Panel extensions
 
-This KB targets Kirby 6 Panel extension development (PHP classes + Vue 3). The verified baseline is `6.0.0-beta.1`, not a production-readiness claim. Official online docs are unversioned; compare examples with your installed tag.
+Use Kirby 6 conventions for new Panel work: PHP field classes and Vue 3 components.
 
-Start upgrades at `kirby://kb/scenarios/83-migrate-kirby-5-to-6`. Retained Kirby 5 sketches are explicitly legacy migration references, not ready-to-run Kirby 6 components. Use `DisplayField` for custom non-value UI and picker fields for stored selections; custom sections do not auto-convert.
+Existing built-in sections remain supported through automatic conversion; prefer `pagelist`/`filelist` for new lists and picker fields for stored selections. Custom sections require a port. For existing code, use `kirby://kb/scenarios/83-migrate-kirby-5-to-6` and the Panel migration guide below; retained Kirby 5 sketches are labelled at the example.
 
 ## Tooling
 

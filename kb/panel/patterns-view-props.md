@@ -62,6 +62,6 @@ panel.plugin('vendor/reports', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Kirby 6 migration
+## Serialization checks
 
-Use Vue 3 components with explicit props. Recheck complex values and dates when migrating legacy Vue 2 views; Symfony YAML can turn unquoted dates into timestamps. Send only the data needed by the view, not whole user/account objects.
+Declare props explicitly and check complex values and dates; Symfony YAML can turn unquoted dates into timestamps. Send only the data needed by the view, not whole user/account objects.

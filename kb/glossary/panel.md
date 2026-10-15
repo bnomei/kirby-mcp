@@ -9,13 +9,13 @@ If a prompt mentions “Panel fields”, “sections”, “blocks”, “page c
 ## In prompts (what it usually implies)
 
 - “Add a field in the Panel” means: update the relevant blueprint.
-- “Pages section doesn’t show X” is legacy terminology: inspect the Kirby 6 `pagelist` display field and current page type/status.
+- “Pages section doesn’t show X” means inspect the existing section configuration, its normalized `pagelist` field and current page type/status.
 - “Custom Panel UI” may mean plugin development (PHP field classes and Vue 3 fields/areas).
 
 ## Variants / aliases
 
 - Panel fields (types + options): `kirby://fields` + `kirby://field/{type}`
-- Kirby 5 legacy section migration references: `kirby://sections`; built-in sections auto-convert, custom sections must be ported to fields.
+- Existing section configuration and migration: `kirby://sections`; built-in sections remain supported through automatic conversion, custom sections require a port.
 - Blueprint parts: fields/tabs/columns and reusable mixins
 
 ## Example
