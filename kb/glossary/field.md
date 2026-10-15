@@ -6,6 +6,8 @@ A Kirby “field” is the smallest unit of content on a model (page/site/file/u
 
 These calls return a `Kirby\Content\Field` object, which you then transform/output with [field methods](kirby://glossary/field-method) (e.g. `escape()`, `kt()`, `toDate()`, …).
 
+A Kirby 6 Panel field is a different concept: it may store content (`pagepicker`, `filepicker`, `userpicker`, text inputs) or only display UI (`pagelist`, `filelist`, `info`, `stats`, `buttons`). Never create content writes for display fields. Schema `hasValue: null` means unresolved, not writable. Unknown content field methods throw in Kirby 6; correct typos instead of relying on the Kirby 5 legacy no-op fallback.
+
 ## In prompts (what it usually implies)
 
 - “The `text` field” means the content value stored under the `text:` key in the page’s content file(s).

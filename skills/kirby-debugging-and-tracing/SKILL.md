@@ -5,6 +5,8 @@ description: Diagnoses Kirby rendering/runtime issues using MCP runtime renderin
 
 # Kirby Debugging and Tracing
 
+Target Kirby 6 / MCP 6.x; verify CMS and MCP versions separately. MCP 1.x is the legacy Kirby 5 line. For upgrade failures inspect `kirby://kb/scenarios/83-migrate-kirby-5-to-6`: unknown field methods now throw, dashed query fields need explicit content access, Symfony YAML changes scalar types and raw blueprints differ from normalized model fields.
+
 ## Quick start
 
 - Follow the workflow below to reproduce and trace render issues.

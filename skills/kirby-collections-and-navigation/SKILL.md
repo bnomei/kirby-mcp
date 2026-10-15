@@ -5,6 +5,8 @@ description: Builds Kirby listings, pagination, search, filtering/sorting/groupi
 
 # Kirby Collections and Navigation
 
+Target Kirby 6 / MCP 6.x; confirm `kirby://info`. MCP 1.x is the legacy Kirby 5 line. Store selected relationships in `pagepicker`/`filepicker`/`userpicker`; display lists (`pagelist`/`filelist`) do not store selections. Kirby 6 always uses the new query runner; access dashed fields with `page.content.get("my-field")`.
+
 ## KB entry points
 
 - `kirby://kb/scenarios/07-pagination`

@@ -1,4 +1,6 @@
-# Kirby KB glossary — plan
+# Historical Kirby 5 legacy authoring plan: glossary
+
+This historical inventory is superseded by the individual Kirby 6 glossary entries. Start at `kirby://glossary/kirby` and `kirby://kb/scenarios/83-migrate-kirby-5-to-6`. Legacy sections become fields (custom sections require class ports); blueprint classes now live under `Kirby\Blueprint`. Do not use this seed inventory as an API contract.
 
 We are creating a **new** set of knowledgebase documents as Markdown files under `/kb/glossary`.
 

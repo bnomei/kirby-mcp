@@ -103,8 +103,8 @@ export default {
 ## Verification
 
 - Build or serve assets:
-  - `kirbyup serve src/index.js` (K5)
-  - `kirbyup build src/index.js --watch` (K6)
+  - `kirbyup dev src/index.js` for HMR with kirbyup 4 (Node.js 24+ at beta.1)
+  - `kirbyup build src/index.js` for production assets
 - Open the Panel and confirm the area appears in the menu.
 - Use `kirby_plugins_index` to confirm the plugin is loaded.
 
@@ -122,8 +122,6 @@ export default {
 - UI components: https://getkirby.com/docs/reference/plugins/ui
 - Panel tooling: kirby://kb/panel/tooling-kirbyup
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; use `kirbyup` 3.x and `kirbyup serve` for HMR.
-- K6: Vue 3 Panel runtime; use `kirbyup` 4.x and watch-mode builds while HMR is unavailable.
-- K5 -> K6: update Vue components to Vue 3-compatible syntax and switch bundler versions.
+Rebuild Kirby 5 legacy Vue 2 assets with kirbyup 4 and Vue 3. Replace the old `serve` command with `dev`; do not ship `index.dev.js`. See `kirby://kb/panel/tooling-kirbyup`.

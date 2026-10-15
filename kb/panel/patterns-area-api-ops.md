@@ -44,11 +44,14 @@ Build a Panel area with a dedicated view that lists items, triggers actions, and
 - `POST /api/my-feature/create` triggers a job and returns a status message.
 - `GET /api/my-feature/settings-status` powers warning banners in the view.
 
-## Panel JS (K5)
+## Panel JS (Kirby 6 / Vue 3)
+
+This is the view's data-loading logic; add a template for your items and actions. Bundle kirbyuse with kirbyup 4, leaving Vue external.
 
 ```js
-// site/plugins/example-api-ops/src/components/ApiOpsView.vue
-import { ref, onMounted, useApi, usePanel } from 'kirbyuse';
+// site/plugins/example-api-ops/src/index.js
+import { ref, onMounted } from 'vue';
+import { useApi, usePanel } from 'kirbyuse';
 
 const ApiOpsView = {
   props: {
@@ -108,8 +111,6 @@ panel.plugin('example/api-ops', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 area views; use `useApi()` and `usePanel()` from kirbyuse.
-- K6: Vue 3 area views; confirm CSRF headers for POST requests.
-- K5 -> K6: re-check any bundled JS and view components.
+Rebuild Kirby 5 legacy Vue 2 bundles with kirbyup 4. Test authenticated POST requests and authorization independently of menu visibility. See `kirby://kb/panel/tooling-kirbyuse` for package and import constraints.

@@ -5,6 +5,16 @@ description: Upgrades Kirby and maintains dependencies safely using composer aud
 
 # Kirby Upgrade and Maintenance
 
+Target Kirby 6 / MCP 6.x; existing MCP 1.x releases target legacy Kirby 5. Verified baseline: `6.0.0-beta.1`, PHP 8.3+. Test beta upgrades on a backed-up copy, not production. Online documentation is unversioned; compare claims to the installed tag.
+
+## Kirby 5 to 6 acceptance
+
+- Read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` before planning. Audit Symfony YAML content as well as blueprints, removed presets, case-insensitive field collisions, option-source changes and invalid values.
+- Distinguish legacy sections from pickers: lists store no value. Port custom sections and array-based fields to PHP classes and rebuild all Panel assets for Vue 3.
+- Remove `query.runner`, test dashed field access and unknown methods; migrate blueprint object APIs, guards, template reserved names and auth/session integrations.
+- Preserve role permission configuration; it is not the deprecated model permissions API. Test allowed/denied roles, pending 2FA, fresh cookies and editor workflows.
+- Back up content/accounts/config as well as the lockfile. A dependency rollback alone cannot undo content writes or account changes.
+
 ## Quick start
 
 - Follow the workflow below for safe, incremental upgrades.
@@ -12,6 +22,7 @@ description: Upgrades Kirby and maintains dependencies safely using composer aud
 ## KB entry points
 
 - `kirby://kb/panel/compat-k5-k6-migration`
+- `kirby://kb/scenarios/83-migrate-kirby-5-to-6`
 - `kirby://kb/panel/tooling-kirbyup`
 - `kirby://kb/glossary/kirbyup`
 - `kirby://kb/glossary/plugin`

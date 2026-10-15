@@ -59,7 +59,7 @@ POST JSON body:
 { "query": "page('notes').children" }
 ```
 
-### Cross-origin browser clients (Kirby 5.2+)
+### Cross-origin browser clients
 
 Kirby has built-in `cors` configuration for browser clients on another origin, including automatic `204` responses to preflight `OPTIONS` requests:
 

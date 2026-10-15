@@ -152,8 +152,6 @@ export default {
 - Panel areas: https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - Panel tooling: kirby://kb/panel/tooling-kirbyup
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; `kirbyup` 3.x supports HMR for rapid iteration.
-- K6: Vue 3 Panel runtime; `kirbyup` 4.x uses watch-mode builds while HMR is unavailable.
-- K5 -> K6: update Vue components to Vue 3-compatible syntax and revisit any Panel UI component usage that changed between versions.
+Use kirbyup 4 and Vue 3 (`kirbyup dev src/index.js` enables HMR). Kirby 5 legacy core callback arrays became controller classes; use the relevant controller's `factory()` instead of invoking core closures. Search overrides use `action`. See `kirby://kb/panel/compat-k5-k6-migration` and the dialog/dropdown/search references.

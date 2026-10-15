@@ -1,10 +1,12 @@
-# Session (aliases: `$session`, `Kirby\Session\SessionData`, `$kirby->session()`)
+# Session (aliases: `$session`, `Kirby\Session\Data`, `$kirby->session()`)
 
 ## Meaning
 
 In Kirby, the session is a per-visitor store that persists across requests (via a cookie). It’s commonly used for authentication state, flash messages, and small “remember this” preferences.
 
 Kirby exposes a session data object with helpers like `get()`, `set()`, `pull()`, etc.
+
+Kirby 6 renames legacy `SessionData` to `Data`, `SessionStore` to `Store` and `FileSessionStore` to `FileStore`. Normal `$kirby->session()` calls remain. Handler integrations use `$kirby->sessions()`, `find($token)` and `Sessions::factory()` instead of `sessionHandler()`, handler `get()` and direct construction. Old login cookies are rejected after the upgrade; users must log in again.
 
 ## In prompts (what it usually implies)
 
@@ -31,7 +33,7 @@ $notice = $session->pull('notice');
 
 - Read effective session settings via `kirby://config/session` (requires `kirby_runtime_install`).
 - Use `kirby_eval` for quick sanity checks (note: real session behavior depends on browser cookies):
-  - example: `return kirby()->session() instanceof Kirby\\Session\\SessionData;`
+  - example: `return kirby()->session() instanceof Kirby\Session\Data;`
 
 ## Related terms
 

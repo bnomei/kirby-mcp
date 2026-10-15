@@ -22,7 +22,7 @@ Not applicable.
 
 ## Edge cases
 
-If you write a value manually, it will be stored like any other field but ignored by the Panel UI.
+Kirby 6 normalizes former built-in info sections into this non-value field. MCP schemas keep it with `hasValue: false` and do not emit an update-schema link for it. This retained guide explains exclusion, not a writable payload; never rely on manually writing a display key.
 
 ## MCP: Inspect/verify
 

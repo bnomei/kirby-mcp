@@ -28,6 +28,8 @@ Replace the stored option key with the new selection.
 
 Some configs allow multiple selection; if enabled, store as list and parse accordingly.
 
+Kirby 6 preserves invalid option values and nests query/API settings inside `options`. Validate configured choices and map removed keys explicitly rather than expecting a save to clean them. See `kirby://glossary/query-language`.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

@@ -1,4 +1,4 @@
-# Scenario: Build custom menus managed in the Panel (structure + pages/link fields)
+# Scenario: Build custom menus managed in the Panel (structure + pagepicker/link fields)
 
 ## Goal
 
@@ -23,7 +23,7 @@ Common variants:
 - Blueprint inspection: `kirby_blueprint_read` / `kirby://blueprint/{encodedId}`
 - Panel field references:
   - `kirby://field/structure`
-  - `kirby://field/pages`
+  - `kirby://field/pagepicker`
   - `kirby://field/link`
 - Render and inspect: `kirby_render_page`
 
@@ -36,7 +36,7 @@ Common variants:
 
 ## Examples
 
-### Multiple independent menus (structure + pages)
+### Multiple independent menus (structure + pagepicker)
 
 Blueprint:
 
@@ -48,7 +48,7 @@ menus:
       type: text
       label: Menu headline
     menuItems:
-      type: pages
+      type: pagepicker
       label: Menu item
 ```
 

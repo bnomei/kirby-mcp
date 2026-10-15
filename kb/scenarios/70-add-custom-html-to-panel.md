@@ -4,6 +4,8 @@
 
 Show custom HTML in the Panel UI using the `info` field in a blueprint (e.g. onboarding content, embedded video).
 
+Kirby 6 `info` is display-only and must not receive content writes. Blueprint-owned markup and query substitutions are distinct from plugin-generated strings: Panel text props escape ordinary strings. In a plugin use `HtmlString::translate()` or `$model->toSafeHtmlString()` for trusted markup with escaped substitutions; use `v-safe-html` in custom components. Never mark raw user/provider HTML trusted just to bypass escaping. See https://getkirby.com/releases/6/migration/plugin-developers/trusted-html.
+
 ## Inputs to ask for
 
 - Where to show it (site blueprint, page blueprint, user blueprint)

@@ -7,7 +7,7 @@ File blueprints define metadata fields for files (e.g. caption, alt text). Updat
 ## Blueprint/template resolution
 
 - File blueprints live in `/site/blueprints/files` (e.g. `image.yml` defines the `image` file template).
-- A `files` section can set `template` to control which file blueprint/template is used for files in that section.
+- A `filelist` display field can set `template` to control the file blueprint/template. Kirby 5 legacy `files` sections auto-convert to `filelist`, not to the stored-selection `filepicker`.
 - If no template is configured, Kirby falls back to `default.yml`.
 
 ## Storage format

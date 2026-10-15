@@ -2,18 +2,18 @@
 
 ## Goal
 
-Reuse Panel UI components and core field/section components instead of rebuilding them.
+Reuse Panel UI components and core value/display field components instead of rebuilding them. Kirby 5 legacy custom sections must become display fields; see `kirby://kb/panel/reference-sections`.
 
 ## Inputs to ask for
 
-- Panel version (K5 or K6)
-- Core component/field/section you want to extend
+- Installed Kirby 6 version (baseline beta.1)
+- Core component or field you want to extend
 - Build setup (kirbyup bundle vs plain JS)
 
 ## When to use
 
 - You want consistent Panel styling and behavior.
-- You need a field or section that is a small variation of a core one.
+- You need a field that is a small variation of a core one.
 
 ## Pattern
 
@@ -29,6 +29,7 @@ panel.plugin('vendor/hello', {
   fields: {
     hello: {
       extends: 'k-text-field',
+      emits: ['input'],
       methods: {
         onInput(value) {
           this.$emit('input', value.trim());
@@ -42,7 +43,7 @@ panel.plugin('vendor/hello', {
 ## MCP: Inspect/verify
 
 - Field reference: `kirby://extension/fields`
-- Section reference: `kirby://extension/sections`
+- Pair the component with a PHP field class; see `kirby://kb/panel/reference-fields`.
 - KB references: `kirby://kb/panel/reference-fields`, `kirby://kb/panel/reference-sections`
 
 ## Gotchas
@@ -56,8 +57,6 @@ panel.plugin('vendor/hello', {
 - https://lab.getkirby.com/public/lab
 - https://github.com/getkirby/kirby/tree/main/panel
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 component extension.
-- K6: Vue 3 component extension.
-- K5 -> K6: re-check component names in the Panel source.
+Rebuild legacy Vue 2 components for Vue 3. Kirby inputs retain `value`/`input`; do not blindly switch to `modelValue`/`update:modelValue`. Check core component methods against the installed tag.

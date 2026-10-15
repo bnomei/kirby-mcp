@@ -2,7 +2,7 @@
 
 ## Meaning
 
-A blueprint is a YAML definition that configures the **Panel UI**: fields, sections, tabs, page/file options, allowed child pages, status workflows, etc.
+A blueprint is a YAML definition that configures the Panel UI: value/display fields, tabs, columns, model options and status workflows. Kirby 6 replaces sections with fields and removes presets. Built-in legacy sections auto-convert; custom sections must be ported.
 
 Blueprints live in the `blueprints` root (often `/site/blueprints`) and can be reused/extended via mixins and `extends`.
 
@@ -17,11 +17,11 @@ Blueprints live in the `blueprints` root (often `/site/blueprints`) and can be r
 - Page blueprints: `…/blueprints/pages/<template>.yml`
 - Reusable parts (“mixins”):
   - `…/blueprints/fields/*`
-  - `…/blueprints/sections/*`
+  - display lists also use field blueprints (`pagelist`/`filelist`)
   - `…/blueprints/tabs/*`
 - `extends` (see kirby://glossary/extends)
 - Panel field types + options: see `kirby://fields` and `kirby://field/{type}`
-- Panel section types + options: see `kirby://sections` and `kirby://section/{type}`
+- Legacy section catalog: `kirby://sections`; use the replacement field for new blueprints.
 
 ## Example
 
@@ -30,25 +30,24 @@ title: Article
 
 tabs:
   content:
-    sections:
-      fields:
-        type: fields
-        fields:
-          headline:
-            type: text
-          text:
-            type: textarea
+    fields:
+      headline:
+        type: text
+      text:
+        type: textarea
 ```
+
+Define shared fields at the root and reference them with YAML lists (`fields: [headline, text]`) in tabs/columns. A mapping such as `headline: true` is not a root-field reference. Names must be unique case-insensitively across the blueprint. In PHP, use `Kirby\Blueprint\Blueprint`; tabs are objects, not arrays.
 
 ## MCP: Inspect/verify
 
 - Always start with `kirby_roots` to locate the effective `blueprints` root.
 - Use `kirby_blueprints_index` to list available blueprint ids.
-- Read the resolved blueprint (incl. plugin overrides and `extends`) via:
+- Read raw blueprint data (including plugin sources and `extends`, but not model field normalization) via:
   - `kirby_blueprint_read`, or
   - resource `kirby://blueprint/{encodedId}` (URL-encode the id, e.g. `pages%2Farticle`)
-- When unsure about a Panel field/section option, use:
-  - `kirby://field/{type}` and `kirby://section/{type}`
+- Use model `blueprint()->fields()` for normalized fields; these include non-value display fields. Check schema `hasValue` before planning writes.
+- When unsure about a Panel field option, use `kirby://field/{type}`.
 
 ## Related terms
 

@@ -28,6 +28,8 @@ Read existing values, merge unique items, then write back as array or comma-sepa
 
 Ordering is preserved by the stored list; keep a stable order in updates.
 
+Kirby 6 preserves invalid option values; decide how to map removed keys before writing. Query/API source settings now live inside `options`, not separate legacy settings. See `kirby://glossary/query-language`.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

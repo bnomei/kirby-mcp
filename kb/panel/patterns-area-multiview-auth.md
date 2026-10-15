@@ -46,11 +46,14 @@ Create a Panel area that switches between multiple views (config, list, detail) 
 - `GET /api/my-app/search?q=...` returns items with Panel links.
 - `GET /api/my-app/item/:id` powers detail views.
 
-## Panel JS (K5)
+## Panel JS (Kirby 6 / Vue 3)
+
+Bundle kirbyuse with kirbyup 4, leaving Vue external. These are external-service authorization routes, not replacements for Kirby's login/challenge system. Validate OAuth state, authorize the acting user and protect stored tokens on the backend.
 
 ```js
 // site/plugins/example-app/src/index.js
-import { onMounted, ref, useApi, usePanel } from 'kirbyuse';
+import { onMounted, ref } from 'vue';
+import { useApi, usePanel } from 'kirbyuse';
 
 const ConfigView = {
   setup() {
@@ -141,8 +144,6 @@ panel.plugin('example/app', {
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 components and older Panel routing.
-- K6: Vue 3 components; use kirbyup for new builds.
-- K5 -> K6: re-test auth routes, CSRF, and view routing.
+Rebuild Kirby 5 legacy Vue 2 assets and re-test auth routes, CSRF and view routing. If integrating Kirby login too, use the new auth status/challenge flow; pending 2FA is not a completed login. See `kirby://kb/panel/compat-k5-k6-migration`.

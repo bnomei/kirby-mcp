@@ -38,7 +38,7 @@ panel.plugin('vendor/audio-block', {
     audio: {
       template: `
         <k-block-figure
-          :is-empty="!source.url"
+          :is-empty="!content.url"
           empty-icon="audio-file"
           empty-text="No file selected yet"
           @open="open"
@@ -48,6 +48,7 @@ panel.plugin('vendor/audio-block', {
       props: {
         content: Object,
       },
+      emits: ['open', 'update'],
       methods: {
         open() {
           this.$emit('open');
@@ -88,8 +89,6 @@ panel.plugin('vendor/audio-block', {
 - Cookbook: https://getkirby.com/docs/cookbook/plugins/to-bundle-or-not-to-bundle
 - kirbyup: kirby://kb/panel/tooling-kirbyup
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: `kirbyup` 3.x supports HMR; bundling is recommended for SFCs.
-- K6: `kirbyup` 4.x uses Vue 3 and watch-mode builds; simple plugins can remain unbundled.
-- K5 -> K6: if migrating, update Vue 2 components to Vue 3 and revisit whether bundling is required.
+Use Vue 3 and kirbyup 4 (`dev` supports HMR). Rebuild Kirby 5 legacy Vue 2 bundles. Simple ESM plugins can remain unbundled; import Vue from `vue`. If using kirbyuse, bundle it: beta.1 provides no plugin import-map hook. See `kirby://kb/panel/tooling-kirbyuse`.

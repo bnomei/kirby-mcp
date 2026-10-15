@@ -20,22 +20,23 @@ Add a new field type for the Panel (blueprints) with custom UI and optional back
 ## Implementation steps
 
 1. Register the field type in PHP:
-   - `Kirby::plugin(..., ['fields' => ['doi' => []]])`
-   - add `props`/`computed`/`api` definitions here if the field needs backend logic
+   - `Kirby::plugin(..., ['fields' => ['doi' => Kirby\Form\Field\TextField::class]])`
+   - subclass a core field or `InputField` for custom storage; use typed `#[Prop]` options, getters and `api()` methods (see `kirby://kb/panel/reference-fields`)
 2. Register the Vue field component in `src/index.js`:
    - `panel.plugin(..., { fields: { doi: DoiField } })`
 3. Implement the Vue field component and align with Kirby UI components.
+   - Kirby 6 uses Vue 3 but retains `value`/`input`: bind explicitly and declare `emits: ['input']`
    - add optional `index.css` if needed
 4. Use the field in a blueprint and test in the Panel.
 
-## Examples (from the cookbook recipe; abridged)
+## Examples (Kirby 6)
 
 ### PHP field registration
 
 ```php
 Kirby::plugin('pluginAuthor/doi', [
   'fields' => [
-    'doi' => [],
+    'doi' => Kirby\Form\Field\TextField::class,
   ],
 ]);
 ```
@@ -54,6 +55,7 @@ panel.plugin('pluginAuthor/doi', {
 
 ## Verification
 
+- Kirby 5 legacy array field registrations are removed; port the PHP class and rebuild with kirbyup 4, not just Vue syntax changes.
 - Add the field to a blueprint and confirm it renders in the Panel.
 - Save content and confirm stored value matches expectations.
 

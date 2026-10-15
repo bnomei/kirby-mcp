@@ -29,7 +29,7 @@ Replace field values by key. For merges/append, read existing values, merge in m
 ## Edge cases
 
 - The site has no UUID; use the singleton `$site` (or the `kirby://site/content` resource).
-- Many site blueprints only define sections, not fields. Only defined fields can be validated.
+- Normalized fields include display-only lists and info/stats. Write only fields with `hasValue: true`; `false` is display-only and `null` is unresolved. Raw blueprint data is not the normalized model schema.
 - Complex fields (blocks/layout/structure) require their own update schemas.
 
 ## MCP: Inspect/verify

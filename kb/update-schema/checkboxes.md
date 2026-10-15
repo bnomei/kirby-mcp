@@ -28,6 +28,8 @@ Read existing values, merge unique items, then write back as array or comma-sepa
 
 The `separator` option changes how lists are stored when serialized as strings.
 
+Kirby 6 preserves invalid option values; do not expect a save to clean removed keys. Put query/API source settings inside `options`, replacing Kirby 5 legacy separate settings. See `kirby://glossary/query-language` and validate before updating.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

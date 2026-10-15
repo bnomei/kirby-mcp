@@ -52,7 +52,9 @@ Most dialogs use built-in components (`k-form-dialog`, `k-text-dialog`, etc.). I
 - Use `Panel::go()` to redirect after submit if needed.
 - The dialog key defines the `{pattern}`; omit the `panel/` prefix.
 
-Since Kirby 5.1, a definition can use `controller` instead of inline callbacks: supply a class name or a closure returning an object with `load()`/`submit()` methods. Kirby uses a static `::for()` factory when the controller provides one. This also applies to Panel drawers, registered under an area's `drawers` key; drawers use components such as `k-form-drawer` and `k-text-drawer`.
+Kirby 6 retains `load`/`submit` closures and supports a controller class under `action`. Extend `Kirby\Panel\Controller\DialogController` (or `DrawerController`), use `factory()` to resolve route arguments and implement `load()`/`submit()`. Kirby 5 legacy `controller`/`::for()` examples must be ported to this contract. Drawers live under the area's `drawers` key. Return UI objects such as `Kirby\Panel\Ui\Dialog\FormDialog` or existing component/props arrays.
+
+Plain text props are escaped in Kirby 6. For markup, use trusted `HtmlString` values with escaped substitutions, not raw user HTML.
 
 ## Common UI components
 
@@ -65,7 +67,7 @@ Since Kirby 5.1, a definition can use `controller` instead of inline callbacks: 
 
 - Returning `null` or `false` from `submit` results in a 404.
 - Dialog patterns are scoped to areas; keep them unique.
-- When extending core dialogs, reuse the base handlers with `$kirby->core()->area('site')['dialogs']['page.changeStatus']['load']($id)` (and `submit`).
+- Core routes now contain controller classes, not callable array handlers. Reuse e.g. `Kirby\Panel\Controller\Dialog\PageChangeStatusDialogController::factory($id)->load()`; `load`/`submit` overrides take precedence over the core action.
 - Use dropdown `dialog` options or the Panel dialog helper to open dialogs.
 
 ## MCP: Inspect/verify
@@ -82,8 +84,6 @@ Since Kirby 5.1, a definition can use `controller` instead of inline callbacks: 
 - https://getkirby.com/docs/reference/plugins/ui
 - https://lab.getkirby.com/public/lab
 
-## Version notes (K5/K6)
+## Kirby 6 migration
 
-- K5: Vue 2 Panel runtime; dialog components are Vue 2 based.
-- K6: Vue 3 Panel runtime; dialog components are Vue 3 based.
-- K5 -> K6: update any custom dialog components to Vue 3 syntax.
+Rebuild legacy Vue 2 dialog components for Vue 3, declare emitted events and preserve Kirby inputs' `value`/`input` contract. See `kirby://kb/panel/compat-k5-k6-migration`.

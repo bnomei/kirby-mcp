@@ -1,8 +1,10 @@
-# Panel pattern - field options with SVG previews
+# SVG option field: Kirby 5 legacy sketch and Kirby 6 port
 
 ## Goal
 
 Build a custom field that renders selectable options with SVG previews (icons or symbols) while keeping option data computed on the server.
+
+Kirby 6: extend a concrete PHP option-field class; replace legacy props/computed arrays with typed properties and getters. Put query/API option sources inside `options`. Invalid option values are preserved; handle removed icons explicitly instead of relying on a save to discard them.
 
 ## Inputs to ask for
 
@@ -41,7 +43,9 @@ Build a custom field that renders selectable options with SVG previews (icons or
 - Icons loaded from an SVG sprite and referenced via `<use>` with a generated URL.
 - Options filtered by include/exclude lists to reduce the dropdown size.
 
-## Panel JS (K5)
+## Kirby 5 legacy frontend sketch (migration reference)
+
+For Kirby 6, declare `emits: ['input']`, rebuild for Vue 3 and replace `v-html` with `v-safe-html`. Pass trusted `HtmlString` values from PHP only after sanitizing SVG (or use controlled sprite URLs). `$h()` marks trust without sanitizing: do not apply it to raw SVG. Recheck dropdown/tag APIs against the installed tag; the old sketch below is not a verified Kirby 6 component.
 
 ```js
 // site/plugins/example-icon-field/src/index.js
@@ -122,8 +126,6 @@ panel.plugin('example/icon-field', {
 - https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Migration acceptance
 
-- K5: Vue 2 field component extension patterns.
-- K6: Vue 3 field components; verify custom input extensions still render.
-- K5 -> K6: rebuild the field bundle for the Vue 3 runtime.
+Test selection/removal, invalid stored options, translated labels and hostile SVG fixtures. See `kirby://kb/panel/compat-k5-k6-migration` for trusted HTML and `kirby://kb/panel/reference-fields` for PHP classes.

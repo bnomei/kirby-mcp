@@ -33,7 +33,13 @@ permissions:
   users: false
 ```
 
-## Current Kirby 5 behavior
+## Kirby 6 guards and role permissions
+
+Use `$model->guards()->isAvailable('update')` for model action availability and `ensureExecutable()` for execution checks. Kirby 5 legacy `$model->permissions()->can()` and model Rules classes are deprecated. Role permissions and `$role->permissions()` are a different API; keep role configuration and blueprint options. Hiding a control never authorizes a backend action.
+
+## Kirby 5 legacy maintenance context
+
+The following history helps audit an existing Kirby 5 site before migration. On Kirby 6 keep role rules, use guards for model checks, and use `pagepicker`/`filepicker`/`userpicker` for stored references; do not delete inaccessible references during migration.
 
 - Use a patched Kirby 5 release (5.6.1 at this maintenance pass). Earlier 5.x versions had permission-enforcement gaps; hiding a Panel control is not an authorization check.
 - `access.system` controls the system view; the old `access.settings` key has no effect.

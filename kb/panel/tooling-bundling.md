@@ -7,23 +7,18 @@
 
 ## Minimal setup
 
-Without a build step, keep assets in the plugin root and register them:
+Without a build step, keep `index.js` and optional `index.css` in the plugin root; Kirby loads them conventionally for the registered plugin:
 
 ```php
-Kirby::plugin('vendor/audio-block', [
-  'panel' => [
-    'js' => 'index.js',
-    'css' => 'index.css',
-  ],
-]);
+Kirby::plugin('vendor/audio-block', []);
 ```
 
-With a build step, use `kirbyup` and point the Panel assets to the build output.
+With a build step, use `kirbyup` and emit the production assets into the plugin root.
 
 ```json
 {
   "scripts": {
-    "dev": "kirbyup serve src/index.js",
+    "dev": "kirbyup dev src/index.js",
     "build": "kirbyup src/index.js"
   }
 }
@@ -31,20 +26,20 @@ With a build step, use `kirbyup` and point the Panel assets to the build output.
 
 ## Dev workflow
 
-- K5: `kirbyup serve src/index.js` for HMR.
-- K6: `kirbyup serve src/index.js` when HMR works, otherwise `kirbyup src/index.js --watch`.
+- Kirby 6: kirbyup 4 / Node.js 24+, `kirbyup dev src/index.js` for HMR (the `next` package line at beta.1).
+- Kirby 5 legacy `serve` and Vue 2 bundles must be replaced with this Vue 3 build.
 - No bundler: edit `index.js`/`index.css` and reload the Panel.
 
 ## Build output
 
 - `kirbyup` produces `index.js` and `index.css` in the configured output directory.
-- Dev server builds write `index.dev.mjs` to point the Panel at the dev server.
-- Ensure `panel` asset paths match the build output location.
+- Dev server builds write `index.dev.js`; ignore it and exclude it from releases.
+- Ensure production files are in the plugin root, not only in `src/`.
 
 ## Compatibility notes
 
 - Use `kirbyup` as the default bundler for Panel plugins.
-- `kirbyuse` 2.x (K6) requires an import map entry before any imports.
+- Bundle Kirby-6-compatible kirbyuse into your plugin and leave Vue external. Tagged beta.1 only maps `vue`; see `kirby://kb/panel/tooling-kirbyuse` before adding custom imports.
 - If you only ship plain JS, keep your component templates small and avoid heavy logic.
 - Converting SFCs to plain JS: move `<script>` logic into the component object, `<template>` into a `template` string, and `<style>` into `index.css`.
 
@@ -62,8 +57,6 @@ With a build step, use `kirbyup` and point the Panel assets to the build output.
 - https://github.com/johannschopplich/kirbyup
 - https://github.com/johannschopplich/kirbyuse
 
-## Version notes (K5/K6)
+## Kirby 6 checks
 
-- K5: `kirbyup` 3.x supports HMR and Vue 2 Panel runtime.
-- K6: `kirbyup` 4.x targets Vue 3; use watch mode if HMR is unavailable.
-- K5 -> K6: update build scripts and Panel asset paths if outputs changed.
+No-build components still need Vue 3-compatible code. Import from `vue` rather than a global `Vue`. Preserve Kirby's `value`/`input` interface and declare emitted events. Verify production loading with no development entry present. Source: https://getkirby.com/releases/6/migration/plugin-developers/vue-3.

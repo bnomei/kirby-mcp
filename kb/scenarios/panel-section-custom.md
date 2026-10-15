@@ -1,146 +1,63 @@
-# Scenario: Custom Panel section
+# Scenario: Custom display field (replaces Kirby 5 Panel sections)
 
-## Goal
+Kirby 5 legacy `sections` plugins are unsupported in Kirby 6. For a list of links, use a `DisplayField` class and a Vue 3 field component. This preserves the old article path for migration discovery.
 
-Create a custom Panel section that loads props from PHP and renders a Vue component.
-
-## Inputs to ask for
-
-- Plugin id (`vendor/name`)
-- Section type name (slug) and label
-- Data fields to expose to the section (props)
-- Blueprint(s) where the section is used
-
-## Internal tools/resources to use
-
-- Resolve project paths: `kirby://roots`
-- Confirm plugin is loaded: `kirby_plugins_index`
-- Inspect blueprints: `kirby_blueprints_index` + `kirby_blueprint_read`
-
-## Implementation steps
-
-1. Register the section in `index.php` and move the props definition into a separate file.
-2. Register the section component in `src/index.js`.
-3. Implement the Vue component with `data()` and `created()` to call `this.load()`.
-4. Use the section in a blueprint.
-5. Build or serve assets with `kirbyup`.
-
-## Examples
-
-### Plugin registration (PHP)
-
-`site/plugins/linksection/index.php`
+## PHP class and registration
 
 ```php
 <?php
 
-Kirby::plugin('vendor/linksection', [
-  'sections' => [
-    'links' => require __DIR__ . '/sections/links.php',
-  ],
+use Kirby\Form\Field\DisplayField;
+use Kirby\Reflection\Attributes\Prop;
+
+class LinksField extends DisplayField
+{
+    #[Prop]
+    protected array $links = [];
+}
+
+Kirby::plugin('example/links', [
+    'fields' => ['links' => LinksField::class],
 ]);
 ```
 
-`site/plugins/linksection/sections/links.php`
+For production plugins, namespace and autoload the class. Pass only authorized links with validated URLs. Cheap `links` data arrives with the field's props; no legacy `this.load()` request is needed.
 
-```php
-<?php
-
-return [
-  'props' => [
-    'label' => function ($label = 'Links') {
-      return $label;
-    },
-    'layout' => function ($layout = 'list') {
-      return $layout;
-    },
-    'links' => function ($links = []) {
-      return $links;
-    },
-  ],
-];
-```
-
-### Vue entry point
-
-`site/plugins/linksection/src/index.js`
+## Vue registration
 
 ```js
-import Links from './components/sections/Links.vue';
-
-panel.plugin('vendor/linksection', {
-  sections: {
-    links: Links,
+panel.plugin('example/links', {
+  fields: {
+    links: {
+      inheritAttrs: false,
+      props: { label: String, links: Array },
+      template: `<k-field :label="label"><k-collection :items="links" /></k-field>`,
+    },
   },
 });
 ```
 
-### Section component
-
-`site/plugins/linksection/src/components/sections/Links.vue`
-
-```vue
-<template>
-  <section class="k-links-section">
-    <header class="k-section-header">
-      <h2 class="k-headline">{{ label }}</h2>
-    </header>
-    <k-collection :items="links" :layout="layout" />
-  </section>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      label: '',
-      layout: 'list',
-      links: [],
-    };
-  },
-  async created() {
-    const response = await this.load();
-    this.label = response.label;
-    this.layout = response.layout;
-    this.links = response.links;
-  },
-};
-</script>
-```
-
-### Blueprint usage
-
-`site/blueprints/site.yml`
+## Blueprint
 
 ```yaml
-sections:
-  links:
+fields:
+  usefulLinks:
     type: links
     label: Getting started
+    links:
+      - text: Documentation
+        link: https://getkirby.com/releases/6
+        icon: book
 ```
+
+Use a unique name across all tabs/columns. `usefulLinks` is a display entry, not a content key to update. A list of selected page references needs `pagepicker` instead.
 
 ## Verification
 
-- Build or serve assets with `kirbyup`.
-- Open the Panel and confirm the section renders.
-- Update blueprint props and verify the UI updates.
-
-## Glossary quick refs
-
-- kirby://glossary/panel
-- kirby://glossary/blueprint
-- kirby://glossary/section
-- kirby://glossary/kirbyuse
+Inspect roots, plugin inventory and raw blueprint through MCP; open the Panel and check rendered links, plain-text escaping and restricted roles. Confirm saving does not persist a display value. For expensive or refreshed data use `api()` and `endpoints.field` as described in `kirby://kb/panel/patterns-section-load`.
 
 ## Links
 
-- Cookbook: https://getkirby.com/docs/cookbook/panel/first-panel-section
-- Panel sections: https://getkirby.com/docs/reference/plugins/extensions/sections
-- Panel tooling: kirby://kb/panel/tooling-kirbyup
-- Panel composables: kirby://kb/panel/tooling-kirbyuse
-
-## Version notes (K5/K6)
-
-- K5: Vue 2 Panel runtime; `kirbyup` 3.x targets Vue 2.7.
-- K6: Vue 3 Panel runtime; `kirbyup` 4.x targets Vue 3, and `kirbyuse` 2.x requires an import map entry.
-- K5 -> K6: update Vue component syntax if needed and switch bundler versions.
+- `kirby://kb/panel/reference-sections`
+- `kirby://kb/panel/tooling-kirbyup`
+- https://getkirby.com/releases/6/migration/plugin-developers/sections

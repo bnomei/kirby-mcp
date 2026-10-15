@@ -2,19 +2,19 @@
 
 ## Meaning
 
-Kirby’s blueprint query language lets you **query pages/files/users** and format values using a dot-notation syntax that mirrors Kirby’s PHP API. It is used heavily in Panel blueprints (field options, pages/files sections, informational templates, etc.).
+Kirby's blueprint query language queries pages/files/users and formats values with dot notation. Kirby 6 always uses the new runner for field options, list fields and query templates.
 
 ## In prompts (what it usually implies)
 
 - “Set options from pages” means: use a query to fetch pages and map them to select options.
-- “Show extra info in a pages section” means: use query string templates for list items.
-- “Query is slow” may relate to the (optional) `query.runner` system option (Kirby 5.1+).
+- “Show extra info in a pages section” is legacy terminology: use query templates in a Kirby 6 `pagelist` field.
+- “Query is slow” means inspect the collection scope and work done by custom methods, not switch runners.
 
 ## Variants / aliases
 
-- Used in blueprint field option sources (`options: query`) and the `query` option in some field/section types
+- Used inside `options` for option fields and in candidate `query` settings for pickers
 - Can use page models and custom methods (same as PHP API surface)
-- Related system option: `query.runner`
+- Kirby 5 legacy `query.runner` configuration must be removed for Kirby 6.
 
 ## Example
 
@@ -22,24 +22,18 @@ Kirby’s blueprint query language lets you **query pages/files/users** and form
 fields:
   related:
     type: select
-    options: query
-    query:
-      fetch: site.index
+    options:
+      type: query
+      query: site.index
       text: '{{ page.title }}'
       value: '{{ page.id }}'
 ```
 
 ## Runner and option-source behavior
 
-Kirby 5 keeps the legacy query runner as its default. Since 5.1, the opt-in AST runner supports logical/comparison/math operators, closure arguments, and subscript access. It is documented as beta; check the configured runner before using its extended syntax:
+Kirby 6 supports logical/comparison/math operators, closure arguments and subscript access without an opt-in. A dash is subtraction: access dashed fields with `page.content.get("my-field")`, not `page.my-field`. Unknown field methods throw. Test both values and errors with the installed beta.
 
-```php
-return [
-  'query.runner' => \Kirby\Query\Runners\DefaultRunner::class,
-];
-```
-
-Since 5.3, an options query that returns an associative array uses its keys as option values by default. Explicit `text`/`value` mappings remain useful when querying model collections.
+Kirby 5 legacy `options: query` plus a separate `query.fetch` block becomes the nested `options.type`/`options.query` example above. API sources likewise move under `options`. Associative option queries use keys as values by default; explicit `text`/`value` mappings remain useful for model collections. Invalid option values are preserved in Kirby 6 rather than silently deleted on save.
 
 For API-backed field options, interpolate only trusted values into the source URL. User-controlled URLs can cause server-side request forgery (SSRF), including access to internal services. Keep Kirby patched for fixes to dynamic option rendering; URL trust is still the application's responsibility.
 
@@ -62,6 +56,6 @@ For API-backed field options, interpolate only trusted values into the source UR
 ## Links
 
 - https://getkirby.com/docs/guide/blueprints/query-language
-- https://getkirby.com/docs/reference/system/options/query
+- https://getkirby.com/releases/6/migration/site-developers#queries
 - https://getkirby.com/docs/reference/panel/fields/select#options
 - https://github.com/getkirby/kirby/releases/tag/5.3.0

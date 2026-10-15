@@ -1,4 +1,6 @@
-# Kirby Panel extensions KB — plan
+# Historical Kirby 5 legacy authoring plan: Panel KB
+
+This is a historical plan, not current implementation guidance. For Kirby 6 use `kirby://kb/panel/INDEX` and `kirby://kb/panel/compat-k5-k6-migration`: custom sections become `DisplayField` classes, fields become PHP classes, and Vue 2/kirbyup 3 become Vue 3/kirbyup 4. The old parallel-version format below is superseded by canonical Kirby 6 articles with explicit legacy migration notes.
 
 We are creating a **new** knowledge base collection under `/kb/panel` focused on Panel extension development
 (PHP + Vue). These docs are **tool-first** for coding agents using Kirby MCP in this repo, with a

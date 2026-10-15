@@ -1,8 +1,10 @@
-# Panel pattern - field with API-backed embed preview
+# API-backed embed field: Kirby 5 legacy sketch and Kirby 6 port
 
 ## Goal
 
 Provide a URL field that fetches embed metadata via a plugin API endpoint and renders a live preview in the Panel.
+
+Kirby 6: implement the PHP side as an `InputField`/`ObjectField` subclass with explicit structured storage, not a legacy array field or plain `UrlField`. Use `api()` and `endpoints.field` for field-local routes. See `kirby://kb/panel/reference-fields`. Treat provider URLs as SSRF inputs: allowlist schemes/hosts and redirects; never expose server credentials. Provider HTML is untrusted: sanitize or isolate it rather than wrapping raw data in `HtmlString`/`$h()`.
 
 ## Inputs to ask for
 
@@ -31,7 +33,7 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 ## Implementation steps
 
 1. Create a plugin API route (via the `api` extension) that accepts a URL and returns parsed embed metadata.
-   - If the endpoint should be scoped to the field, define a field `api` endpoint instead (auto-prefixed with `/fields/<fieldName>`).
+   - For a field-local endpoint, define `api()` and use the exported `endpoints.field` prefix; never hardcode a page-only route.
 2. Store a structured field value (input URL plus media payload) to avoid re-fetching on reload.
 3. In the field component, call `useApi().get()` when the URL changes and update the stored value.
 4. Render a preview and load provider scripts only when needed.
@@ -43,7 +45,9 @@ Provide a URL field that fetches embed metadata via a plugin API endpoint and re
 - Field value shape: `{ input: "...", media: { title, code, providerName } }`.
 - Preview shows a status badge for synced vs failed.
 
-## Panel JS (K5)
+## Kirby 5 legacy frontend sketch (migration reference)
+
+For Kirby 6, replace the URL-field inheritance with a component declaring an object `value`, `emits: ['input']` and explicit `:value`/`@input` bindings. Import Vue helpers from `vue`, bundle Kirby-6-compatible kirbyuse, restore metadata from the initial value and ignore stale responses when URLs change rapidly. Test consent and script cleanup separately; the legacy sketch below is not a ready-to-run Kirby 6 component.
 
 ```js
 // site/plugins/example-embed-field/src/components/EmbedField.vue
@@ -113,8 +117,6 @@ panel.plugin('example/embed-field', {
 - https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/extensions/api
 
-## Version notes (K5/K6)
+## Migration acceptance
 
-- K5: Vue 2 field component with `useApi()` from kirbyuse.
-- K6: Vue 3 field component; confirm the API endpoint still resolves.
-- K5 -> K6: re-test preview rendering and provider script loading.
+Verify PHP structured-value round-trips, initial preview hydration, rejected provider URLs, stale-request handling and safe HTML rendering. Rebuild with kirbyup 4 / Vue 3; a successful JavaScript build alone does not migrate the PHP field.

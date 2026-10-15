@@ -5,6 +5,16 @@ description: Secures Kirby sites with access restriction, user roles, permission
 
 # Kirby Security and Auth
 
+Target Kirby 6 / MCP 6.x; MCP 1.x is the legacy Kirby 5 line. Read `kirby://kb/scenarios/83-migrate-kirby-5-to-6` for the beta.1 auth/session changes.
+
+## Kirby 6 authorization and login
+
+- Model guards (`isAvailable`, `ensureExecutable`) replace deprecated model permissions checks. Role permissions and blueprint options remain separate: do not mechanically replace `$role->permissions()`.
+- Use `authenticate()` and handle `Kirby\Auth\Status` / `State::Pending`; grant access only after successful challenge completion. `login2fa()` is legacy; password-only `login()` cannot complete 2FA.
+- Users may opt into 2FA even if not globally required. Basic Auth cannot complete it; use appropriately scoped API accounts instead of weakening editor accounts.
+- Old cookies are invalidated on upgrade. Test fresh login, logout, expiry and recovery. Passkeys are host-bound and require HTTPS outside localhost.
+- Custom challenges extend `Kirby\Auth\Challenge`; hash secret pending data yourself. Never expose credentials in UI props, logs or migration reports.
+
 ## KB entry points
 
 - `kirby://kb/scenarios/62-access-restriction-login`

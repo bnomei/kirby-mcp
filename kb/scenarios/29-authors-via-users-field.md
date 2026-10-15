@@ -1,8 +1,8 @@
-# Scenario: Add authors via users + `users` field
+# Scenario: Add authors via users + `userpicker` field
 
 ## Goal
 
-Model “authors” using Kirby users (with a dedicated role/blueprint) and assign authors to content pages (e.g. articles) via the `users` field.
+Model authors using Kirby users (with a dedicated role/blueprint) and assign authors to content pages via `userpicker`. The Kirby 5 legacy `users` picker name is deprecated; keep existing content keys when changing its type.
 
 ## Inputs to ask for
 
@@ -24,7 +24,7 @@ Model “authors” using Kirby users (with a dedicated role/blueprint) and assi
 
 1. Create a user blueprint for authors:
    - `site/blueprints/users/author.yml`
-2. Add a `users` field to the target page blueprint (e.g. `pages/article.yml`).
+2. Add a `userpicker` field to the target page blueprint (e.g. `pages/article.yml`).
    - Optionally restrict to `author` role with `query`
    - If you must store IDs instead of UUIDs, set `store: id`
 3. In the template:
@@ -55,7 +55,7 @@ fields:
 
 ```yaml
 author:
-  type: users
+  type: userpicker
   multiple: false
   query: kirby.users.filterBy('role', 'author')
 ```
@@ -98,6 +98,6 @@ author:
 ## Links
 
 - Cookbook: Authors: https://getkirby.com/docs/cookbook/content-structure/authors
-- Reference: Users field: https://getkirby.com/docs/reference/panel/fields/users
+- Kirby 6 picker names: https://getkirby.com/releases/6/blueprints
 - Guide: Users: https://getkirby.com/docs/guide/users
 - Guide: UUIDs: https://getkirby.com/docs/guide/uuids

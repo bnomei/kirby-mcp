@@ -22,11 +22,13 @@ color: '#ff0000'
 
 ## Merge strategy
 
-Replace the full string. For append/prepend, read the current value and concatenate before updating.
+Replace the full color string with a validated value; concatenating colors does not produce a valid color.
 
 ## Edge cases
 
 Panel may output hex or rgb() depending on options.
+
+Kirby 6 color options use `value: text` (e.g. `"#ff0000": Red`), not the Kirby 5 legacy reverse notation. Query/API settings move inside `options`. Invalid values are preserved; validate the color rather than concatenating or expecting a save to remove it. See `kirby://glossary/query-language`.
 
 ## MCP: Inspect/verify
 

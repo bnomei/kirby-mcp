@@ -1,8 +1,10 @@
-# Panel pattern - field with drawer editing and live preview
+# Barcode drawer field: Kirby 5 legacy sketch and Kirby 6 port
 
 ## Goal
 
 Build a custom field that opens a drawer for editing, validates input, and renders a live preview (for example a barcode).
+
+Kirby 6: use a PHP field class (e.g. a `TextField` subclass) and server-side validation. For server-backed drawers implement `drawers()` and open a path below `endpoints.field`; see `kirby://kb/panel/reference-fields` and `kirby://kb/panel/reference-dialogs`.
 
 ## Inputs to ask for
 
@@ -41,7 +43,9 @@ Build a custom field that opens a drawer for editing, validates input, and rende
 - Preview uses SVG and updates after each successful submit.
 - Invalid input triggers a negative Panel notification.
 
-## Panel JS (K5)
+## Kirby 5 legacy frontend sketch (migration reference)
+
+For Kirby 6, use Vue 3 imports, declare `emits: ['input', 'change']`, replace the old `slot="options"` syntax with `<template #options>`, and render only after mount/`nextTick`. Clean up preview-library state on unmount. Verify the drawer API in the installed tag rather than assuming this legacy sketch is compatible.
 
 ```js
 // site/plugins/example-barcode-field/src/components/BarcodeField.vue
@@ -137,8 +141,6 @@ panel.plugin('example/barcode-field', {
 - https://getkirby.com/docs/reference/plugins/extensions/fields
 - https://getkirby.com/docs/reference/plugins/ui
 
-## Version notes (K5/K6)
+## Migration acceptance
 
-- K5: Vue 2 field components and drawer API.
-- K6: Vue 3 field components; confirm drawer APIs are unchanged.
-- K5 -> K6: rebuild the field bundle and re-test preview rendering.
+Test valid/invalid submit, cancel without changing content, preview updates after mount, and save/reload. Rebuild with kirbyup 4; never treat client validation as the storage contract.

@@ -1,5 +1,7 @@
 # kirbyup (Panel bundler)
 
+Kirby 6 beta.1 baseline: kirbyup 4 is published under `next` and requires Node.js 24+. Verify and lock the installed prerelease. Kirby 5 legacy kirbyup 3/`serve` builds must be replaced with a Vue 3 build, not reused.
+
 ## When to use
 
 - Build Panel plugin assets (JS/CSS) with a zero-config Vite-based bundler.
@@ -11,7 +13,7 @@
 ```json
 {
   "scripts": {
-    "dev": "kirbyup serve src/index.js",
+    "dev": "kirbyup dev src/index.js",
     "build": "kirbyup src/index.js"
   }
 }
@@ -34,15 +36,14 @@ export default defineConfig({
 
 ## Dev workflow
 
-- `kirbyup serve src/index.js` starts the dev server and generates `index.dev.mjs` that points the Panel at the dev server.
+- `npx kirbyup@next dev src/index.js` starts the HMR dev server and generates `index.dev.js` that points the Panel at the dev server.
 - `kirbyup src/index.js --watch` builds dev bundles on file changes (useful for older Kirby versions or when HMR is unavailable).
-- `serve` watches `./**/*.php` by default; `--watch` overrides that list (add the PHP glob back if needed); `--no-watch` disables PHP watching.
-- `--watch` (build) watches the entry file folder if no path is provided.
+- Confirm watch/config flags against the installed kirbyup 4 CLI; do not assume kirbyup 3 flags are unchanged.
 
 ## Build output
 
 - Production build writes `index.js` and `index.css` to the output directory.
-- Dev server creates `index.dev.mjs` as an entry that loads assets from the dev server.
+- Dev server creates `index.dev.js`. Ignore it in Git and never ship it; its presence also enables Vue's development build in the Panel.
 
 ## Compatibility notes
 
@@ -64,8 +65,6 @@ export default defineConfig({
 - https://github.com/johannschopplich/kirbyup/tree/feat/vue-3
 - https://kirbyup.getkirby.com
 
-## Version notes (K5/K6)
+## Kirby 6 verification
 
-- K5: `kirbyup` 3.x (main branch) uses Vue 2.7 with `@vitejs/plugin-vue2` and supports HMR via `kirbyup serve`.
-- K6: `kirbyup` 4.x (feat/vue-3) targets Vue 3 with `@vitejs/plugin-vue`; use `serve` when HMR works or `--watch` as fallback.
-- K5 -> K6: upgrade to `kirbyup` 4.x, switch to Vue 3-based Panel tooling, and re-check dev workflow.
+Build with `npx kirbyup@next src/index.js`; import Vue from `vue` and do not bundle a second runtime. Test both production and HMR output. See https://getkirby.com/releases/6/migration/plugin-developers/vue-3 for the beta tooling baseline.

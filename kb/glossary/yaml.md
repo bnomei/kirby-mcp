@@ -4,6 +4,8 @@
 
 YAML is the primary format for Kirby **blueprints** and is also used for some structured field values (though many fields can store JSON as well). Kirby’s YAML parsing/encoding behavior can be configured via system options.
 
+Kirby 6 defaults to Symfony YAML. Kirby 5 legacy Spyc accepted scalars that now fail or change type: use `true`/`false` instead of `yes`/`no`/`on`/`off`; quote dates (otherwise timestamps), leading reserved characters and whole template strings. Use single quotes for regex backslashes. Remove duplicate keys and tab indentation. Audit serialized structure/object/entries/picker content too, not just `.yml` files. A temporary `yaml.handler: spyc` migration fallback exists in beta.1; prefer fixing data and see `kirby://kb/scenarios/83-migrate-kirby-5-to-6`.
+
 ## In prompts (what it usually implies)
 
 - “Edit the blueprint YAML” means: modify `site/blueprints/.../*.yml` (but confirm the real blueprints root first).
