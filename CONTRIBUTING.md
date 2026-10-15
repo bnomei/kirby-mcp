@@ -16,7 +16,7 @@ Before the full suite, run `composer cms:starterkit` to install the pinned Kirby
 
 - Keep PRs focused and describe the why and the how.
 - Update docs/tests when behavior changes.
-- Add every new tool/resource to `Mcp\Permissions` and [the capability map](docs/permissions.md).
+- Add every new tool/resource to `Mcp\Permissions` and [the capability map](docs/remote.md#complete-capability-map).
   Verify remote discovery and direct-call enforcement without changing trusted local behavior.
 - Follow repo guidelines in `AGENTS.md`.
 

@@ -2,6 +2,9 @@
 
 # Keep the Composer dist lean (Packagist respects export-ignore)
 /.tmp export-ignore
+/.agents export-ignore
+/.amp export-ignore
+/docs export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.github export-ignore

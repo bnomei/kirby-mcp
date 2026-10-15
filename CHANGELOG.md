@@ -5,6 +5,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.0.1] - 2026-10-15
+
+- Reorganize the README around capabilities, local setup, and everyday usage, with grouped tool/resource lists and a dedicated introduction to the bundled knowledge base.
+- Consolidate detailed configuration, remote authentication/permissions, and global reference setup into focused guides; replace the migration ledger with current compatibility notes.
+- Add a cropped Panel activity screenshot and clarify default settings, client executable paths, and authentication configuration.
+- Exclude documentation, images, and orb development files from Composer distribution archives while retaining runtime assets, the knowledge base, and skills.
+
 ## [6.0.0] - 2026-10-15
 
 - Target Kirby 6 (verified CMS baseline 6.0.0-beta.1) and require PHP 8.3+. Kirby 5 projects should install MCP `^1.15`; Kirby 7+ is excluded. The stable MCP version does not certify the upstream CMS beta for production.
@@ -12,7 +19,7 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Reject unsupported project runtimes before dispatching project-local wrappers, including older MCP installations, while preserving reference access; use Kirby 6 Panel URLs, blueprint namespace, and UUID string resolution.
 - Distinguish value-bearing picker fields from display fields in content schemas. Generate update-schema links only for known value fields with bundled guides; preserve existing built-in section support via automatic conversion.
 - Migrate the bundled KB and all 15 skills to canonical Kirby 6 guidance, including picker storage, blueprint references, Vue 3 fields, authentication, live editor, core PHP/storage/HTTP contracts and an actionable Kirby 5 migration guide.
-- Fix portable fixture temporary-file creation and document TXT dashed-key normalization. Record upstream Starterkit asset casing and remaining browser/integration limitations in `docs/kirby-6-migration.md`.
+- Fix portable fixture temporary-file creation and document TXT dashed-key normalization. See [compatibility notes](docs/reference.md#compatibility-and-reference-limits) for upstream Starterkit asset casing and [remote integration limits](docs/remote.md#troubleshoot-http).
 
 ## [1.15.1] - 2026-10-15
 

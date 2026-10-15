@@ -26,7 +26,7 @@ page/file/site/user updates additionally apply Kirby's native mutation permissio
 This is not per-target isolation: an allowed capability can access every target supported by it.
 Enabled and permitted eval or generic CLI execution is trusted and can bypass other permissions.
 Revocation is checked per HTTP request, not continuously during an open stream. Local stdio and
-loopback shared-token access remain trusted. See [Remote MCP permissions](docs/permissions.md) before
+loopback shared-token access remain trusted. See [Remote MCP permissions](docs/remote.md#configure-role-permissions) before
 exposing the server.
 
 ## Reporting a Vulnerability
