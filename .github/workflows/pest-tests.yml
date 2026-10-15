@@ -6,14 +6,25 @@ on:
     paths:
       - '**.php'
       - 'composer.lock'
+      - 'composer.json'
+      - 'tests/fixture/**'
+      - '.agents/**'
+      - '.github/workflows/pest-tests.yml'
   pull_request:
     paths:
       - '**.php'
       - 'composer.lock'
+      - 'composer.json'
+      - 'tests/fixture/**'
+      - '.agents/**'
+      - '.github/workflows/pest-tests.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.3', '8.5']
 
     steps:
       - name: Checkout
@@ -22,7 +33,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.5
+          php-version: ${{ matrix.php }}
           tools: composer:v2
           coverage: xdebug
 
@@ -30,7 +41,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
 
       - name: Install
         run: composer install
@@ -39,4 +50,4 @@ jobs:
         run: composer cms:starterkit
 
       - name: Test code
-        run: vendor/bin/pest --ci
+        run: composer test -- --ci

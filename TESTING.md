@@ -1,5 +1,14 @@
 # Testing
 
+## Reproducible Kirby 6 baseline
+
+Run `composer install`, `composer cms:starterkit`, `composer test`, then `composer analyse`.
+The fixture script downloads the exact `6.0.0-beta.1` kit tag and checks its bundled runtime against
+`composer.lock` before replacing `tests/cms/`. `cms:plainkit` uses the same version checks but is not
+the full-suite fixture. Root dependencies resolve against PHP 8.3; CI runs Pest on PHP 8.3 and 8.5.
+Keep the development helper patch and prepend scripts: Laravel development dependencies still collide
+with Kirby's global `e()`/`dump()` helpers. Fixture config keeps the bundled Kirby loader authoritative.
+
 ## Panel activity browser checks in an orb
 
 Run the PHP suite before browser checks: some tests modify the generated `tests/cms/` fixture.
@@ -17,7 +26,7 @@ Do not regenerate the fixture while the browser is using it.
 
 ## Coverage (Herd + Xdebug)
 
-- Requires PHP >= 8.4 (CI uses 8.5).
+- Requires PHP >= 8.3 (CI uses 8.3 and 8.5).
 - Ensure the starterkit fixture exists: `composer cms:starterkit` (creates `tests/cms/`).
 - Recommended run (prints summary + file breakdown):
   - `herd coverage ./vendor/bin/pest --coverage`

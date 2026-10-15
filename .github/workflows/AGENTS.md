@@ -6,7 +6,7 @@ Keep GitHub Actions fast, reproducible, and aligned with local `composer` script
 
 ## System
 
-- `pest-tests.yml` runs Pest on PHP 8.5 (with Xdebug coverage).
+- `pest-tests.yml` runs Pest on PHP 8.3 and 8.5 (with Xdebug coverage), using the pinned Kirby 6 fixture and Composer's PHP 8.3 dependency platform.
 - `phpstan.yml` runs `composer analyse` (PHPStan on PHP 8.5 with the autoload helper fix) and uses `--error-format=github`.
 - `fix-php-code-style-issues.yml` runs Laravel Pint and auto-commits styling fixes.
 
@@ -14,6 +14,7 @@ Keep GitHub Actions fast, reproducible, and aligned with local `composer` script
 
 - If you change PHP support or `composer.json` scripts (`test`, `analyse`, `format`), update workflows to match.
 - Install steps in CI currently run `composer install`; keep this in sync with how deps are installed for CI.
+- Composer manifests, fixture/setup scripts, and workflow changes must trigger validation; use `composer test` to retain helper collision protection.
 - PHPStan must run `composer cms:patch-kirby-helpers` after installation, as fixture setup does for Pest. Its parallel workers load Composer before the custom autoload file; relying only on helper constants in that file can crash a clean install with duplicate `e()` declarations.
 
 ## Guardrails

@@ -4,7 +4,7 @@
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": "^8.2",
+    "php": "^8.3",
     "firebase/php-jwt": "^7.0",
     "getkirby/cli": "^1.0",
     "guzzlehttp/psr7": "^2.8",
@@ -14,7 +14,7 @@
     "symfony/yaml": "^7.0"
   },
   "require-dev": {
-    "getkirby/cms": "^5.2",
+    "getkirby/cms": "6.0.0-beta.1",
     "larastan/larastan": "^3.0",
     "laravel/pint": "^1.26",
     "pestphp/pest": "^4.0",
@@ -26,6 +26,9 @@
       "url": "https://github.com/modelcontextprotocol/php-sdk"
     }
   ],
+  "conflict": {
+    "getkirby/cms": "<6.0.0-beta.1 || >=7.0"
+  },
   "config": {
     "allow-plugins": {
       "getkirby/composer-installer": true,
@@ -33,7 +36,10 @@
       "php-http/discovery": false
     },
     "sort-packages": true,
-    "optimize-autoloader": true
+    "optimize-autoloader": true,
+    "platform": {
+      "php": "8.3.0"
+    }
   },
   "autoload": {
     "psr-4": {
@@ -75,18 +81,16 @@
     ],
     "cms:plainkit": [
       "@cms:patch-kirby-helpers",
-      "rm -rf tests/cms",
-      "vendor/bin/kirby install:kit plainkit tests/cms",
+      "bash tests/fixture/prepare-kit.sh plainkit",
       "@cms:install-fixtures"
     ],
     "cms:starterkit": [
       "@cms:patch-kirby-helpers",
-      "rm -rf tests/cms",
-      "vendor/bin/kirby install:kit starterkit tests/cms",
+      "bash tests/fixture/prepare-kit.sh starterkit",
       "@cms:install-fixtures"
     ],
     "dist": [
-       "rm -rf tests/cms"
+      "rm -rf tests/cms"
     ]
   },
   "minimum-stability": "stable",
