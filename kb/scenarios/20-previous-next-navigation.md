@@ -21,6 +21,7 @@ Add “previous/next” links between pages in a collection (common: blog articl
 
 1. Decide which navigation helpers to use (`prev/next` vs `prevListed/nextListed`, etc.).
 2. Add guard checks with `hasPrev*()`/`hasNext*()` before rendering links.
+3. For a custom sorted/filtered collection, pass that same collection explicitly to `hasPrev($collection)`, `prev($collection)`, `hasNext($collection)`, and `next($collection)`. These methods otherwise use siblings; sorting a collection does not change the page's sibling context.
 
 ## Examples
 
@@ -76,3 +77,4 @@ Add “previous/next” links between pages in a collection (common: blog articl
 ## Links
 
 - Cookbook: Previous / Next navigation: https://getkirby.com/docs/cookbook/navigation/previous-next
+- Reference: Collection context: https://getkirby.com/docs/reference/objects/cms/page/next

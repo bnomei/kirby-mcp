@@ -19,6 +19,10 @@ Important: `asset()` can access arbitrary filesystem paths, so you should never 
 - Asset object methods: `$asset->url()`, `$asset->exists()`, `$asset->read()` (depending on use)
 - Related helpers: `css()`, `js()` (generate asset URLs for CSS/JS)
 
+## Plugin assets
+
+Plugin assets have generated, cache-busting media URLs; obtain their URLs from the plugin's asset objects instead of hardcoding `/media/plugins/...` paths. Registering an explicit `assets` extension publishes only the configured assets and disables automatic publication of the entire plugin `assets` folder. Keep private files outside the public asset set.
+
 ## Example
 
 ```php
@@ -44,3 +48,5 @@ Important: `asset()` can access arbitrary filesystem paths, so you should never 
 
 - https://getkirby.com/docs/reference/templates/helpers/asset
 - https://getkirby.com/docs/reference/objects/filesystem/asset
+- https://getkirby.com/docs/guide/plugins/custom-plugins#plugin-assets
+- https://getkirby.com/docs/reference/plugins/extensions/assets

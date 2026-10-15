@@ -29,6 +29,20 @@ fields:
       value: '{{ page.id }}'
 ```
 
+## Runner and option-source behavior
+
+Kirby 5 keeps the legacy query runner as its default. Since 5.1, the opt-in AST runner supports logical/comparison/math operators, closure arguments, and subscript access. It is documented as beta; check the configured runner before using its extended syntax:
+
+```php
+return [
+  'query.runner' => \Kirby\Query\Runners\DefaultRunner::class,
+];
+```
+
+Since 5.3, an options query that returns an associative array uses its keys as option values by default. Explicit `text`/`value` mappings remain useful when querying model collections.
+
+For API-backed field options, interpolate only trusted values into the source URL. User-controlled URLs can cause server-side request forgery (SSRF), including access to internal services. Keep Kirby patched for fixes to dynamic option rendering; URL trust is still the application's responsibility.
+
 ## MCP: Inspect/verify
 
 - Inspect the exact blueprint config via `kirby_blueprint_read` (or `kirby://blueprint/{encodedId}`) to see the query that is actually applied (incl. `extends`).
@@ -49,3 +63,5 @@ fields:
 
 - https://getkirby.com/docs/guide/blueprints/query-language
 - https://getkirby.com/docs/reference/system/options/query
+- https://getkirby.com/docs/reference/panel/fields/select#options
+- https://github.com/getkirby/kirby/releases/tag/5.3.0

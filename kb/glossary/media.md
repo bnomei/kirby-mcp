@@ -20,6 +20,10 @@ If your project uses thumbnails heavily, the media folder is often where “wher
   - `$page->mediaUrl()`, `$page->mediaRoot()`
 - Hashing is influenced by `$kirby->contentToken()` and (when set) `content.salt`
 
+## Security
+
+Set `content.salt` and `cookie.key` to distinct, long cryptographically random secrets instead of relying on defaults. Kirby 5.4.4 added system-view warnings for default values. The salt protects preview/media URL tokens; it is not merely a deployment hashing preference. Keep these secrets out of source control and logs, and do not treat an unguessable media URL as a substitute for authorization on protected downloads.
+
 ## Example
 
 ```php
@@ -46,3 +50,5 @@ If your project uses thumbnails heavily, the media folder is often where “wher
 - https://getkirby.com/docs/guide/files/resize-images-on-the-fly
 - https://getkirby.com/docs/reference/system/options/thumbs
 - https://getkirby.com/docs/reference/system/options/content#salt-for-drafts-and-media-files
+- https://getkirby.com/docs/reference/system/options/cookie
+- https://github.com/getkirby/kirby/releases/tag/5.4.4

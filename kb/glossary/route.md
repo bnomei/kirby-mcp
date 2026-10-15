@@ -18,6 +18,10 @@ Routes can be defined in config or registered via the `routes` plugin extension.
 - Registered in a plugin via `Kirby::plugin([... 'routes' => [ ... ]])`
 - A route has a `pattern` and an `action` (and optional language scope, methods, etc.)
 
+## Preserve preview URLs
+
+When removing parent slugs with custom routes, let `_token` preview requests pass through via `$this->next()` rather than redirecting them and losing their authentication token. Do not override draft URLs: previews need their original URLs. Verify both normal navigation and authenticated Panel previews after changing routing.
+
 ## Example
 
 ```php

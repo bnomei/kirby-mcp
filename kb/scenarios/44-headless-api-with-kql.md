@@ -59,10 +59,27 @@ POST JSON body:
 { "query": "page('notes').children" }
 ```
 
+### Cross-origin browser clients (Kirby 5.2+)
+
+Kirby has built-in `cors` configuration for browser clients on another origin, including automatic `204` responses to preflight `OPTIONS` requests:
+
+```php
+return [
+  'cors' => [
+    'allowOrigin' => 'https://frontend.example.com',
+    'allowMethods' => ['POST'],
+    'allowHeaders' => ['Authorization', 'Content-Type'],
+  ],
+];
+```
+
+Restrict origins, methods, and headers to those needed. `allowHeaders` defaults to an empty list. Cookie/credentialed browser requests additionally need `allowCredentials: true` and a trusted explicit origin, never `*`. CORS is not authentication or authorization. Keep a shared API user's Basic Auth credentials on a trusted backend, not in public browser code.
+
 ## Verification
 
 - Request `POST /api/query` with Basic Auth from an API client (curl/Insomnia).
 - Confirm unauthenticated requests return `403 Unauthenticated`.
+- For browser clients, verify preflight and actual requests from both allowed and disallowed origins.
 
 ## Glossary quick refs
 
@@ -77,3 +94,4 @@ POST JSON body:
 - KQL plugin: https://github.com/getkirby/kql
 - Guide: API: https://getkirby.com/docs/guide/api
 - Guide: API authentication: https://getkirby.com/docs/guide/api/authentication
+- CORS configuration: https://getkirby.com/docs/reference/system/options/cors

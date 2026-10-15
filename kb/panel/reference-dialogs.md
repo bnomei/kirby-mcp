@@ -52,6 +52,8 @@ Most dialogs use built-in components (`k-form-dialog`, `k-text-dialog`, etc.). I
 - Use `Panel::go()` to redirect after submit if needed.
 - The dialog key defines the `{pattern}`; omit the `panel/` prefix.
 
+Since Kirby 5.1, a definition can use `controller` instead of inline callbacks: supply a class name or a closure returning an object with `load()`/`submit()` methods. Kirby uses a static `::for()` factory when the controller provides one. This also applies to Panel drawers, registered under an area's `drawers` key; drawers use components such as `k-form-drawer` and `k-text-drawer`.
+
 ## Common UI components
 
 - `k-form-dialog`
@@ -75,6 +77,7 @@ Most dialogs use built-in components (`k-form-dialog`, `k-text-dialog`, etc.). I
 ## Links
 
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dialogs
+- https://getkirby.com/docs/reference/plugins/extensions/panel-drawers
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
 - https://lab.getkirby.com/public/lab

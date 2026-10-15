@@ -18,6 +18,12 @@ Content files are `.txt` by default, but the extension can be configured (e.g. `
 - Content file extension is configurable via `content.extension` (e.g. `txt` vs `md`)
 - Page states: draft/unlisted/listed (see kirby://glossary/status)
 
+## Saved content, changes, and previews
+
+Kirby 5 distinguishes saved content (`latest`) from the Panel's unpublished edits (`changes`). These content versions are separate from a page's draft/unlisted/listed status and from its content language. A published page can still have unpublished edits.
+
+Use `$model->version('latest')->read($language)` when a migration needs only the saved values for an exact language without fallback; `null` means no saved content exists for that language. Do not treat a Panel preview as proof that edits have been published. Editing locks are also separate: since 5.5, leaving a Panel view releases its lock; unlocking does not publish or discard changes.
+
 ## Example
 
 ```text
@@ -53,3 +59,5 @@ Really interesting content here...
 - https://getkirby.com/docs/guide/content/creating-pages
 - https://getkirby.com/docs/guide/content/fields
 - https://getkirby.com/docs/reference/system/options/content
+- https://getkirby.com/docs/cookbook/development-deployment/content-file-cleanup
+- https://github.com/getkirby/kirby/releases/tag/5.5.0

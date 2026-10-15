@@ -2,35 +2,32 @@
 
 ## Field summary
 
-Link field stored as a YAML object with type and value (plus optional text/target).
+Stores a single link string, not a YAML object with `type` and `value`. For link text, target, or other metadata, wrap a link field in an `object` field with separate sibling fields.
 
 ## Storage format
 
-```yaml
-cta:
-  type: url
-  value: https://example.com
-  text: Learn more
-  target: _blank
+```text
+Cta: https://example.com
 ```
 
 ## Runtime value
 
-Use `$page->cta()->yaml()` to get the structured link data.
+`$page->cta()->value()` returns the stored string. Use `$page->cta()->toUrl()` to resolve internal references and other supported link types to a URL.
 
 ## Update payload (kirby_update_page_content)
 
 ```json
-{ "cta": { "type": "url", "value": "https://example.com", "text": "Learn more", "target": "_blank" } }
+{ "cta": "https://example.com" }
 ```
 
 ## Merge strategy
 
-Replace the full link object. If you only need to change one key, read, update, and write back.
+Replace the link string. If using an object wrapper, preserve its other fields when replacing the object.
 
 ## Edge cases
 
-For type `page` or `file`, the value is a stored reference (uuid or id).
+- Internal links can be `page://…` or `file://…` references; do not wrap them in a type/value object.
+- The `custom` link type is disabled by default because arbitrary schemes cannot be validated safely. Enable it only with appropriate validation/sanitization for the intended use case.
 
 ## MCP: Inspect/verify
 

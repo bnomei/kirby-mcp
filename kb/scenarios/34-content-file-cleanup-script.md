@@ -25,13 +25,15 @@ This is a destructive operation: treat it like a migration.
 
 ## Implementation steps
 
-1. Backup first (content + accounts + site config).
+1. Backup first (content + accounts + site config). Resolve all unsaved Panel changes before running; this script cleans only saved content. Do not run if fields absent from blueprints are intentional unless they are allowlisted.
 2. Implement a cleanup script that:
    - boots Kirby
    - impersonates (`$kirby->impersonate('kirby')`)
-   - compares `$model->content()->fields()` vs `$model->blueprint()->fields()`
-   - updates undefined fields to `null`
-   - iterates languages when `kirby()->multilang()` is true
+   - reads `$model->version('latest')->read($language)` without language fallback
+   - skips languages with no saved content file
+   - compares stored field keys against blueprint field keys and the preserve list
+   - replaces saved content with the retained fields using `$version->replace()`
+   - iterates languages when `kirby()->multilang()` is true (otherwise uses `default`)
 3. Run once, verify, then delete the script/route.
 
 ## Examples (cookbook approach; abridged)
@@ -41,15 +43,22 @@ $kirby = new Kirby;
 $kirby->impersonate('kirby');
 
 $ignore = ['uuid', 'title', 'slug', 'template', 'sort', 'focus'];
+$languages = $kirby->multilang() ? $kirby->languages()->codes() : ['default'];
 
 foreach ($kirby->models() as $model) {
-  $contentFields = array_keys($model->content()->fields());
+  $version = $model->version('latest');
   $blueprintFields = array_keys($model->blueprint()->fields());
-  $fieldsToDelete = array_diff($contentFields, $blueprintFields, $ignore);
 
-  if ($fieldsToDelete) {
-    $data = array_map(fn () => null, array_flip($fieldsToDelete));
-    $model->update($data);
+  foreach ($languages as $language) {
+    $content = $version->read($language);
+    if ($content === null) {
+      continue;
+    }
+
+    $fieldsToDelete = array_diff(array_keys($content), $blueprintFields, $ignore);
+    if ($fieldsToDelete !== []) {
+      $version->replace(array_diff_key($content, array_flip($fieldsToDelete)), $language);
+    }
   }
 }
 ```
@@ -58,6 +67,7 @@ foreach ($kirby->models() as $model) {
 
 - Check a few content files before/after.
 - Confirm essential fields weren’t removed accidentally.
+- Verify that absent translations remain absent and that no default-language fallback was copied into another language.
 
 ## Glossary quick refs
 

@@ -6,6 +6,8 @@ Sections are blueprint building blocks used to organize content and UI in the Pa
 
 Sections live inside blueprints and are defined by `type` (e.g. `pages`, `files`, `fields`, …). Kirby also supports custom section types via plugins.
 
+Since Kirby 5.2, files sections support `create: false` to hide the upload button, useful when a query would exclude newly uploaded files. This is a UI control, not a replacement for upload permissions. Stats reports can open a `dialog` or `drawer` as alternatives to a URL link.
+
 ## In prompts (what it usually implies)
 
 - “Add a pages/files list to the Panel” means: add a `pages` or `files` section to the blueprint.
@@ -49,3 +51,5 @@ sections:
 - https://getkirby.com/docs/reference/panel/sections
 - https://getkirby.com/docs/guide/blueprints/layout
 - https://getkirby.com/docs/reference/plugins/extensions/sections
+- https://getkirby.com/docs/reference/panel/sections/files
+- https://getkirby.com/docs/reference/panel/sections/stats

@@ -5,6 +5,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-10-15
+
+- Refreshed the bundled Kirby 5 knowledge base against documentation updates and stable releases through Kirby 5.6.1, preserving existing Kirby 6 notes without adding a migration guide.
+- Corrected link and entries field storage/update examples, and made the content cleanup recipe language-fallback-safe while preserving saved content and required fields.
+- Clarified permissions, query runners, CORS, preview routing, content versions, plugin assets, and Panel contracts; recorded the maintenance baseline for future documentation passes.
+
 ## [1.15.0] - 2026-10-08
 
 - Replaced the built-in OAuth credential form with native Kirby Panel login, preserving configured login methods and two-factor authentication. Login returns through `/mcp/oauth/resume`; installations with copied route definitions must refresh their OAuth routes.

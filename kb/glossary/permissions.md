@@ -33,6 +33,17 @@ permissions:
   users: false
 ```
 
+## Current Kirby 5 behavior
+
+- Use a patched Kirby 5 release (5.6.1 at this maintenance pass). Earlier 5.x versions had permission-enforcement gaps; hiding a Panel control is not an authorization check.
+- `access.system` controls the system view; the old `access.settings` key has no effect.
+- Since 5.4, `site.access` and user/self `access` and `list` permissions control additional read access. `user` concerns the acting user's own account; `users` concerns other accounts.
+- User-blueprint `options` describe the **target account's role**; role keys inside an option identify the **acting user's role**. Role-specific options override corresponding permissions; otherwise Kirby falls back to the acting user's permissions. Changing role checks the old role's `changeRole` and the new role's `create` option.
+- Since 5.4, denying `pages.changeStatus` also prevents creating an already-published page. To allow publication on creation but forbid later status changes, allow the permission and enforce the latter rule in `page.changeStatus:before`.
+- Register custom permissions through the `permissions` plugin extension; unregistered custom permissions are deprecated since 5.5. Panel areas automatically provide `access.<areaId>`.
+- Since 5.6, inaccessible references in pages/files/users fields display `–` without deleting the stored value. Do not remove references merely because the acting user cannot see them.
+- `site.preview` governs site preview; in Kirby 5 the home page's preview permission/option also matters.
+
 ## MCP: Inspect/verify
 
 - Inspect user role blueprints with `kirby_blueprints_index` + `kirby://blueprint/users%2F<role>`.
@@ -55,3 +66,8 @@ permissions:
 - https://getkirby.com/docs/guide/users/roles
 - https://getkirby.com/docs/reference/objects/cms/role/permissions
 - https://getkirby.com/docs/reference/objects/cms/app/impersonate
+- https://getkirby.com/docs/reference/panel/blueprints/user
+- https://getkirby.com/docs/reference/plugins/extensions/permissions
+- https://github.com/getkirby/kirby/releases/tag/5.4.0
+- https://github.com/getkirby/kirby/releases/tag/5.5.0
+- https://github.com/getkirby/kirby/releases/tag/5.6.0
