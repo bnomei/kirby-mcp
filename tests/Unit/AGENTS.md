@@ -22,6 +22,7 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 ## Guardrails
 
 - No network access.
+- Cover unsupported runtime versions without blocking global-reference access; new schema guides must not be assumed present merely because a field appears in the Panel catalog.
 - Avoid persistent filesystem writes; use temp dirs and clean up.
 - Don’t assert incidental ordering unless it’s part of the contract.
 - Global `beforeEach` clears Kirby MCP static caches; don’t rely on cached state across tests.

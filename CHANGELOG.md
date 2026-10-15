@@ -5,6 +5,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+- Prepare the next major, Kirby MCP 6, for Kirby 6.0.0-beta.1 and PHP 8.3+. Existing 1.x tags remain the Kirby 5 line; no 6.x release has been published.
+- Pin kit fixtures and Composer to the same Kirby release, resolve dependencies for PHP 8.3, and test both PHP 8.3 and 8.5 in CI.
+- Reject unsupported project runtimes while preserving reference access; use Kirby 6 Panel URLs, blueprint namespace, and UUID string resolution.
+- Distinguish value-bearing picker fields from display fields in content schemas and omit unavailable update-schema links. Add canonical Kirby 6 technical reference entries; track deferred KB work in `docs/kirby-6-migration.md`.
+
 ## [1.15.1] - 2026-10-15
 
 - Refreshed the bundled Kirby 5 knowledge base against documentation updates and stable releases through Kirby 5.6.1, preserving existing Kirby 6 notes without adding a migration guide.

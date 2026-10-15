@@ -11,12 +11,15 @@ final class PanelReferenceIndex
      */
     public const FIELD_TYPES = [
         'blocks' => 'Blocks',
+        'buttons' => 'Buttons',
         'checkboxes' => 'Checkboxes',
         'color' => 'Color',
         'date' => 'Date',
         'email' => 'Email',
         'entries' => 'Entries',
-        'files' => 'Files',
+        'filelist' => 'File list',
+        'filepicker' => 'File picker',
+        'files' => 'Files (deprecated alias for filepicker)',
         'gap' => 'Gap',
         'headline' => 'Headline',
         'hidden' => 'Hidden',
@@ -28,7 +31,10 @@ final class PanelReferenceIndex
         'multiselect' => 'Multiselect',
         'number' => 'Number',
         'object' => 'Object',
-        'pages' => 'Pages',
+        'pagelist' => 'Page list',
+        'pagepicker' => 'Page picker',
+        'pages' => 'Pages (deprecated alias for pagepicker)',
+        'password' => 'Password',
         'radio' => 'Radio',
         'range' => 'Range',
         'select' => 'Select',
@@ -43,7 +49,8 @@ final class PanelReferenceIndex
         'toggle' => 'Toggle',
         'toggles' => 'Toggles',
         'url' => 'Url',
-        'users' => 'Users',
+        'userpicker' => 'User picker',
+        'users' => 'Users (deprecated alias for userpicker)',
         'writer' => 'Writer',
     ];
 
@@ -51,10 +58,10 @@ final class PanelReferenceIndex
      * @var array<string, string>
      */
     public const SECTION_TYPES = [
-        'fields' => 'Fields section',
-        'files' => 'Files section',
-        'info' => 'Info section',
-        'pages' => 'Pages section',
-        'stats' => 'Stats section',
+        'fields' => 'Fields section (legacy; use fields directly in Kirby 6)',
+        'files' => 'Files section (legacy; use the filelist field in Kirby 6)',
+        'info' => 'Info section (legacy; use the info field in Kirby 6)',
+        'pages' => 'Pages section (legacy; use the pagelist field in Kirby 6)',
+        'stats' => 'Stats section (legacy; use the stats field in Kirby 6)',
     ];
 }

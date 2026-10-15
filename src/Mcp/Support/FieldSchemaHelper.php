@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Support;
 
+use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
+use Kirby\Form\Field;
+use Kirby\Form\Field\ValueField;
+
+/**
+ * @phpstan-type FieldSchema array{type: string|null, hasValue: bool|null, _schemaRef?: array{panel?: string, updateSchema?: string}, _nestedBlockFields?: array<string, array<string, mixed>>}
+ */
 final class FieldSchemaHelper
 {
     /**
      * @param array<mixed> $data
-     * @return array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}, _nestedBlockFields?: array<string, array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}}>>}>
+     * @return array<string, FieldSchema>
      */
     public static function fromBlueprintData(array $data, bool $includeNestedBlocks = false): array
     {
@@ -19,7 +26,7 @@ final class FieldSchemaHelper
 
     /**
      * @param array<mixed> $fields
-     * @return array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}, _nestedBlockFields?: array<string, array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}}>>}>
+     * @return array<string, FieldSchema>
      */
     public static function fromFieldDefinitions(array $fields, bool $includeNestedBlocks = false): array
     {
@@ -81,7 +88,7 @@ final class FieldSchemaHelper
 
     /**
      * @param array<string, array> $definitions
-     * @return array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}, _nestedBlockFields?: array<string, array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}}>>}>
+     * @return array<string, FieldSchema>
      */
     private static function buildSchemaMap(array $definitions, bool $includeNestedBlocks): array
     {
@@ -94,13 +101,23 @@ final class FieldSchemaHelper
             }
 
             $type = self::normalizeType($type);
-            $entry = ['type' => $type];
+            $hasValue = null;
+            if ($type !== null && class_exists(Field::class)) {
+                try {
+                    $hasValue = is_subclass_of(Field::resolve($type, $fieldKey), ValueField::class);
+                } catch (\Throwable) {
+                    // Static/raw inspection cannot resolve unregistered custom field types.
+                }
+            }
+            $entry = ['type' => $type, 'hasValue' => $hasValue];
 
             if (is_string($type) && self::isSlug($type)) {
-                $entry['_schemaRef'] = [
-                    'panel' => 'kirby://field/' . $type,
-                    'updateSchema' => 'kirby://field/' . $type . '/update-schema',
-                ];
+                if (isset(PanelReferenceIndex::FIELD_TYPES[$type])) {
+                    $entry['_schemaRef']['panel'] = 'kirby://field/' . $type;
+                }
+                if ($hasValue === true && is_file(KbDocuments::kbRoot() . '/update-schema/' . $type . '.md')) {
+                    $entry['_schemaRef']['updateSchema'] = 'kirby://field/' . $type . '/update-schema';
+                }
             }
 
             if ($includeNestedBlocks === true && ($type === 'blocks' || $type === 'layout')) {
@@ -120,7 +137,7 @@ final class FieldSchemaHelper
 
     /**
      * @param array<string, mixed> $definition
-     * @return array<string, array<string, array{type: string|null, _schemaRef?: array{panel: string, updateSchema: string}}>>
+     * @return array<string, array<string, FieldSchema>>
      */
     private static function resolveNestedBlockFields(array $definition): array
     {

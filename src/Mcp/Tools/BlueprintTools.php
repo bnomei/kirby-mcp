@@ -353,7 +353,7 @@ final class BlueprintTools
     #[McpTool(
         name: 'kirby_blueprint_read',
         title: 'Blueprint Read',
-        description: 'Read a single Kirby blueprint by id (e.g. pages/home). Prefers runtime `kirby mcp:blueprint` (includes plugin-registered blueprints) and returns structured JSON. Use withData=false to omit the large data payload and avoid truncation. Set debug=true to include CLI stdout/stderr. Resource template: `kirby://blueprint/{encodedId}`.',
+        description: 'Read raw Kirby blueprint props by id (e.g. pages/home), not a normalized/model-bound schema. Prefers runtime `kirby mcp:blueprint` (includes plugin-registered blueprints). Root references and legacy sections remain raw; content tools expose normalized model fieldSchemas. Use withData=false to omit the large data payload and avoid truncation. Set debug=true to include CLI stdout/stderr. Resource template: `kirby://blueprint/{encodedId}`.',
         annotations: new ToolAnnotations(
             title: 'Blueprint Read',
             readOnlyHint: true,

@@ -764,7 +764,7 @@ it('binds Panel login handoffs and requires explicit consent', function (string 
             $unauthResponse = KirbyMcpOAuthRoute::handle($projectRoot, $unauthRequest);
             expect($unauthResponse->code())->toBe(302);
             $loginLocation = kirbyMcpRouteLocation($unauthResponse);
-            expect($loginLocation)->toBe(\Kirby\Panel\Panel::url('login'));
+            expect($loginLocation)->toBe($app->panel()->url('login'));
             expect($app->session()->get('panel.path'))->toBe('https://example.test/mcp/oauth/resume');
             $sessionId = $app->session()->get('bnomei.kirby-mcp.oauth.pending');
             expect($sessionId)->toBeString();

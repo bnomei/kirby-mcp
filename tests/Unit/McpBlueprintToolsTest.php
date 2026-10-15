@@ -60,9 +60,9 @@ it('exposes a static blueprints index tool', function (): void {
     expect($data['blueprints']['pages/home']['displayName'])->toBe('Home');
     expect($data['blueprints']['pages/home']['displayNameSource'])->toBe('title');
 
-    expect($data['blueprints'])->toHaveKey('sections/notes');
-    expect($data['blueprints']['sections/notes']['displayName'])->toBe('Notes');
-    expect($data['blueprints']['sections/notes']['displayNameSource'])->toBe('label');
+    expect($data['blueprints'])->toHaveKey('fields/notes');
+    expect($data['blueprints']['fields/notes']['displayName'])->toBe('Notes');
+    expect($data['blueprints']['fields/notes']['displayNameSource'])->toBe('label');
 
     expect($data['blueprints'])->toHaveKey('fields/cover');
     expect($data['blueprints']['fields/cover']['displayName'])->toBe('cover');

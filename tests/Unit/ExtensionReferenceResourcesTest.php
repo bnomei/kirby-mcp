@@ -13,6 +13,10 @@ it('lists Kirby extension resources', function (): void {
     expect($markdown)->toContain('kirby://extension/commands');
     expect($markdown)->toContain('kirby://extension/routes');
     expect($markdown)->toContain('kirby://extension/darkroom-drivers');
+    expect($markdown)->toContain('kirby://extension/auth-methods');
+    expect($markdown)->toContain('kirby://extension/structure-methods');
+    expect($markdown)->toContain('kirby://extension/structure-object-methods');
+    expect($markdown)->toContain('Sections (legacy; replaced by fields in Kirby 6)');
 });
 
 it('supports cached extension markdown fetches', function (): void {

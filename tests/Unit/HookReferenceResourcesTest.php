@@ -12,6 +12,9 @@ it('lists Kirby hook resources', function (): void {
 
     expect($markdown)->toContain('kirby://hook/file.changeName:after');
     expect($markdown)->toContain('kirby://hook/system.exception');
+    expect($markdown)->toContain('kirby://hook/user.changeSecret:before');
+    expect($markdown)->toContain('kirby://hook/user.changeSecret:after');
+    expect($markdown)->toContain('kirby://hook/user.login:failed');
 });
 
 it('supports hook name and slug inputs', function (): void {

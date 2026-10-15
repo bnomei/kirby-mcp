@@ -61,6 +61,11 @@ it('suggests Kirby Panel field types', function (): void {
 
     expect($provider->getCompletions(''))->toContain('blocks');
     expect($provider->getCompletions('ema'))->toBe(['email']);
+    expect($provider->getCompletions('picker'))->toBe(['filepicker', 'pagepicker', 'userpicker']);
+    expect($provider->getCompletions('list'))->toBe(['filelist', 'list', 'pagelist']);
+    expect($provider->getCompletions('but'))->toBe(['buttons']);
+    expect($provider->getCompletions('pass'))->toBe(['password']);
+    expect($provider->getCompletions(''))->toContain('files', 'pages', 'users');
 });
 
 it('suggests Kirby Panel section types', function (): void {
@@ -77,6 +82,8 @@ it('suggests Kirby hook names', function (): void {
     expect($provider->getCompletions(''))->toContain('file.changeName:after');
     expect($provider->getCompletions('file-changename-after'))->toBe(['file.changeName:after']);
     expect($provider->getCompletions('system-exception'))->toBe(['system.exception']);
+    expect($provider->getCompletions('user-changesecret'))->toBe(['user.changeSecret:after', 'user.changeSecret:before']);
+    expect($provider->getCompletions('login-failed'))->toBe(['user.login:failed']);
 });
 
 it('suggests Kirby extension names', function (): void {
@@ -85,4 +92,6 @@ it('suggests Kirby extension names', function (): void {
     expect($provider->getCompletions(''))->toContain('commands');
     expect($provider->getCompletions('darkroom'))->toBe(['darkroom-drivers']);
     expect($provider->getCompletions('panelview'))->toBe(['panel-view-buttons']);
+    expect($provider->getCompletions('authMethods'))->toBe(['auth-methods']);
+    expect($provider->getCompletions('structure'))->toBe(['structure-methods', 'structure-object-methods']);
 });

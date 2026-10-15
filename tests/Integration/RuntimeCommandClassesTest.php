@@ -1662,6 +1662,27 @@ it('executes query strings when enabled and confirm=true', function (): void {
         expect($payload['result']['type'] ?? null)->toBe('string');
         expect($payload['result']['value'] ?? null)->toBe('Home');
 
+        $uuid = $app->site()->homePage()?->uuid()?->toString();
+        expect($uuid)->toBeString();
+        $uuidResult = runRuntimeCommand(static function () use ($app, $uuid): void {
+            QueryDot::run(new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'model' => $uuid,
+                'query' => 'page.title.value == "Home" ? "matched" : "wrong"',
+            ], $app));
+        });
+        expect($uuidResult['ok'])->toBeTrue();
+        expect($uuidResult['result']['value'])->toBe('matched');
+
+        $invalidMethod = runRuntimeCommand(static function () use ($app): void {
+            QueryDot::run(new RuntimeCommandIntegrationCli([
+                'confirm' => true,
+                'query' => 'page.title.nonexistentMethod()',
+            ], $app));
+        });
+        expect($invalidMethod['ok'])->toBeFalse();
+        expect($invalidMethod['error']['message'])->toContain('does not exist');
+
         $missing = runRuntimeCommand(function () use ($app): void {
             $cli = new RuntimeCommandIntegrationCli([
                 'confirm' => true,
@@ -1828,6 +1849,99 @@ it('updates runtime commands into a temp commands root', function (): void {
     } finally {
         restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
         removeRuntimeCommandsDir($commandsRoot);
+    }
+});
+
+it('distinguishes Kirby 6 display fields and pickers through content and raw blueprint commands', function (): void {
+    [$app, $previous, $errorHandlers, $previousWhoops] = runtimeCommandsApp();
+    $root = sys_get_temp_dir() . '/kirby-mcp-six-' . bin2hex(random_bytes(6));
+    $definition = [
+        'title' => 'Six',
+        'fields' => [
+            'related' => ['type' => 'pagepicker'],
+            'assets' => ['type' => 'filepicker'],
+            'authors' => ['type' => 'userpicker'],
+            'listing' => ['type' => 'pagelist'],
+            'body' => ['type' => 'blocks', 'fieldsets' => [
+                'card' => ['name' => 'Card', 'fields' => [
+                    'target' => ['type' => 'pagepicker'],
+                    'notice' => ['type' => 'info', 'text' => 'Display only'],
+                ]],
+            ]],
+            'choice' => ['type' => 'select', 'options' => ['a' => 'Alpha', 'b' => 'Beta']],
+            'dash-key' => ['type' => 'text'],
+        ],
+        'tabs' => ['content' => ['fields' => [
+            'related', 'assets', 'authors', 'listing', 'body', 'choice', 'dash-key',
+        ]]],
+    ];
+    try {
+        \Kirby\Filesystem\F::write($root . '/site/blueprints/pages/six.yml', \Kirby\Data\Yaml::encode($definition));
+        \Kirby\Filesystem\F::write($root . '/content/home/six.en.txt', "Title: English\n\n----\n\nChoice: a\n\n----\n\nDash-key: colon: # quoted\n");
+        \Kirby\Filesystem\F::write($root . '/content/home/six.de.txt', "Title: Deutsch\n\n----\n\nChoice: b\n");
+        $app = new App([
+            'roots' => ['index' => $root],
+            'options' => ['languages' => true],
+            'languages' => [
+                ['code' => 'en', 'default' => true, 'name' => 'English', 'locale' => 'en_US'],
+                ['code' => 'de', 'name' => 'Deutsch', 'locale' => 'de_DE'],
+            ],
+        ]);
+        $read = runRuntimeCommand(static fn () => PageContent::run(new RuntimeCommandIntegrationCli(['id' => 'home'], $app)));
+        expect($read['ok'])->toBeTrue();
+        $schemas = $read['fieldSchemas'];
+        foreach (['related', 'assets', 'authors', 'body'] as $name) {
+            expect($schemas[$name]['hasValue'])->toBeTrue();
+        }
+        expect($schemas['listing']['hasValue'])->toBeFalse();
+        expect($schemas['listing']['_schemaRef'])->not()->toHaveKey('updateSchema');
+        expect($schemas['body']['_nestedBlockFields']['card']['target']['hasValue'])->toBeTrue();
+        expect($schemas['body']['_nestedBlockFields']['card']['notice']['hasValue'])->toBeFalse();
+        foreach ($schemas as $schema) {
+            if (isset($schema['_schemaRef']['updateSchema'])) {
+                expect((new \Bnomei\KirbyMcp\Mcp\Resources\UpdateSchemaResources())->contentField($schema['type']))->not()->toBe('');
+            } else {
+                expect($schema['hasValue'] === false || !is_file(dirname(__DIR__, 2) . '/kb/update-schema/' . $schema['type'] . '.md'))->toBeTrue();
+            }
+        }
+
+        $raw = runRuntimeCommand(static fn () => Blueprint::run(new RuntimeCommandIntegrationCli(['id' => 'pages/six'], $app)));
+        expect($raw['ok'])->toBeTrue();
+        expect($raw['fieldSchemas']['related']['type'])->toBe('pagepicker');
+        expect($raw['data']['tabs']['content']['fields'][0])->toBe('related');
+
+        $query = runRuntimeCommand(static fn () => QueryDot::run(new RuntimeCommandIntegrationCli([
+            'query' => 'page["dash_key"].value', 'confirm' => true,
+        ], $app)));
+        expect($query['error'] ?? null)->toBeNull();
+        expect($query['ok'])->toBeTrue();
+        expect($query['result']['value'])->toBe('colon: # quoted');
+
+        $update = static fn (bool $validate) => runRuntimeCommand(static fn () => PageUpdate::run(new RuntimeCommandIntegrationCli([
+            'id' => 'home', 'data' => '{"choice":"outside","title":"Geändert"}',
+            'language' => 'de', 'confirm' => true, 'validate' => $validate,
+        ], $app)));
+        expect($update(true)['ok'])->toBeFalse();
+        expect($app->page('home')?->content('de')->get('choice')->value())->toBe('b');
+        expect($update(false)['ok'])->toBeTrue();
+        $translated = runRuntimeCommand(static fn () => PageContent::run(new RuntimeCommandIntegrationCli(['id' => 'home', 'language' => 'de'], $app)));
+        expect($translated['content']['choice'])->toBe('outside');
+        expect($translated['content']['title'])->toBe('Geändert');
+        expect($app->page('home')?->content('en')->get('choice')->value())->toBe('a');
+
+        $legacy = new \Kirby\Cms\Page(['slug' => 'legacy', 'blueprint' => ['sections' => [
+            'children' => ['type' => 'pages'],
+            'images' => ['type' => 'files'],
+            'content' => ['type' => 'fields', 'fields' => ['pick' => ['type' => 'pages']]],
+        ]]]);
+        $converted = \Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper::fromFieldDefinitions($legacy->blueprint()->fields());
+        expect($converted['children']['type'])->toBe('pagelist');
+        expect($converted['images']['type'])->toBe('filelist');
+        expect($converted['children']['hasValue'])->toBeFalse();
+        expect($converted['pick']['hasValue'])->toBeTrue();
+    } finally {
+        \Kirby\Filesystem\Dir::remove($root);
+        restoreRuntimeCommandsApp($previous, $errorHandlers, $previousWhoops);
     }
 });
 

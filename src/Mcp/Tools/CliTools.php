@@ -12,6 +12,7 @@ use Bnomei\KirbyMcp\Mcp\Policies\KirbyCliAllowlistPolicy;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
+use Bnomei\KirbyMcp\Project\RuntimeCompatibility;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
@@ -330,7 +331,17 @@ final class CliTools
                 $env['KIRBY_HOST'] = $host;
             }
 
-            $cliResult = (new KirbyCliRunner())->run(
+            $runner = new KirbyCliRunner();
+            if (!in_array($command, ['version', 'help', 'list'], true)) {
+                $versionResult = $runner->run($projectRoot, ['version'], $env, $timeoutSeconds);
+                if ($versionResult->exitCode !== 0) {
+                    throw new \RuntimeException('Unable to detect Kirby runtime version: ' . trim($versionResult->stderr));
+                }
+                preg_match('/\b(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)\b/', $versionResult->stdout, $matches);
+                RuntimeCompatibility::requireSupported($matches[1] ?? null);
+            }
+
+            $cliResult = $runner->run(
                 projectRoot: $projectRoot,
                 args: array_merge([$command], $normalizedArgs),
                 env: $env,

@@ -83,7 +83,7 @@ class OnlinePluginsTools
     )]
     public function search(
         string $query,
-        #[CompletionProvider(values: ['', 3, 4, 5])]
+        #[CompletionProvider(values: ['', 3, 4, 5, 6])]
         int|string $kirbyMajorVersion = '',
         #[CompletionProvider(values: ['', 'free', 'paid'])]
         string $pricing = '',

@@ -209,3 +209,13 @@ it('rejects empty queries', function (): void {
 
     expect(fn () => $tools->search(''))->toThrow(ToolCallException::class, 'Query must not be empty.');
 });
+
+it('suggests and accepts Kirby 6 plugin compatibility searches', function (): void {
+    $parameter = (new ReflectionMethod(OnlinePluginsTools::class, 'search'))->getParameters()[1];
+    $completion = $parameter->getAttributes(\Mcp\Capability\Attribute\CompletionProvider::class)[0]->newInstance();
+
+    expect($completion->values)->toContain(6);
+
+    $tools = new OnlinePluginsToolsStub('<ul class="plugin-cards"></ul>');
+    expect($tools->search('Foo', kirbyMajorVersion: 6, fetch: 0)['kirbyMajorVersion'])->toBe('6');
+});

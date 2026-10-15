@@ -7,6 +7,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 ## System
 
 - Fixture Kirby site lives in `tests/cms/` (generated test data).
+- `tests/fixture/prepare-kit.sh` pins Kirby 6.0.0-beta.1 kits and verifies the bundled runtime against the Composer lock before replacing the fixture. Do not use moving kit branches.
 - The fixture config loads the library before plugin discovery, emulating a Composer-based host while retaining the kit's bundled Kirby version.
 - `tests/cms/` must not be committed/changed in PRs; regenerate it locally with `composer cms:starterkit` (CI does this automatically).
 - Use `cmsPath()` from `tests/Pest.php` to reference it.
@@ -26,6 +27,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Include dynamic blueprint allow/deny decisions, NUL-containing subjects, and empty listener token overrides in OAuth regression coverage.
 - Exercise Panel OAuth handoff, browser-session binding, expiry, replacement, and consumption on approve/deny. Verify real Panel login and token exchange in the browser fixture; impersonation alone does not verify login redirects.
 - Activity coverage must exercise dispatched tool and bundled/non-bundled resource reads; discovery, failed lookups, and scope-denied calls must not record. Run Panel browser checks after the PHP suite, which modifies the generated fixture, then rerun `.agents/prepare-panel.php`.
+- Kirby 6 coverage must distinguish picker value fields from display lists, preserve raw root references, resolve nested block fields, and verify invalid options with validation on/off plus independent language storage. Query UUID strings use `Uuid::from()`.
 
 ## Guardrails
 

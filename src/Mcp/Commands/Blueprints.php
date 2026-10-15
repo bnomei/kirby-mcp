@@ -7,7 +7,7 @@ namespace Bnomei\KirbyMcp\Mcp\Commands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommand;
 use Bnomei\KirbyMcp\Mcp\Support\FieldSchemaHelper;
 use Kirby\CLI\CLI;
-use Kirby\Cms\Blueprint;
+use Kirby\Blueprint\Blueprint;
 use Kirby\Data\Yaml;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;

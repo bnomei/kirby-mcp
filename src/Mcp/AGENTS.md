@@ -19,6 +19,9 @@ Maintain a stable and secure MCP surface: tools, resources, and completions for 
 - Blueprint update guides live in `kb/update-schema/blueprint-*.md` and are exposed via `kirby://blueprints/update-schema` and `kirby://blueprint/{type}/update-schema`.
 - KB document list/read resources: `kirby://kb` and `kirby://kb/{path}` (path relative to `kb/`, no `.md`).
 - Blueprint/page content outputs may include `fieldSchemas` maps with `_schemaRef` pointers to both panel refs and update schemas.
+- Kirby MCP 6 targets Kirby >=6.0.0-beta.1 within major 6. Gate runtime commands and non-diagnostic generic CLI execution; do not gate projectless/static reference access.
+- `fieldSchemas.hasValue` is true for Kirby `ValueField` subclasses, false for display fields, null when unresolved. This is not a per-language write-permission check. Emit update-schema links only for existing bundled guides with `hasValue: true`; unresolved/static and display fields omit them.
+- `Kirby\Blueprint\Blueprint::load()` returns raw props, not normalized/model-bound definitions. Root references use list syntax; only model blueprints resolve layouts/legacy sections. Never imply raw inspection validates a complete blueprint.
 - Command execution is routed through `src/Cli/` and guarded by `src/Mcp/Policies/`.
 - `src/Mcp/ToolIndex.php` may add curated “instance” entries for common resource templates (e.g. `kirby://section/pages`) to improve `kirby_tool_suggest`; keep these aligned with the corresponding docs/index sources.
 - Tool methods should accept `Mcp\Server\RequestContext` when they need session/client access (for example, structured output). Do not type-hint `ClientGateway` directly.

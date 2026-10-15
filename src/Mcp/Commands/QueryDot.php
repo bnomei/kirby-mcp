@@ -191,7 +191,7 @@ final class QueryDot extends RuntimeCommand
         }
 
         if (Uuid::is($modelArg, ['page', 'file', 'user', 'site']) === true) {
-            return Uuid::for($modelArg)?->model();
+            return Uuid::from($modelArg)?->model();
         }
 
         if ($modelArg === 'site') {

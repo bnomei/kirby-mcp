@@ -75,8 +75,15 @@ final class RuntimeCommandTestCli extends CLI
 
 final class RuntimeCommandTestApp extends App
 {
+    public static ?string $testVersion = '6.0.0-beta.1';
+
     public function __construct()
     {
+    }
+
+    public static function version(): ?string
+    {
+        return self::$testVersion;
     }
 }
 
@@ -104,6 +111,19 @@ it('returns the kirby instance without output when available', function (): void
     expect($result)->toBe($kirby);
     expect($output)->toBe('');
 });
+
+it('rejects unsupported project runtimes with actionable reference access guidance', function (?string $version): void {
+    RuntimeCommandTestApp::$testVersion = $version;
+    try {
+        ob_start();
+        $result = RuntimeCommandProbe::kirbyOrEmitErrorPublic(new RuntimeCommandTestCli(kirby: new RuntimeCommandTestApp()));
+        $output = ob_get_clean();
+        expect($result)->toBeNull();
+        expect($output)->toContain('Kirby MCP 6 requires Kirby 6.0.0-beta.1', '--global');
+    } finally {
+        RuntimeCommandTestApp::$testVersion = '6.0.0-beta.1';
+    }
+})->with(['5.6.1', '6.0.0-alpha.3', '7.0.0-beta.1', null]);
 
 it('formats error payloads and respects debug trace settings', function (): void {
     $exception = new RuntimeException('boom', 123);

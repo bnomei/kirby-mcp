@@ -1,7 +1,7 @@
 # Kirby MCP
 
-[![Kirby 5](https://flat.badgen.net/badge/Kirby/5?color=ECC748)](https://getkirby.com)
-![PHP 8.2](https://flat.badgen.net/badge/PHP/8.2?color=4E5B93&icon=php&label)
+[![Kirby 6](https://flat.badgen.net/badge/Kirby/6?color=ECC748)](https://getkirby.com/releases/6)
+![PHP 8.3](https://flat.badgen.net/badge/PHP/8.3?color=4E5B93&icon=php&label)
 ![Release](https://flat.badgen.net/packagist/v/bnomei/kirby-mcp?color=ae81ff&icon=github&label)
 ![Downloads](https://flat.badgen.net/packagist/dt/bnomei/kirby-mcp?color=272822&icon=github&label)
 ![Unittests](https://github.com/bnomei/kirby-mcp/actions/workflows/pest-tests.yml/badge.svg)
@@ -10,6 +10,10 @@
 [![Buymecoffee](https://flat.badgen.net/badge/icon/donate?icon=buymeacoffee&color=FF813F&label)](https://www.buymeacoffee.com/bnomei)
 
 CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
+
+This branch prepares **Kirby MCP 6**, targeting **Kirby 6.0.0-beta.1** and PHP **8.3+**; it is not a published release. Kirby 5 projects should use the existing MCP 1.x tags. Composer rejects unsupported installed CMS versions without making the CMS a production dependency. Runtime operations reject unsupported Kirby versions; static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for validation and deferred documentation.
+
+Content `fieldSchemas` retain display fields for inspection and expose `hasValue` (`true`, `false`, or `null` when unresolved). `pagelist`/`filelist` are display fields; `pagepicker`/`filepicker`/`userpicker` store selections. `hasValue` is not write permission or per-language storability. Update-schema links require a bundled guide and `hasValue: true`; unresolved/static types omit them, while guides remain directly accessible through reference resources. Raw blueprint reads do not normalize layouts or validate model-bound blueprints.
 
 It can also run as a projectless global reference MCP (`kirby-mcp --global`) for always-on Kirby docs/KB research. Global reference mode is intentionally separate from project-local MCP servers and cannot inspect, render, update, or run commands in a Kirby project.
 

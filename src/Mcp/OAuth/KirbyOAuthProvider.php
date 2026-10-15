@@ -9,7 +9,6 @@ use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Firebase\JWT\JWT;
 use Kirby\Cms\App as Kirby;
 use Kirby\Http\Response as KirbyResponse;
-use Kirby\Panel\Panel;
 use Psr\Http\Message\ServerRequestInterface;
 
 final class KirbyOAuthProvider
@@ -192,7 +191,7 @@ final class KirbyOAuthProvider
             // Panel strips query strings from its remembered post-login destination.
             $kirby->session()->set('panel.path', $this->providerUrl('/resume'));
 
-            return KirbyResponse::redirect(Panel::url('login'));
+            return KirbyResponse::redirect($kirby->panel()->url('login'));
         }
 
         $client = $this->client((string) $params['client_id']);

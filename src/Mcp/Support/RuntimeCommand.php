@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Support;
 
+use Bnomei\KirbyMcp\Project\RuntimeCompatibility;
 use Kirby\CLI\CLI;
 use Kirby\Cms\App;
 use Throwable;
@@ -46,6 +47,13 @@ abstract class RuntimeCommand
                     'code' => 0,
                 ],
             ]);
+            return null;
+        }
+
+        try {
+            RuntimeCompatibility::requireSupported($kirby->version());
+        } catch (Throwable $exception) {
+            static::emit($cli, ['ok' => false, 'error' => static::errorArray($exception)]);
             return null;
         }
 
