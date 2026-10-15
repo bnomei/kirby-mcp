@@ -37,6 +37,10 @@ permissions:
 
 Use `$model->guards()->isAvailable('update')` for model action availability and `ensureExecutable()` for execution checks. Kirby 5 legacy `$model->permissions()->can()` and model Rules classes are deprecated. Role permissions and `$role->permissions()` are a different API; keep role configuration and blueprint options. Hiding a control never authorizes a backend action.
 
+Availability checks abilities and permissions; executability also validates action arguments. `isAvailable()`/`isExecutable()` return booleans, while `ensureAvailable()`/`ensureExecutable()` throw explaining exceptions. Kirby actions run their own guards; explicit preflight is useful before a multi-item operation but is not a transaction or a substitute for checks during execution.
+
+Abilities protect invariants even for the privileged `kirby` user. Anonymous users have the `nobody` role. Model blueprint permission rules take precedence over role rules; keep denied-role tests when changing either. See https://getkirby.com/releases/6/guards.
+
 ## Kirby 5 legacy maintenance context
 
 The following history helps audit an existing Kirby 5 site before migration. On Kirby 6 keep role rules, use guards for model checks, and use `pagepicker`/`filepicker`/`userpicker` for stored references; do not delete inaccessible references during migration.

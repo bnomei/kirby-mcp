@@ -6,7 +6,9 @@ In Kirby, the session is a per-visitor store that persists across requests (via 
 
 Kirby exposes a session data object with helpers like `get()`, `set()`, `pull()`, etc.
 
-Kirby 6 renames legacy `SessionData` to `Data`, `SessionStore` to `Store` and `FileSessionStore` to `FileStore`. Normal `$kirby->session()` calls remain. Handler integrations use `$kirby->sessions()`, `find($token)` and `Sessions::factory()` instead of `sessionHandler()`, handler `get()` and direct construction. Old login cookies are rejected after the upgrade; users must log in again.
+Use `Kirby\Session\Data`, `Store` and `FileStore` for session integrations. The normal entry point is `$kirby->session()`; handler integrations use `$kirby->sessions()`, `find($token)` and `Sessions::factory()`. Store scalar/array data, not objects: sessions no longer serialize objects. Cookies are signed with HMAC-SHA256 and default to secure on HTTPS.
+
+For Kirby 5 migrations, replace the old `SessionData`/`SessionStore`/`FileSessionStore` class names and `sessionHandler()` API with the names above. Old login cookies and in-flight challenges are invalidated, so users must log in again. See `kirby://kb/scenarios/84-kirby-6-core-contracts` for handler methods.
 
 ## In prompts (what it usually implies)
 

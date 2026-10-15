@@ -7,6 +7,8 @@ Expose a `.json` representation for a page template, typically to:
 - provide a lightweight “project-local API” for frontend JS
 - implement “load more” pagination (HTML snippets + JSON metadata)
 
+Clients can request the regular URL with `Accept: application/json` as well as the explicit `.json` URL. Test negotiation over HTTP, including HTML controls and shared-cache behavior; `kirby_render_page` alone cannot test headers. See `kirby://glossary/content-representation`.
+
 ## Inputs to ask for
 
 - Which page/template gets the representation (e.g. `photography`, `blog`)

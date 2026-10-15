@@ -28,6 +28,8 @@ Replace the full string. For append/prepend, read the current value and concaten
 
 Panel may normalize whitespace. Empty string clears the field; `null` removes the key on save.
 
+The browser's spellcheck default applies unless the blueprint sets `spellcheck`. Set `spellcheck: false` explicitly for identifiers or other text where checking is unwanted. This differs from the Kirby 5 default, which disabled it. Disabled fields allow selecting/copying values; do not use `disabled` to conceal sensitive content.
+
 ## MCP: Inspect/verify
 
 - Read the blueprint config via `kirby_blueprint_read` or `kirby://blueprint/{encodedId}`.

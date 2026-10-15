@@ -1,122 +1,32 @@
-# API-backed embed field: Kirby 5 legacy sketch and Kirby 6 port
+# API-backed embed field
 
-## Goal
+## Contract
 
-Provide a URL field that fetches embed metadata via a plugin API endpoint and renders a live preview in the Panel.
+Use a PHP `InputField` subclass with an explicit structured value, or an `ObjectField` subclass whose nested form matches that value. Register it under `fields` and pair it with a Vue 3 component. Store the input URL and approved metadata; a `UrlField` cannot represent an object payload correctly. Follow `kirby://kb/panel/reference-fields` for props, storage and registration.
 
-Kirby 6: implement the PHP side as an `InputField`/`ObjectField` subclass with explicit structured storage, not a legacy array field or plain `UrlField`. Use `api()` and `endpoints.field` for field-local routes. See `kirby://kb/panel/reference-fields`. Treat provider URLs as SSRF inputs: allowlist schemes/hosts and redirects; never expose server credentials. Provider HTML is untrusted: sanitize or isolate it rather than wrapping raw data in `HtmlString`/`$h()`.
+Choose allowed providers, privacy/consent requirements and whether metadata is persisted or fetched on demand before implementing. Do not store provider credentials in the value or exported props.
 
-## Inputs to ask for
+## Implementation
 
-- Allowed providers or URL patterns
-- Whether to store only the URL or a structured payload (url + metadata)
-- Privacy options (for example nocookie variants)
-- Script loading needs (Twitter, Instagram, etc.)
-
-## MCP tools/resources to use
-
-- kirby://roots
-- kirby_plugins_index
-- kirby_routes_index
-- kirby_blueprints_index
-- kirby_blueprint_read
-- kirby://extension/api
-- kirby://extension/fields
-
-## Files to touch
-
-- site/plugins/<plugin>/index.php
-- site/plugins/<plugin>/lib/api.php (or equivalent)
-- site/plugins/<plugin>/src/components/<EmbedField>.vue
-- site/plugins/<plugin>/index.js
-
-## Implementation steps
-
-1. Create a plugin API route (via the `api` extension) that accepts a URL and returns parsed embed metadata.
-   - For a field-local endpoint, define `api()` and use the exported `endpoints.field` prefix; never hardcode a page-only route.
-2. Store a structured field value (input URL plus media payload) to avoid re-fetching on reload.
-3. In the field component, call `useApi().get()` when the URL changes and update the stored value.
-4. Render a preview and load provider scripts only when needed.
-5. If the example plugin is prebuilt, keep the core behavior and re-bundle with kirbyup for new work.
-
-## Examples
-
-- API endpoint namespace: `/api/my-embed/get-data` with `{ url }` input.
-- Field value shape: `{ input: "...", media: { title, code, providerName } }`.
-- Preview shows a status badge for synced vs failed.
-
-## Kirby 5 legacy frontend sketch (migration reference)
-
-For Kirby 6, replace the URL-field inheritance with a component declaring an object `value`, `emits: ['input']` and explicit `:value`/`@input` bindings. Import Vue helpers from `vue`, bundle Kirby-6-compatible kirbyuse, restore metadata from the initial value and ignore stale responses when URLs change rapidly. Test consent and script cleanup separately; the legacy sketch below is not a ready-to-run Kirby 6 component.
-
-```js
-// site/plugins/example-embed-field/src/components/EmbedField.vue
-import { computed, ref, useApi } from 'kirbyuse';
-
-const EmbedField = {
-  extends: 'k-url-field',
-  props: {
-    provider: String,
-  },
-  setup(props, { emit }) {
-    const api = useApi();
-    const media = ref({});
-    const loading = ref(false);
-    const inputValue = computed(() => (props.value && props.value.input ? props.value.input : ''));
-    const hasMedia = computed(() => media.value && media.value.code);
-
-    const emitInput = (url) => {
-      emit('input', { input: url, media: media.value });
-      loadProviderScripts();
-    };
-
-    const onInput = async (url) => {
-      if (!url) {
-        media.value = {};
-        return emitInput(url);
-      }
-      loading.value = true;
-      try {
-        const response = await api.get('my-embed/get-data', { url });
-        media.value = response.data || {};
-      } catch (error) {
-        media.value = {};
-      } finally {
-        emitInput(url);
-        loading.value = false;
-      }
-    };
-
-    const loadProviderScripts = () => {
-      if (media.value.providerName === 'Twitter' && !window.twttr) {
-        const script = document.createElement('script');
-        script.src = 'https://platform.twitter.com/widgets.js';
-        document.body.appendChild(script);
-      }
-    };
-
-    return { media, loading, inputValue, hasMedia, onInput };
-  },
-};
-
-panel.plugin('example/embed-field', {
-  fields: {
-    embed: EmbedField,
-  },
-});
-```
+1. Define the value contract, for example `{ input, media: { title, providerName, thumbnailUrl } }`. Implement conversion between stored YAML and this object, including empty and invalid old values. Preserve unrelated properties when updating metadata.
+2. Define a field-local `api()` route. Validate the URL's scheme, host and redirects before making any request; protect against SSRF, including private network destinations. Bound response size and time. Authorize access independently of field visibility.
+3. Declare an object `value`, `endpoints`, and `emits: ['input']` in the component. Bind Kirby input components with `:value`/`@input`. Call `this.$api.get(this.endpoints.field + '/preview', { url })` rather than constructing a page-only endpoint.
+4. Initialize the preview from `value.media`. Debounce input, assign each request a sequence number and ignore responses from older requests. Invalidate pending responses on clear and unmount. Only the current request may set loading/error state or emit a new value.
+5. Render metadata as text. For a provider player, use an allowlisted iframe origin with appropriate sandbox/permissions and consent. Provider HTML is not trusted: sanitize or isolate it, never pass raw HTML to `$h()` or `HtmlString`.
+6. Load third-party scripts only after consent and only for providers that require them. Share script loading deliberately, and destroy field-owned widgets/listeners on unmount. Handle fetch failure without silently replacing a previously saved value.
+7. Build with kirbyup 4. Import Vue helpers from `vue`; bundle compatible kirbyuse only if needed, leaving Vue external.
 
 ## Verification
 
-- URL changes trigger a single API call and update the preview.
-- Value is persisted as structured YAML/JSON in the content file.
-- Provider scripts load only when required.
+Exercise initial hydration, empty input, rapid A→B URL changes with A returning last, rejected URLs/redirects, denied access, failed providers, consent revocation and navigation cleanup. Save/reload the structured value and inspect the content file. Check site/page/file/user and nested placements that the plugin supports.
 
-## Links
+## Existing Kirby 5 plugins
 
-- https://getkirby.com/docs/reference/plugins/extensions/fields
-- https://getkirby.com/docs/reference/plugins/extensions/api
+Replace array-based PHP fields with classes. Replace URL-field inheritance when the stored value is an object. Vue 2 bundles and implicit component events need rebuilding; keep the content key stable and explicitly migrate incompatible old payloads. A rebuild alone does not migrate PHP storage or provider security.
 
-## Migration acceptance
+## References
 
-Verify PHP structured-value round-trips, initial preview hydration, rejected provider URLs, stale-request handling and safe HTML rendering. Rebuild with kirbyup 4 / Vue 3; a successful JavaScript build alone does not migrate the PHP field.
+- `kirby://kb/panel/reference-fields`
+- `kirby://kb/panel/tooling-kirbyup`
+- https://getkirby.com/releases/6/migration/plugin-developers/fields
+- https://getkirby.com/releases/6/migration/plugin-developers/trusted-html

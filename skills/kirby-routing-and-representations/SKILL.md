@@ -24,6 +24,7 @@ Use Kirby 6 conventions for new work. Reserve template data names `$slot`/`$slot
 ## Decision guide
 
 - Use content representations for page-backed JSON/XML/RSS.
+- Existing representations also support HTTP `Accept` negotiation. Test ordinary URLs, explicit extensions, Content-Type and cache separation; see `kirby://glossary/content-representation`.
 - Use routes for non-page endpoints, redirects, or custom logic.
 - Avoid greedy patterns that shadow representations.
 

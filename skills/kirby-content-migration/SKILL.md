@@ -14,6 +14,7 @@ Use Kirby 6 conventions for new work. For CMS upgrades, read `kirby://kb/scenari
 - Renaming a legacy picker type does not rename its stored key. Resolve existing targets; a new random UUID is not a relationship target.
 - Audit Symfony YAML changes in nested content: quote dates/reserved scalars and use real booleans. Invalid options now survive saves; transform removed keys explicitly.
 - Only follow actual update-schema links or entries in `kirby://fields/update-schema`; do not invent guides for arbitrary/display types.
+- PHP updates can accept supported objects/collections; MCP arguments still require JSON storage payloads. Check serialization, empty-number behavior and validation in `kirby://kb/scenarios/84-kirby-6-core-contracts` before bulk writes.
 
 ## Quick start
 

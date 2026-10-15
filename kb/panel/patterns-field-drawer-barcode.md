@@ -1,146 +1,31 @@
-# Barcode drawer field: Kirby 5 legacy sketch and Kirby 6 port
+# Barcode field with drawer editing
 
-## Goal
+## Contract
 
-Build a custom field that opens a drawer for editing, validates input, and renders a live preview (for example a barcode).
+Use a PHP `TextField` subclass for the stored code and server-side validation for the selected barcode standard. Register typed display props and a Vue 3 field component with a string `value` and explicit `input` event. Preserve leading zeroes; barcode identifiers are strings, not numbers.
 
-Kirby 6: use a PHP field class (e.g. a `TextField` subclass) and server-side validation. For server-backed drawers implement `drawers()` and open a path below `endpoints.field`; see `kirby://kb/panel/reference-fields` and `kirby://kb/panel/reference-dialogs`.
+Choose the barcode standard, checksum rules, renderer and drawer fields before implementing. Length alone is not a barcode validator.
 
-## Inputs to ask for
+## Implementation
 
-- Input format and validation rules
-- Preview rendering method (SVG, canvas)
-- Drawer form fields and helper text
-- Display options (height, font, colors, margins)
-
-## MCP tools/resources to use
-
-- kirby://roots
-- kirby_plugins_index
-- kirby_blueprints_index
-- kirby_blueprint_read
-- kirby://extension/fields
-
-## Files to touch
-
-- site/plugins/<plugin>/index.php
-- site/plugins/<plugin>/index.js or site/plugins/<plugin>/src/index.js
-- site/plugins/<plugin>/src/components/<Field>.vue
-- site/plugins/<plugin>/index.css
-
-## Implementation steps
-
-1. Define field `props` in PHP for validation/display options; set defaults for missing blueprint values.
-2. Extend `k-field` and render a preview area in the field body.
-3. Use `usePanel().drawer.open()` with a `k-form-drawer` for focused editing.
-4. Validate input on submit and emit `input` and `change` events.
-5. Render a preview using a client-side library, updating on value changes.
-6. If the plugin ships prebuilt JS, keep the drawer logic and preview rendering isolated.
-
-## Examples
-
-- Drawer includes a single text input plus an info block.
-- Preview uses SVG and updates after each successful submit.
-- Invalid input triggers a negative Panel notification.
-
-## Kirby 5 legacy frontend sketch (migration reference)
-
-For Kirby 6, use Vue 3 imports, declare `emits: ['input', 'change']`, replace the old `slot="options"` syntax with `<template #options>`, and render only after mount/`nextTick`. Clean up preview-library state on unmount. Verify the drawer API in the installed tag rather than assuming this legacy sketch is compatible.
-
-```js
-// site/plugins/example-barcode-field/src/components/BarcodeField.vue
-import { computed, ref, usePanel, watch } from 'kirbyuse';
-
-const BarcodeField = {
-  extends: 'k-field',
-  props: {
-    value: String,
-  },
-  setup(props, { emit }) {
-    const panel = usePanel();
-    const preview = ref(null);
-    const hasValue = computed(() => props.value && props.value.trim() !== '');
-
-    const isValid = (value) => value.length >= 4;
-
-    const renderPreview = () => {
-      if (!hasValue.value) return;
-      // Call a barcode library here and render into preview.value
-    };
-
-    const handleSubmit = (values) => {
-      const next = values.code || '';
-      if (!isValid(next)) {
-        panel.notification.error('Invalid code');
-        return;
-      }
-      emit('input', next);
-      emit('change', next);
-      panel.drawer.close();
-    };
-
-    const openDrawer = () => {
-      panel.drawer.open({
-        component: 'k-form-drawer',
-        props: {
-          title: 'Edit code',
-          fields: {
-            code: {
-              label: 'Code',
-              type: 'text',
-              minlength: 4,
-            },
-          },
-          value: { code: props.value },
-        },
-        on: {
-          submit: handleSubmit,
-        },
-      });
-    };
-
-    watch(
-      () => props.value,
-      () => renderPreview(),
-    );
-
-    renderPreview();
-
-    return { preview, hasValue, openDrawer, renderPreview };
-  },
-  template: `
-    <k-field v-bind="$props" class="k-barcode-field">
-      <k-button slot="options" icon="edit" size="xs" @click="openDrawer">Edit</k-button>
-      <div class="k-barcode-preview">
-        <svg ref="preview"></svg>
-      </div>
-    </k-field>
-  `,
-};
-
-panel.plugin('example/barcode-field', {
-  fields: {
-    barcode: BarcodeField,
-  },
-});
-```
+1. Add PHP validation for allowed characters, length and checksum. Decide whether an empty value is allowed. Keep a canonical string storage format.
+2. Render a `k-field` wrapper with an edit button in `<template #options>`. Use a local draft value while the drawer is open; cancel must not emit or save.
+3. Open the drawer with the Panel drawer API. For backend-defined drawers use the field's `drawers()` registration and `endpoints.field` path; register route factories as closures. Reuse `kirby://kb/panel/reference-dialogs` for route and submit conventions.
+4. On successful submit, emit the validated code through `input`, close the drawer and let the parent form own content saving. Do not independently write page content from a field preview. Backend validation remains authoritative even if the client also validates.
+5. Import a compatible barcode renderer with kirbyup 4. Render into a template-ref SVG/canvas only after mount/`nextTick`; watch external value changes, clear previews for empty values and display renderer errors without corrupting the saved code.
+6. Clean up renderer state and listeners on unmount. Render user text as text; library-generated SVG is not a reason to trust arbitrary stored HTML. Preserve label, help, disabled state and keyboard access.
 
 ## Verification
 
-- Drawer opens and closes reliably from the field options.
-- Validation rejects invalid input and preserves the old value.
-- Preview updates when the value changes.
+Exercise valid/invalid checksums, leading zeroes, empty values, cancel, repeated open/close, reset/discard, mount timing and save/reload. Test backend rejection independently of client validation, including API writes. Confirm the field works in every supported model/nested placement.
 
-## Gotchas
+## Existing Kirby 5 plugins
 
-- Don't mutate `props.value` directly; always `$emit('input', next)` to update the stored value.
-- If the preview library touches the DOM, re-render after refs exist (`onMounted`/`nextTick`).
+Replace array field definitions with a PHP class; use Vue helpers from `vue`, explicit emitted events and Vue 3 slots. Replace `slot="options"` with `<template #options>`. Do not render before refs exist or assume old drawer component internals remain unchanged.
 
-## Links
+## References
 
-- https://getkirby.com/docs/reference/plugins/extensions/fields
-- https://getkirby.com/docs/reference/plugins/ui
-
-## Migration acceptance
-
-Test valid/invalid submit, cancel without changing content, preview updates after mount, and save/reload. Rebuild with kirbyup 4; never treat client validation as the storage contract.
+- `kirby://kb/panel/reference-fields`
+- `kirby://kb/panel/reference-dialogs`
+- https://getkirby.com/releases/6/migration/plugin-developers/fields
+- https://getkirby.com/releases/6/migration/plugin-developers/vue-3

@@ -4,7 +4,11 @@
 
 Kirby UUIDs are stable identifiers for models (pages, files, users, etc.) that stay the same even if you move or rename content. This makes them ideal for persistent relations (linking/embedding) compared to paths and filenames.
 
-In Kirby, UUID strings typically look like `page://Eesj89FnbMzMMvs0` (or similar for files/users). Picker fields (`pages`, `files`, `users`) store UUIDs by default unless you disable UUID storage with the field’s `store` property. UUID generation can be configured (including UUID v4) or disabled entirely; the setting only affects newly generated UUIDs.
+In Kirby, UUID strings typically look like `page://Eesj89FnbMzMMvs0` (or similar for files/users). Picker fields (`pagepicker`, `filepicker`, `userpicker`) store UUIDs by default unless you disable UUID storage with the field’s `store` property. UUID generation can be configured (including UUID v4) or disabled entirely; the setting only affects newly generated UUIDs.
+
+Use `Kirby\Uuid\Uuid::from($uuidString)` to parse a UUID string, `Uuid::for($model)` for a model object, and `Kirby\Uuid\Permalink::from($url)` for a permalink. Generate a permalink with `$model->permalink()` or `$uuid->toPermalink()`; a UUID string and an HTTP permalink are different representations.
+
+For Kirby 5 code, replace string/permalink calls to `Uuid::for()` with the appropriate parser above, and `Uuid::url()` with `toPermalink()`. The old picker names remain blueprint aliases; use the canonical names in new definitions and PHP field resolution.
 
 ## In prompts (what it usually implies)
 

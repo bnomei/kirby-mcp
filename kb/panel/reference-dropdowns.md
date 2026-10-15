@@ -38,10 +38,10 @@ Kirby::plugin('vendor/todos', [
 Use Panel dropdown components and load options from the backend:
 
 ```html
-<k-dropdown>
-  <k-button @click="$refs.options.toggle()">Options</k-button>
-  <k-dropdown-content ref="options" :options="$dropdown('todos/' + id)" />
-</k-dropdown>
+<div>
+  <k-button @click="$refs.options.toggle($event.currentTarget)">Options</k-button>
+  <k-dropdown ref="options" :options="$dropdown('todos/' + id)" />
+</div>
 ```
 
 ## Data flow (props/events/load)
@@ -51,11 +51,11 @@ Use Panel dropdown components and load options from the backend:
 - `click` can trigger a global event for custom handling.
 - Option settings include `text`, `icon`, `dialog`, `click`, `link`, `target`, and `disabled`.
 - `dialog` can be a string pattern or a full dialog config array.
-- `click` can be a string or `['global' => 'myEvent', 'payload' => [...]]`. Subscribe through `this.$panel.events` and unsubscribe on unmount; the Kirby 5 legacy `$events` helper is removed.
+- A string `click` emits an `action` event on the dropdown; a `['global' => 'myEvent', 'payload' => [...]]` click emits globally. Subscribe through `this.$panel.events` and unsubscribe on unmount.
 
 ## Common UI components
 
-- `k-dropdown`, `k-dropdown-content`
+- `k-dropdown` (Kirby 5 `k-dropdown-content` was renamed; do not use the old wrapper structure)
 - `k-button`, `k-options-dropdown`
 
 ## Gotchas

@@ -6,7 +6,19 @@ Templates are PHP files that **render pages**. In a standard setup they live in 
 
 Template selection is tied to the page’s template name (usually derived from the content filename and blueprint/template setup). Kirby falls back to `default.php` if no matching template exists.
 
-Kirby 6 adds template stacks with `push()`, `endpush()` and `stack()`; do not declare application helpers with those names. Templates now receive `$slot` and `$slots`, so rename any controller/template data that used those reserved names. See https://getkirby.com/releases/6/template-stacks and the site migration guide.
+Use template stacks to collect output from snippets and render it elsewhere. Reserve `push()`, `endpush()` and `stack()` for Kirby, and `$slot`/`$slots` for template slots. For a Kirby 5 migration, rename application helpers or controller data that collide with these names.
+
+## Collect block assets with stacks
+
+In the header snippet, place `<?php stack('styles') ?>` inside the head. In each block snippet, push its stylesheet:
+
+```php
+<?php push('styles', css('assets/css/gallery.css'), unique: true) ?>
+```
+
+The stack placeholder is resolved after the template finishes, so the header can precede the block. `unique: true` deduplicates identical output, not filenames with different markup. For buffered markup use `push('scripts')`, output the markup, then `endpush()`.
+
+`stack()` echoes by default; `return: true` returns its placeholder. Stacks clear after rendering by default: to render the same stack twice, use `clear: false` on the first call. See https://getkirby.com/releases/6/template-stacks.
 
 ## In prompts (what it usually implies)
 

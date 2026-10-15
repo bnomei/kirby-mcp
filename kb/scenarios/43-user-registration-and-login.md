@@ -38,6 +38,25 @@ Implement frontend user registration and login using Kirby’s user system.
 
 Kirby 5 legacy `login2fa()` is deprecated and string status checks must become `state()`/`is(State::Pending)`. Password-only `login()` cannot complete a second factor. Users can opt into 2FA even when the site does not require it. Test pending, invalid, expired and successful challenges; never treat a pending status as a logged-in user. See https://getkirby.com/releases/6/migration/site-developers#users-permissions-and-login.
 
+## Password policy, passkeys and recovery
+
+Configure `auth.passwords` for a shared policy, then call `$kirby->auth()->passwords()->validate($password)` in custom registration/password forms. Catch `InvalidArgumentException` and show the policy's `hint()`. Supported rules include `minlength`, `maxlength`, lowercase/uppercase/digits/symbols, or custom `rules` with translated `hint`/`error`. The absolute bounds are 8–1000 characters. Do not log passwords or put them in diagnostics.
+
+```php
+return [
+    'auth' => [
+        'methods' => ['password', 'webauthn'],
+        'passwords' => ['minlength' => 12],
+    ],
+];
+```
+
+Method order chooses the initial login form. Keep a bootstrap method available: users must be logged in to enroll their first passkey. Passkeys require HTTPS except localhost and belong to the site's host; staging passkeys do not automatically work in production. Default challenges include `webauthn`, `totp`, `email`.
+
+With password `2fa` unset/false, enrolled users still complete their second factor. `true` requires a second step from everyone; keep email recovery available for users without another factor. `code`/`password-reset` login methods cannot be combined with mandatory password 2FA. Users enroll their own factors in the Security drawer; admins can remove another user's factor after their own password confirmation, but cannot enroll passkeys for them. Test recovery and Basic Auth integrations before rollout.
+
+Source: https://getkirby.com/releases/6/authentication.
+
 ## Examples (from the cookbook recipe; abridged)
 
 ```php

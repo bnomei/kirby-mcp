@@ -63,22 +63,17 @@ const ActionMenuButton = {
   },
   setup(props) {
     const panel = usePanel();
-    const button = ref(null);
     const menu = ref(null);
     const openDialog = () => {
       if (props.dialog) panel.dialog.open(props.dialog);
     };
-    const toggleMenu = () => {
-      if (menu.value) menu.value.toggle();
+    const toggleMenu = (event) => {
+      if (menu.value) menu.value.toggle(event.currentTarget);
     };
     const go = (item) => {
       if (item.disabled) return;
       if (item.link) window.open(item.link, item.target || '_blank');
     };
-    const anchor = computed(() => {
-      const btn = button.value;
-      return btn && (btn.$el || btn);
-    });
     const options = computed(() =>
       (props.items || []).map((item) => ({
         text: item.text,
@@ -89,21 +84,20 @@ const ActionMenuButton = {
       })),
     );
 
-    return { button, menu, anchor, options, openDialog, toggleMenu, go };
+    return { menu, options, openDialog, toggleMenu, go };
   },
   template: `
     <div class="k-action-menu-button">
       <k-button
-        ref="button"
         :icon="icon"
         :text="text"
         :theme="theme"
         @click="openDialog"
       />
-      <k-dropdown-content
+      <k-button v-if="options.length" icon="dots" @click="toggleMenu">More actions</k-button>
+      <k-dropdown
         v-if="options.length"
         ref="menu"
-        :anchor="anchor"
         :options="options"
       />
     </div>
