@@ -11,22 +11,14 @@
 
 CLI-first MCP server for Composer-based Kirby CMS projects. It lets an IDE or agent inspect your Kirby project (blueprints, templates, plugins, docs) and interact with a real Kirby runtime. It ships with a local knowledge base of Kirby concepts and tasks. For agent-specific install steps (Claude Code, Codex CLI) and Skill sync, see **Client setup**.
 
-**Kirby MCP v6.0.0** targets **Kirby 6**, with the currently verified CMS baseline **6.0.0-beta.1**, and requires PHP **8.3+**. The stable MCP package version does not make the CMS beta production-certified. Kirby 7+ is not supported. Composer rejects unsupported installed CMS versions without making the CMS a production dependency; runtime operations enforce the same boundary while static/reference access remains available. See the [migration ledger](docs/kirby-6-migration.md) for verification and known limitations.
-
-Content `fieldSchemas` retain display fields for inspection and expose `hasValue` (`true`, `false`, or `null` when unresolved). `pagelist`/`filelist` are display fields; `pagepicker`/`filepicker`/`userpicker` store selections. `hasValue` is not write permission or per-language storability. Update-schema links require a bundled guide and `hasValue: true`; unresolved/static types omit them, while guides remain directly accessible through reference resources. Raw blueprint reads do not normalize layouts or validate model-bound blueprints.
-
-Existing built-in sections remain supported through automatic conversion and need no immediate rewrite. Prefer canonical fields for new blueprints; custom sections require ports. Section resources remain available for existing configuration and migration guidance.
-
-It can also run as a projectless global reference MCP (`kirby-mcp --global`) for always-on Kirby docs/KB research. Global reference mode is intentionally separate from project-local MCP servers and cannot inspect, render, update, or run commands in a Kirby project.
-
-The server uses MCP SDK v0.8 dual-era dispatch: existing clients negotiate stateful sessions through `initialize`, while `2026-07-28` clients use stateless requests. MCP logging requests are not advertised—diagnostics are written to stderr instead. A valid W3C v00 `traceparent` supplied by a modern request, including the native HTTP header from browser clients, is included for correlation; `tracestate` and `baggage` are never logged.
-
 > [!WARNING]
 > Prompt injection is a serious security threat, especially when used with documents retrieved from the internet. You might not see it happen when observing the conversation with the agent!
 
 ## Quickstart
 
 ### Choose the version for your project
+
+MCP 6.x requires **Kirby 6 and PHP 8.3+**. For Kirby 5 projects, use MCP 1.x:
 
 | Installed CMS | Project-local development install                                                             |
 | ------------- | --------------------------------------------------------------------------------------------- |
@@ -36,6 +28,8 @@ The server uses MCP SDK v0.8 dual-era dispatch: existing clients negotiate state
 `^1.15` stays on MCP 1.x, including 1.15.1 and later compatible updates. An unversioned install selects the latest compatible **available** release; it does not promise support for future CMS majors. Use `^6.0` to keep MCP updates within major 6.
 
 The CMS is installed separately. For the current beta, opt in explicitly in the consumer project's Composer requirements, for example `composer require getkirby/cms:"6.0.0-beta.1" --with-all-dependencies`, before installing MCP. An explicit beta version permits that package under Composer's default `minimum-stability: stable`; MCP's development dependency does not opt a consumer into CMS betas. Review the dependency changes on a test copy first.
+
+The verified CMS baseline is **6.0.0-beta.1**; the stable MCP release does not make the CMS beta production-ready. Kirby 7+ is not supported. See the [migration ledger](docs/kirby-6-migration.md) for verification and known limitations.
 
 From your Kirby project root:
 
@@ -251,6 +245,19 @@ Modern `2026-07-28` clients receive one-hour public cache hints for the global r
 Tool results that expose concrete `kirby://` references in structured fields also include navigable resource links for modern clients; URI templates remain structured references only.
 
 <details>
+<summary>Blueprint inspection and content field schemas</summary>
+
+Raw blueprint reads show configuration without normalizing layouts or validating a model-bound blueprint. Content reads include `fieldSchemas`, which retain display fields for inspection:
+
+- `pagelist` and `filelist` display lists; `pagepicker`, `filepicker` and `userpicker` store selections.
+- `hasValue` is `true`, `false`, or `null` when unresolved. It describes whether a field holds a value, not write permission or whether it can store a value in a particular language.
+- Update-schema links appear only when `hasValue` is `true` and a bundled guide exists. Unresolved/static types omit these links; guides remain directly accessible through reference resources.
+
+Existing built-in sections remain supported through Kirby's automatic conversion and need no immediate rewrite. Prefer canonical fields for new blueprints; custom sections require ports. Section resources remain available for existing configuration and migration guidance.
+
+</details>
+
+<details>
 <summary>🛠️ Tools</summary>
 
 - `kirby_blueprint_read` — read a single blueprint by id
@@ -460,6 +467,8 @@ Start the server (point it at a composer-based Kirby project):
 
 HTTP is disabled by default. `vendor/bin/kirby-mcp` continues to run stdio unless you add the Kirby
 route and set `"http.enabled": true` in `.kirby-mcp/mcp.json` or environment variables.
+
+The server uses MCP SDK v0.8: existing clients negotiate stateful sessions through `initialize`, while clients using protocol `2026-07-28` send stateless requests.
 
 Modern resource update subscriptions use a bounded, 120-second local-filesystem bus under `.kirby-mcp/http-notifications` so separate same-host HTTP workers can communicate. Each subscribed URI requires the same bearer scope as reading that resource; project content subscriptions require `kirby-mcp:runtime`. This is not multi-host/NFS storage and does not promise durability or exactly-once delivery. Stateless dump calls must pass an explicit render `traceId` or request `path`; only handshake sessions provide last-trace convenience. Confirmation elicitation is a user-safety interaction, while HTTP bearer scopes are authorization; explicit `confirm=true` remains supported.
 
@@ -949,6 +958,7 @@ Environment variables:
 
 ## Troubleshooting
 
+- Unsupported Kirby version: Composer and runtime operations enforce the supported CMS range. Use MCP 1.x for Kirby 5; static/reference access remains available without a supported runtime.
 - “Unable to determine Kirby project root”: run from the Kirby project root or pass `--project=/absolute/path` (or set `KIRBY_MCP_PROJECT_ROOT`).
 - Runtime-only tools fail: run `vendor/bin/kirby-mcp install` and check `kirby_runtime_status`.
 - CLI command blocked: add patterns to `.kirby-mcp/mcp.json` (`cli.allow` / `cli.allowWrite`) or block with `cli.deny`.
@@ -959,6 +969,8 @@ Environment variables:
 - No dump output: ensure `dumps.enabled=true`, a `.kirby-mcp/dumps.jsonl` exists, and use the correct `traceId` with `kirby_dump_log_tail`.
 - HTTP client gets 401/403: confirm Bearer auth, token audience/resource, scopes, and `Origin` match the configured HTTP settings.
 - Claude custom connector cannot connect: confirm the public URL is the MCP endpoint (`https://example.com/mcp`), the route helper is registered, `http.enabled=true`, `http.auth.mode=oauth`, `http.oauthProvider.enabled=true`, and non-loopback requests reach Kirby over HTTPS.
+
+Server diagnostics go to stderr; MCP logging requests are not advertised. For request correlation, modern requests can supply a valid W3C v00 `traceparent`, including through the native HTTP header in browser clients. Diagnostics include that trace context but never log `tracestate` or `baggage`.
 
 ## Development
 
