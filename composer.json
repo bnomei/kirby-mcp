@@ -7,8 +7,10 @@
     "php": "^8.3",
     "firebase/php-jwt": "^7.0",
     "getkirby/cli": "^1.0",
+    "guzzlehttp/guzzle": "^7.9",
     "guzzlehttp/psr7": "^2.8",
-    "mcp/sdk": "^0.8.1",
+    "mcp/sdk": "^0.9.0",
+    "symfony/cache": "^7.3",
     "symfony/finder": "^7.3",
     "symfony/process": "^7.0",
     "symfony/yaml": "^7.0"

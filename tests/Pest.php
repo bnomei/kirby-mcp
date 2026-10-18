@@ -106,3 +106,9 @@ beforeEach(function (): void {
     \Bnomei\KirbyMcp\Project\ComposerInspector::clearCache();
     \Bnomei\KirbyMcp\Project\KirbyMcpConfig::clearCache();
 });
+
+uses()->afterEach(function (): void {
+    // Tests share a PHP process, unlike Kirby requests. Release session writes
+    // before another App opens the same cookie session with a separate store.
+    App::instance(null, true)?->session()->commit();
+})->in('Integration');

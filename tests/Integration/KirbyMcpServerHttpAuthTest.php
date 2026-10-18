@@ -132,7 +132,7 @@ it('rejects missing malformed invalid and query-string bearer credentials before
     $malformed = $handler->handle(
         $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
             ->withHeader('Content-Type', 'application/json')
-            ->withHeader('Authorization', 'Basic nope')
+            ->withHeader('Authorization', 'Bearer bad token')
             ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('initialize', 1)))
     );
     expect($malformed->getStatusCode())->toBe(400)

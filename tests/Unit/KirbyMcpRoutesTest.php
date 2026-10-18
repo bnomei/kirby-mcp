@@ -14,7 +14,7 @@ it('builds the copied Kirby route bundle for HTTP MCP', function (): void {
         ->and($routes[0]['method'])->toBe('GET|POST|DELETE|OPTIONS')
         ->and($routes[0]['name'])->toBe('kirby-mcp.mcp')
         ->and($routes[0]['action'])->toBeInstanceOf(Closure::class)
-        ->and($routes[1]['pattern'])->toBe('.well-known/oauth-protected-resource')
+        ->and($routes[1]['pattern'])->toBe('.well-known/oauth-protected-resource/(:all?)')
         ->and($routes[1]['method'])->toBe('GET')
         ->and($routes[1]['name'])->toBe('kirby-mcp.oauth-protected-resource')
         ->and($routes[1]['action'])->toBeInstanceOf(Closure::class)
@@ -64,6 +64,17 @@ it('exposes focused route helpers', function (): void {
     expect(KirbyMcpRoutes::mcp('/custom')[0]['pattern'])->toBe('custom')
         ->and(KirbyMcpRoutes::oauth()[0]['pattern'])->toBe(KirbyMcpRoutes::oauthProtectedResourceMetadata()[0]['pattern']);
 });
+
+it('routes canonical metadata paths independently of the MCP route path', function (string $path): void {
+    $definition = KirbyMcpRoutes::routes('/internal/mcp')[1];
+    $route = new KirbyRoute($definition['pattern'], $definition['method'], $definition['action']);
+
+    expect($route->match($path, 'GET'))->not->toBeFalse();
+})->with([
+    '.well-known/oauth-protected-resource',
+    '.well-known/oauth-protected-resource/mcp',
+    '.well-known/oauth-protected-resource/public/custom/mcp',
+]);
 
 it('maps custom OAuth provider URL paths to Kirby route patterns', function (): void {
     $routes = KirbyMcpRoutes::oauth(oauthPath: '/api/oauth?ignored=true');

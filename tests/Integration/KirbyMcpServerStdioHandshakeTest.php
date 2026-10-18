@@ -5,6 +5,32 @@ declare(strict_types=1);
 use Symfony\Component\Process\Process;
 use Composer\InstalledVersions;
 
+it('dispatches modern stdio tools without initialization and validates structured results', function (): void {
+    $meta = [
+        'io.modelcontextprotocol/protocolVersion' => '2026-07-28',
+        'io.modelcontextprotocol/clientCapabilities' => new stdClass(),
+        'io.modelcontextprotocol/clientInfo' => ['name' => 'tests', 'version' => 'dev'],
+    ];
+    $responses = runKirbyMcpStdioRequests([
+        ['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => ['_meta' => $meta]],
+        ['jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/call', 'params' => [
+            '_meta' => $meta, 'name' => 'kirby_info', 'arguments' => new stdClass(),
+        ]],
+    ]);
+
+    expect($responses)->toHaveCount(2);
+    $tools = array_column($responses[0]['result']['tools'], null, 'name');
+    $result = $responses[1]['result'] ?? [];
+    expect($responses[1]['id'])->toBe(2)
+        ->and($result['isError'] ?? false)->toBeFalse()
+        ->and($result)->toHaveKey('structuredContent');
+    $schema = $tools['kirby_info']['outputSchema'];
+    $sent = json_decode(json_encode($result['structuredContent'], JSON_THROW_ON_ERROR), false, flags: JSON_THROW_ON_ERROR);
+    $errors = (new Mcp\Capability\Discovery\SchemaValidator())->validateAgainstJsonSchema($sent, $schema);
+    expect($errors)->toBeEmpty()
+        ->and(json_decode($result['content'][0]['text'], true, flags: JSON_THROW_ON_ERROR))->toBe($result['structuredContent']);
+});
+
 it('negotiates only supported handshake protocol revisions', function (string $offered, string $expected): void {
     $responses = runKirbyMcpStdioRequests([[
         'jsonrpc' => '2.0',

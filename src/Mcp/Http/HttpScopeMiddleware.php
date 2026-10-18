@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Http;
 
 use Mcp\Schema\JsonRpc\MessageInterface;
+use Mcp\Server\Authorization\AccessToken;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -87,10 +88,8 @@ final readonly class HttpScopeMiddleware implements MiddlewareInterface
      */
     private function hasScopes(ServerRequestInterface $request, array $requiredScopes): bool
     {
-        $tokenScopes = $request->getAttribute('oauth.scopes', []);
-        if (!is_array($tokenScopes)) {
-            $tokenScopes = [];
-        }
+        $token = $request->getAttribute(AccessToken::class);
+        $tokenScopes = $token instanceof AccessToken ? $token->getScopes() : [];
 
         foreach ($requiredScopes as $requiredScope) {
             if (!in_array($requiredScope, $tokenScopes, true)) {

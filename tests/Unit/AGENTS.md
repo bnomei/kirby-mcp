@@ -22,6 +22,7 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 ## Guardrails
 
 - No network access.
+- SDK v0.9 auth tests use validated `AccessToken` objects; legacy `oauth.*` attributes must not grant scopes. Elicitation probes use typed `RequestSuspension` properties.
 - Cover unsupported runtime versions without blocking global-reference access; new schema guides must not be assumed present merely because a field appears in the Panel catalog.
 - Avoid persistent filesystem writes; use temp dirs and clean up.
 - Don’t assert incidental ordering unless it’s part of the contract.

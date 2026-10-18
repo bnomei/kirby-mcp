@@ -29,6 +29,10 @@ Revocation is checked per HTTP request, not continuously during an open stream. 
 loopback shared-token access remain trusted. See [Remote MCP permissions](docs/remote.md#configure-role-permissions) before
 exposing the server.
 
+CORS preflight (`OPTIONS`) does not require a bearer token, but still enforces allowed origins and rejects
+query-string credentials. Actual MCP requests require authentication; scopes and Kirby identity come
+from the SDK's validated access token, not client-supplied request metadata.
+
 ## Reporting a Vulnerability
 
 Please report security issues via GitHub Security Advisories for this repository.

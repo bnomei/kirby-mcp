@@ -15,6 +15,7 @@ use Mcp\Schema\Result\CallToolResult;
 use Mcp\Server\Session\FileSessionStore;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\Process\Process;
 
 function kirbyMcpStatelessRoot(): string
 {
@@ -353,10 +354,6 @@ it('ignores stale confirmation input and re-asks on a fresh stateless call', fun
 });
 
 it('streams resource updates published by a separate HTTP notification bus instance', function (): void {
-    if (!function_exists('pcntl_fork') || !function_exists('pcntl_waitpid')) {
-        $this->markTestSkipped('pcntl is required for the cross-process subscription test.');
-    }
-
     $root = kirbyMcpStatelessRoot();
     $factory = new HttpFactory();
     $handler = kirbyMcpStatelessHandler($root, sseMaxSeconds: 1);
@@ -372,28 +369,57 @@ it('streams resource updates published by a separate HTTP notification bus insta
             ->and($response->getHeaderLine('Content-Type'))->toStartWith('text/event-stream')
             ->and($response->getHeaderLine('Mcp-Session-Id'))->toBe('');
 
-        $child = pcntl_fork();
-        if ($child === -1) {
-            throw new RuntimeException('Unable to fork notification publisher.');
-        }
-        if ($child === 0) {
-            usleep(400000);
-            try {
+        // Capture stdout at the process boundary: the SDK flushes PHP output
+        // buffers while emitting SSE, so ob_get_clean() cannot retain the stream.
+        $process = new Process([
+            PHP_BINARY,
+            '-r', <<<'PHP'
+require 'tests/prepend.php';
+require 'vendor/autoload.php';
+$root = $argv[1];
+$factory = new GuzzleHttp\Psr7\HttpFactory();
+$handler = new Bnomei\KirbyMcp\Mcp\HttpMcpHandler(
+    serverFactory: new Bnomei\KirbyMcp\Mcp\ServerFactory(),
+    sessionStore: new Mcp\Server\Session\FileSessionStore($root . '/http-sessions'),
+    tokenValidator: new Bnomei\KirbyMcp\Mcp\Http\SharedTokenValidator('local-secret'),
+    projectRoot: $root,
+    sseMaxSeconds: 1,
+);
+$request = $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+    ->withHeader('Authorization', 'Bearer local-secret')
+    ->withHeader('Content-Type', 'application/json')
+    ->withHeader('MCP-Protocol-Version', '2026-07-28')
+    ->withHeader('Mcp-Method', 'subscriptions/listen')
+    ->withHeader('Accept', 'text/event-stream')
+    ->withBody($factory->createStream($argv[2]));
+$handler->handle($request)->getBody()->getContents();
+PHP,
+            $root,
+            (string) kirbyMcpStatelessRequest(
+                $factory,
+                'subscriptions/listen',
+                9,
+                ['notifications' => ['resourceSubscriptions' => ['kirby://site/content']]],
+            )->getBody(),
+        ], dirname(__DIR__, 2), timeout: 10);
+        $published = false;
+        $received = '';
+        $process->run(static function (string $type, string $output) use ($root, &$published, &$received): void {
+            if ($type !== Process::OUT) {
+                return;
+            }
+            $received .= $output;
+            if (!$published && str_contains($received, 'notifications/subscriptions/acknowledged')) {
                 $publisher = new FileNotificationBus($root);
                 $publisher->activate();
                 $publisher->publish(new ResourceUpdatedNotification('kirby://site/content'));
-                exit(0);
-            } catch (Throwable) {
-                exit(1);
+                $published = true;
             }
-        }
+        });
+        $stream = $process->getOutput();
 
-        ob_start();
-        $response->getBody()->getContents();
-        $stream = (string) ob_get_clean();
-        pcntl_waitpid($child, $status);
-
-        expect(pcntl_wexitstatus($status))->toBe(0)
+        expect($process->getExitCode())->toBe(0, $process->getErrorOutput())
+            ->and($published)->toBeTrue()
             ->and($stream)->toContain('notifications/subscriptions/acknowledged')
             ->and($stream)->toContain('notifications/resources/updated')
             ->and($stream)->toContain('kirby://site/content')

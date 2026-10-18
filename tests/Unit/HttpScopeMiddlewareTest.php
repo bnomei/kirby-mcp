@@ -27,10 +27,19 @@ function httpScopeOkHandler(): RequestHandlerInterface
     };
 }
 
+it('does not trust legacy OAuth attributes instead of the validated access token', function (): void {
+    $factory = new HttpFactory();
+    $request = $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+        ->withAttribute('oauth.scopes', HttpAuthScopes::all())
+        ->withBody($factory->createStream('null'));
+
+    expect(httpScopeMiddleware()->process($request, httpScopeOkHandler())->getStatusCode())->toBe(403);
+});
+
 it('treats a valid JSON-scalar POST body as the read floor without erroring', function (string $body): void {
     $factory = new HttpFactory();
     $request = $factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
-        ->withAttribute('oauth.scopes', [HttpAuthScopes::READ])
+        ->withAttribute(\Mcp\Server\Authorization\AccessToken::class, new \Mcp\Server\Authorization\AccessToken([HttpAuthScopes::READ]))
         ->withBody($factory->createStream($body));
 
     $response = httpScopeMiddleware()->process($request, httpScopeOkHandler());

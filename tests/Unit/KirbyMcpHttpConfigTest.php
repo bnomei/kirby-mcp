@@ -355,6 +355,19 @@ it('accepts OAuth config for non-loopback HTTP binds', function (): void {
     }
 });
 
+it('allows external OAuth discovery but still requires issuer and audience', function (): void {
+    $config = new KirbyMcpHttpConfig(
+        enabled: true,
+        authMode: 'oauth',
+        oauthIssuer: 'https://issuer.example.test',
+        oauthAudience: 'https://mcp.example.test/mcp',
+    );
+    expect($config->oauthJwksUri)->toBeNull()
+        ->and($config->validationErrors())->toBe([])
+        ->and((new KirbyMcpHttpConfig(enabled: true, authMode: 'oauth'))->validationErrors())
+        ->toBe(['HTTP OAuth auth requires an issuer.', 'HTTP OAuth auth requires an audience.']);
+});
+
 it('accepts built-in OAuth provider config without external issuer metadata', function (): void {
     $root = kirbyMcpHttpConfigTempRoot([
         'http' => [

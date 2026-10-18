@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp;
 
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
-use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
 
 final class KirbyMcpRoutes
 {
@@ -114,7 +113,7 @@ final class KirbyMcpRoutes
     {
         return [
             [
-                'pattern' => self::patternFromPath(ProtectedResourceMetadata::DEFAULT_METADATA_PATH),
+                'pattern' => '.well-known/oauth-protected-resource/(:all?)',
                 'method' => 'GET',
                 'action' => fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
                 'name' => 'kirby-mcp.oauth-protected-resource',

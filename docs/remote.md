@@ -70,6 +70,8 @@ Requests without an `Origin` pass the Origin check. With a nonempty `http.allowe
 
 Supply the secret as `KIRBY_MCP_HTTP_TOKEN` in the web process environment (or `http.auth.token`). Both PHP's `REMOTE_ADDR` and the request host must be loopback. Accepted loopback hosts are `localhost`, `::1`, and valid IPv4 literals in `127.0.0.0/8`. This is trusted-operator access, not a remote-user permission boundary.
 
+Shared-token HTTP requests on other `127/8` addresses (such as `127.0.0.2`) remain supported, but do not advertise OAuth resource metadata. SDK OAuth URLs allow plain HTTP only on `localhost`, `127.0.0.1`, and `::1`. Invalid request-derived resource URLs return HTTP 400 without stopping the listener.
+
 ### Remote bearer token
 
 ```json
@@ -192,6 +194,8 @@ Leave the built-in provider disabled and configure your issuer:
 
 Configure your issuer to grant the intended JWT `scope` claim, for example `kirby-mcp:read kirby-mcp:runtime`. The local `http.auth.scopes` setting does not restrict scopes accepted from external JWTs.
 
+External JWT signatures must use RS256, RS384, or RS512; built-in OAuth uses RS256 only. Omit `jwksUri` to discover the key set from the issuer; an explicit key-set URL and the issuer must use HTTPS except on `localhost`, `127.0.0.1`, or `::1` for development. Key caching is in-process, not a shared persistent cache.
+
 Kirby MCP validates JWT signatures through JWKS, issuer, audience/resource, expiry and operation scopes; it does not run your external authorization server. Set JWT `sub` to the exact ID of an existing Kirby user in this project, not an email or external account ID. Missing, unknown and deleted users are rejected. There is no account mapping or provisioning. Composer supplies the HTTP/JWT libraries used by Kirby MCP; `league/oauth2-server` is not required by the built-in provider.
 
 ## Scopes
@@ -290,9 +294,13 @@ Remote discovery, `kirby://tools`, and tool suggestions show only permitted capa
 
 Origin and bearer validation occur before MCP side effects. HTTP exposes the configured MCP endpoint, not an arbitrary command router. The optional Panel activity API has separate native Kirby admin authentication; see [activity behavior](configuration.md#panel-activity).
 
+Since 6.1.0, CORS preflight (`OPTIONS`) succeeds without a bearer token after Origin and query-credential checks. Actual MCP requests still require bearer authentication and operation scopes.
+
+OAuth protected-resource metadata now follows the resource URL path: `https://example.test/mcp` advertises `https://example.test/.well-known/oauth-protected-resource/mcp`. `KirbyMcpRoutes::routes()` handles this automatically. If you copied route arrays manually, refresh the metadata route to `.well-known/oauth-protected-resource/(:all?)`; the handler only serves the exact configured metadata path and query.
+
 ## Sessions, streaming and subscriptions
 
-The server uses MCP SDK v0.8. Existing clients negotiate stateful sessions through `initialize`; protocol `2026-07-28` uses stateless requests. HTTP tools do not require a preceding `kirby_init`, though it remains useful for audit and guidance. See [reference semantics](reference.md#confirmations-and-resource-links) for confirmations and resource links.
+The server uses MCP SDK v0.9. Existing clients negotiate stateful sessions through `initialize`; protocol `2026-07-28` uses stateless requests over HTTP and stdio. HTTP tools do not require a preceding `kirby_init`, though it remains useful for audit and guidance. See [reference semantics](reference.md#confirmations-and-resource-links) for confirmations and resource links.
 
 Modern resource subscriptions use a bounded 120-second local-filesystem notification bus at `.kirby-mcp/http-notifications`, allowing separate same-host workers to communicate. It is not multi-host/NFS storage and does not promise durability or exactly-once delivery. Each URI requires the scope needed to read it; project content subscriptions require `kirby-mcp:runtime`. Legacy GET/SSE streams recheck every stored subscription against the current token's scopes when opened, independently of role checks.
 

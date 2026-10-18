@@ -18,6 +18,15 @@ $transport = new Bnomei\KirbyMcp\Mcp\StreamableHttpGetTransport(
     pollIntervalMicros: 10000,
     heartbeatIntervalSeconds: 0.05,
 );
+$transport->setOutgoingMessagesProvider(static function (Symfony\Component\Uid\Uuid $sessionId): array {
+    static $sent = false;
+    if ($sent) {
+        return [];
+    }
+    $sent = true;
+
+    return [['message' => '{"jsonrpc":"2.0","method":"notifications/resources/updated","params":{"uri":"kirby://kb"}}', 'context' => ['type' => 'notification']]];
+});
 $transport->listen()->getBody()->getContents();
 PHP;
 
@@ -35,6 +44,7 @@ PHP;
 
     expect($process->getExitCode())->toBe(0)
         ->and($process->getErrorOutput())->toBe('')
+        ->and($process->getOutput())->toContain("event: message\ndata: {\"jsonrpc\":\"2.0\",\"method\":\"notifications/resources/updated\",\"params\":{\"uri\":\"kirby://kb\"}}\n\n")
         ->and($process->getOutput())->toContain(": connected\n\n")
         ->and($process->getOutput())->toContain(": keepalive\n\n")
         ->and($elapsed)->toBeGreaterThanOrEqual(0.9)

@@ -98,10 +98,6 @@ final readonly class KirbyMcpHttpConfig
                 $errors[] = 'HTTP OAuth auth requires an audience.';
             }
 
-            if ($this->oauthProvider->enabled === false && ($this->oauthJwksUri === null || $this->oauthJwksUri === '')) {
-                $errors[] = 'HTTP OAuth auth requires a JWKS URI.';
-            }
-
             if ($this->oauthProvider->enabled === true) {
                 array_push($errors, ...$this->oauthProvider->validationErrors());
             }

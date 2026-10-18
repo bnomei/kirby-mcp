@@ -95,7 +95,19 @@ final class HttpMcpListener
                 continue;
             }
 
-            $request = $this->readRequest($client, $factory);
+            try {
+                $request = $this->readRequest($client, $factory);
+            } catch (\InvalidArgumentException) {
+                $this->emitResponse($client, $factory->createResponse(400)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody($factory->createStream('{"error":"Invalid HTTP request."}')));
+                fclose($client);
+                if ($once) {
+                    break;
+                }
+
+                continue;
+            }
             if ($request === null) {
                 fclose($client);
                 continue;
@@ -196,7 +208,17 @@ final class HttpMcpListener
             $body .= $chunk;
         }
 
-        $host = $headers['Host'][0] ?? $headers['host'][0] ?? '127.0.0.1';
+        $hosts = [];
+        foreach ($headers as $name => $values) {
+            if (strcasecmp($name, 'Host') === 0) {
+                $hosts = array_merge($hosts, $values);
+            }
+        }
+        if (count($hosts) !== 1 || !preg_match('/^(?:\[[0-9a-fA-F:]+\]|[a-zA-Z0-9.-]+)(?::[0-9]+)?$/D', $hosts[0])
+            || !str_starts_with($target, '/') || str_starts_with($target, '//')) {
+            throw new \InvalidArgumentException('Invalid request authority or target.');
+        }
+        $host = $hosts[0];
         $uri = 'http://' . $host . $target;
         $request = $factory->createServerRequest($method, $uri)
             ->withBody($factory->createStream($body));

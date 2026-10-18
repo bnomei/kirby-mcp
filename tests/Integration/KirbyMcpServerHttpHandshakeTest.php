@@ -478,7 +478,8 @@ it('answers Streamable HTTP CORS preflight on the MCP endpoint', function (): vo
     $missingAuthResponse = $handler->handle(
         $factory->createServerRequest('OPTIONS', 'http://127.0.0.1/mcp')
     );
-    expect($missingAuthResponse->getStatusCode())->toBe(401);
+    expect($missingAuthResponse->getStatusCode())->toBe(204)
+        ->and((string) $missingAuthResponse->getBody())->toBe('');
 
     $queryCredentialResponse = $handler->handle(
         $factory->createServerRequest('OPTIONS', 'http://127.0.0.1/mcp?access_token=local-secret')
@@ -488,7 +489,6 @@ it('answers Streamable HTTP CORS preflight on the MCP endpoint', function (): vo
 
     $response = $handler->handle(
         $factory->createServerRequest('OPTIONS', 'http://127.0.0.1/mcp')
-            ->withHeader('Authorization', 'Bearer local-secret')
             ->withHeader('Origin', 'http://localhost:3000')
             ->withHeader('Access-Control-Request-Method', 'POST')
             ->withHeader('Access-Control-Request-Headers', 'Authorization,Content-Type,Mcp-Protocol-Version,Mcp-Method,Mcp-Name,Traceparent')
@@ -500,6 +500,17 @@ it('answers Streamable HTTP CORS preflight on the MCP endpoint', function (): vo
         ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Method')
         ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Mcp-Name')
         ->and($response->getHeaderLine('Access-Control-Allow-Headers'))->toContain('Traceparent');
+
+    $restrictedHandler = new HttpMcpHandler(
+        new ServerFactory(),
+        $sessionStore,
+        allowedOrigins: ['https://allowed.example.test'],
+        useKirbyUser: true,
+    );
+    $preflight = $factory->createServerRequest('OPTIONS', 'http://127.0.0.1/mcp');
+    expect($restrictedHandler->handle($preflight->withHeader('Origin', 'https://blocked.example.test'))->getStatusCode())->toBe(403)
+        ->and($restrictedHandler->handle($preflight->withHeader('Origin', 'https://allowed.example.test'))->getStatusCode())->toBe(204)
+        ->and($restrictedHandler->handle($preflight->withMethod('POST'))->getStatusCode())->toBe(401);
 });
 
 it('enforces shared-token authorization and origin policy before protocol handling', function (): void {
@@ -590,6 +601,80 @@ it('enforces shared-token authorization and origin policy before protocol handli
     expect($getResponse->getHeaderLine('Access-Control-Allow-Origin'))->toBe('http://allowed.example.test');
     expect($getResponse->getHeaderLine('Access-Control-Expose-Headers'))->toContain('Mcp-Session-Id');
 });
+
+it('keeps nonstandard loopback shared tokens scoped without publishing false OAuth metadata', function (): void {
+    $factory = new HttpFactory();
+    $handler = new HttpMcpHandler(
+        new ServerFactory(),
+        new \Mcp\Server\Session\InMemorySessionStore(),
+        sharedToken: 'local-secret',
+        tokenValidator: (new \Bnomei\KirbyMcp\Mcp\Http\HttpAuthFactory())->sharedTokenValidator('local-secret', ['mcp:read']),
+    );
+    $metadata = $factory->createServerRequest('GET', 'http://127.0.0.2/.well-known/oauth-protected-resource/mcp');
+    expect($handler->handle($metadata)->getStatusCode())->toBe(404);
+    $request = kirbyMcpHttpAuthorize($factory->createServerRequest('POST', 'http://127.0.0.2/mcp'))
+        ->withBody($factory->createStream(kirbyMcpHttpToolCall('kirby_run_cli_command', 1)));
+    $response = $handler->handle($request);
+    expect($response->getStatusCode())->toBe(403)
+        ->and((string) $response->getBody())->toContain('insufficient_scope');
+    expect($handler->handle($request->withUri(new \GuzzleHttp\Psr7\Uri('http://127.evil.test/mcp')))->getStatusCode())->toBe(400);
+});
+
+it('keeps one listener alive after invalid Host requests and authenticates loopback requests', function (string $host): void {
+    $port = kirbyMcpUnusedTcpPort();
+    if ($port === 0) {
+        $this->markTestSkipped('Local TCP listeners are unavailable.');
+    }
+    $process = new Process(
+        [PHP_BINARY, dirname(__DIR__, 2) . '/bin/kirby-mcp', 'http', '--project=' . cmsPath()],
+        dirname(__DIR__, 2),
+        [
+            'KIRBY_MCP_HTTP_ENABLED' => '1',
+            'KIRBY_MCP_HTTP_HOST' => $host,
+            'KIRBY_MCP_HTTP_PORT' => (string) $port,
+            'KIRBY_MCP_HTTP_AUTH_MODE' => 'shared-token',
+            'KIRBY_MCP_HTTP_TOKEN' => 'local-secret',
+        ],
+        timeout: 15,
+    );
+    $process->start();
+    try {
+        $deadline = microtime(true) + 5;
+        while (!str_contains($process->getErrorOutput(), 'Kirby MCP HTTP listening') && microtime(true) < $deadline && $process->isRunning()) {
+            usleep(20000);
+        }
+        expect($process->getErrorOutput())->toContain('Kirby MCP HTTP listening');
+        $send = static function (string $authority, ?string $token) use ($host, $port): string {
+            $client = stream_socket_client("tcp://{$host}:{$port}", timeout: 1);
+            if (!is_resource($client)) {
+                throw new RuntimeException('Listener stopped accepting requests.');
+            }
+            stream_set_timeout($client, 3);
+            $body = kirbyMcpHttpJsonRequest('initialize', 1);
+            $auth = $token === null ? '' : "Authorization: Bearer {$token}\r\n";
+            fwrite($client, "POST /mcp HTTP/1.1\r\nHost: {$authority}\r\n{$auth}Content-Type: application/json\r\nAccept: application/json, text/event-stream\r\nContent-Length: " . strlen($body) . "\r\nConnection: close\r\n\r\n{$body}");
+            $response = stream_get_contents($client);
+            fclose($client);
+
+            return (string) $response;
+        };
+        foreach (['example.test', '[broken', '127.0.0.1:99999', '127.0.0.1.evil.test'] as $invalidHost) {
+            expect($send($invalidHost, null))->toContain('HTTP/1.1 400');
+        }
+        $missing = $send("{$host}:{$port}", null);
+        expect($missing)->toContain('HTTP/1.1 401');
+        if ($host === '127.0.0.2') {
+            expect($missing)->not()->toContain('resource_metadata=');
+        }
+        expect($send("{$host}:{$port}", 'wrong-secret'))->toContain('HTTP/1.1 401');
+        expect($send("{$host}:{$port}", 'bad token'))->toContain('HTTP/1.1 400');
+        $valid = $send("{$host}:{$port}", 'local-secret');
+        expect($valid)->toContain('HTTP/1.1 200')->toContain('"serverInfo"');
+        expect($process->isRunning())->toBeTrue();
+    } finally {
+        $process->stop(1);
+    }
+})->with(['127.0.0.1', '127.0.0.2']);
 
 it('starts the opt-in kirby-mcp http listener and serves /mcp', function (): void {
     $bin = realpath(__DIR__ . '/../../bin/kirby-mcp');

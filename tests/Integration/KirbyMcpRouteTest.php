@@ -441,16 +441,16 @@ it('allows remote-token HTTP only when the request is fully loopback', function 
     });
 });
 
-it('serves OAuth protected resource metadata through the Kirby route adapter', function (): void {
+it('serves OAuth protected resource metadata through the Kirby route adapter', function (string $resourcePath): void {
     kirbyMcpRouteWithHttpEnv([
         'KIRBY_MCP_HTTP_ENABLED' => '1',
         'KIRBY_MCP_HTTP_AUTH_MODE' => 'oauth',
         'KIRBY_MCP_HTTP_OAUTH_ISSUER' => 'https://auth.example.test',
-        'KIRBY_MCP_HTTP_OAUTH_AUDIENCE' => 'https://example.test/mcp',
+        'KIRBY_MCP_HTTP_OAUTH_AUDIENCE' => 'https://example.test' . $resourcePath,
         'KIRBY_MCP_HTTP_OAUTH_JWKS_URI' => 'https://auth.example.test/.well-known/jwks.json',
-    ], function (): void {
+    ], function () use ($resourcePath): void {
         $factory = new HttpFactory();
-        $request = $factory->createServerRequest('GET', 'https://example.test/.well-known/oauth-protected-resource', [
+        $request = $factory->createServerRequest('GET', 'https://example.test/.well-known/oauth-protected-resource' . $resourcePath, [
             'REMOTE_ADDR' => '203.0.113.10',
         ]);
 
@@ -459,10 +459,15 @@ it('serves OAuth protected resource metadata through the Kirby route adapter', f
 
         expect($response->code())->toBe(200)
             ->and($payload['authorization_servers'] ?? null)->toBe(['https://auth.example.test'])
-            ->and($payload['resource'] ?? null)->toBe('https://example.test/mcp')
+            ->and($payload['resource'] ?? null)->toBe('https://example.test' . $resourcePath)
             ->and($payload['scopes_supported'] ?? [])->toContain('kirby-mcp:read');
+
+        foreach (['/wrong', $resourcePath . '/extra'] as $suffix) {
+            $wrongRequest = $request->withUri($request->getUri()->withPath('/.well-known/oauth-protected-resource' . $suffix));
+            expect(KirbyMcpRoute::handle(cmsPath(), $wrongRequest)->code())->toBe(404);
+        }
     });
-});
+})->with(['/mcp', '/public/custom/mcp']);
 
 it('serves the built-in OAuth provider flow for Claude Desktop custom connectors', function (): void {
     $projectRoot = cmsPath();

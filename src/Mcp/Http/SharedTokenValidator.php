@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Http;
 
+use Mcp\Server\Authorization\AccessToken;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationResult;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface;
 
@@ -26,12 +27,9 @@ final readonly class SharedTokenValidator implements AuthorizationTokenValidator
 
         $scopes = $this->scopes === [] ? HttpAuthScopes::all() : $this->scopes;
 
-        return AuthorizationResult::allow([
-            'oauth.claims' => [
-                'token_type' => 'shared-token',
-            ],
-            'oauth.scopes' => $scopes,
-            'oauth.subject' => 'shared-token',
-        ]);
+        return AuthorizationResult::allow(new AccessToken($scopes, [
+            'token_type' => 'shared-token',
+            'sub' => 'shared-token',
+        ]));
     }
 }

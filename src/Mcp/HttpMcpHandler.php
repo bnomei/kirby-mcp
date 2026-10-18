@@ -14,9 +14,9 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use GuzzleHttp\Psr7\HttpFactory;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\MessageInterface;
+use Mcp\Server\Authorization\AccessToken;
 use Mcp\Server\Session\SessionStoreInterface;
 use Mcp\Server\Transport\Http\Middleware\AuthorizationMiddleware;
-use Mcp\Server\Transport\Http\Middleware\OAuthRequestMetaMiddleware;
 use Mcp\Server\Transport\Http\Middleware\ProtocolVersionMiddleware;
 use Mcp\Server\Transport\Http\Middleware\ProtectedResourceMetadataMiddleware;
 use Mcp\Server\Transport\Http\MiddlewareRequestHandler;
@@ -65,8 +65,14 @@ final class HttpMcpHandler
             return $originResponse;
         }
 
-        $metadata = $this->protectedResourceMetadata($request);
-        if ($this->isProtectedResourceMetadataRequest($request, $metadata)) {
+        try {
+            $metadata = $this->protectedResourceMetadata($request);
+        } catch (\InvalidArgumentException) {
+            return $this->withCorsHeaders($responseFactory->createResponse(400)
+                ->withHeader('Content-Type', 'application/json')
+                ->withBody($streamFactory->createStream($this->encodeError('Invalid MCP resource URL.'))), $request);
+        }
+        if ($metadata !== null && $this->isProtectedResourceMetadataRequest($request, $metadata)) {
             return (new MiddlewareRequestHandler([
                 new ProtectedResourceMetadataMiddleware($metadata, $responseFactory, $streamFactory),
             ], static fn (): ResponseInterface => $responseFactory->createResponse(404)))->handle($request);
@@ -83,9 +89,38 @@ final class HttpMcpHandler
             return $this->withCorsHeaders($queryCredentialResponse, $request);
         }
 
+        if ($request->getMethod() === 'OPTIONS') {
+            return $this->withCorsHeaders($responseFactory->createResponse(204), $request);
+        }
+
+        if ($metadata === null) {
+            $authorization = $request->getHeaderLine('Authorization');
+            $result = AuthorizationResult::unauthorized();
+            if (preg_match('/^Bearer(?: |$)/i', $authorization)) {
+                $result = preg_match('/^Bearer +([A-Za-z0-9\-._~+\/]+=*) *$/i', $authorization, $matches)
+                    ? $this->authorizationTokenValidator()->validate($matches[1])
+                    : AuthorizationResult::badRequest();
+            }
+            $token = $result->getAccessToken();
+            if (!$result->isAllowed() || $token === null) {
+                $challenge = 'Bearer';
+                if ($result->getError() !== null) {
+                    $challenge .= ' error="' . $result->getError() . '"';
+                }
+
+                return $this->withCorsHeaders($this->withStructuredAuthErrorBody(
+                    $responseFactory->createResponse($result->getStatusCode())->withHeader('WWW-Authenticate', $challenge),
+                    $streamFactory,
+                ), $request);
+            }
+            $request = $request->withAttribute(AccessToken::class, $token);
+        }
+
+        $middleware = $metadata === null ? [] : [
+            new AuthorizationMiddleware($this->authorizationTokenValidator(), $metadata, responseFactory: $responseFactory, streamFactory: $streamFactory),
+        ];
         $handler = new MiddlewareRequestHandler([
-            new AuthorizationMiddleware($this->authorizationTokenValidator(), $metadata, $responseFactory),
-            new OAuthRequestMetaMiddleware($streamFactory),
+            ...$middleware,
             new HttpScopeMiddleware($this->scopePolicy ?? new HttpScopePolicy(), $responseFactory, $streamFactory),
         ], fn (ServerRequestInterface $request): ResponseInterface => $this->handleAuthorizedRequest(
             $request,
@@ -106,7 +141,8 @@ final class HttpMcpHandler
         $oauthUserId = null;
         $permissions = null;
         if ($this->useKirbyUser) {
-            $oauthUserId = $request->getAttribute('oauth.subject');
+            $token = $request->getAttribute(AccessToken::class);
+            $oauthUserId = $token instanceof AccessToken ? $token->getSubject() : null;
             if (!is_string($oauthUserId) || trim($oauthUserId) === '' || str_contains($oauthUserId, "\0")) {
                 return $responseFactory->createResponse(401)
                     ->withHeader('WWW-Authenticate', 'Bearer error="invalid_token"');
@@ -194,14 +230,28 @@ final class HttpMcpHandler
         };
     }
 
-    private function protectedResourceMetadata(ServerRequestInterface $request): ProtectedResourceMetadata
+    private function protectedResourceMetadata(ServerRequestInterface $request): ?ProtectedResourceMetadata
     {
         if ($this->protectedResourceMetadata instanceof ProtectedResourceMetadata) {
             return $this->protectedResourceMetadata;
         }
 
         $uri = $request->getUri();
-        $authority = $uri->getAuthority() !== '' ? $uri->getAuthority() : '127.0.0.1';
+        $authority = $uri->getAuthority();
+        if ($authority === '' || $uri->getUserInfo() !== '') {
+            throw new \InvalidArgumentException('Invalid resource authority.');
+        }
+
+        // SDK OAuth metadata permits HTTP only on localhost, ::1 and 127.0.0.1.
+        // Local shared tokens also support real 127/8 literals. They need no
+        // OAuth discovery; do not advertise a fabricated HTTPS or localhost URL.
+        $host = $uri->getHost();
+        if ($this->sharedToken !== null && $this->sharedToken !== ''
+            && !$this->useKirbyUser && $uri->getScheme() === 'http'
+            && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+            && str_starts_with($host, '127.') && $host !== '127.0.0.1') {
+            return null;
+        }
 
         return (new HttpAuthFactory())->metadata(
             issuer: $uri->getScheme() . '://' . $authority,
@@ -214,7 +264,8 @@ final class HttpMcpHandler
         ProtectedResourceMetadata $metadata,
     ): bool {
         return $request->getMethod() === 'GET'
-            && in_array($request->getUri()->getPath(), $metadata->getMetadataPaths(), true);
+            && $request->getUri()->getPath() === $metadata->getMetadataPath()
+            && $request->getUri()->getQuery() === (string) parse_url($metadata->getMetadataUrl(), PHP_URL_QUERY);
     }
 
     private function handleGetRequest(

@@ -6,14 +6,16 @@ namespace Bnomei\KirbyMcp\Mcp\Http;
 
 use Bnomei\KirbyMcp\Mcp\OAuth\OAuthFileStore;
 use Bnomei\KirbyMcp\Mcp\OAuth\OAuthKeySet;
-use Bnomei\KirbyMcp\Mcp\OAuth\StaticJwksProvider;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig;
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpToken;
+use Firebase\JWT\CachedKeySet;
+use Firebase\JWT\JWK;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\HttpFactory;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface;
-use Mcp\Server\Transport\Http\OAuth\JwksProvider;
 use Mcp\Server\Transport\Http\OAuth\JwtTokenValidator;
-use Mcp\Server\Transport\Http\OAuth\OidcDiscovery;
 use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 final readonly class HttpAuthFactory
 {
@@ -42,11 +44,34 @@ final readonly class HttpAuthFactory
 
     public function oauthValidator(KirbyMcpHttpConfig $config): AuthorizationTokenValidatorInterface
     {
+        $cache = new ArrayAdapter();
+        $client = new Client(['timeout' => 10, 'allow_redirects' => false]);
+        $requests = new HttpFactory();
+        if ($config->oauthJwksUri === null) {
+            return JwtTokenValidator::fromIssuer(
+                issuer: (string) $config->oauthIssuer,
+                audience: (string) $config->oauthAudience,
+                cache: $cache,
+                httpClient: $client,
+                requestFactory: $requests,
+                algorithms: ['RS256', 'RS384', 'RS512'],
+            );
+        }
+
+        foreach ([(string) $config->oauthIssuer, $config->oauthJwksUri] as $url) {
+            $parts = parse_url($url);
+            $host = strtolower(trim($parts['host'] ?? '', '[]'));
+            $scheme = strtolower($parts['scheme'] ?? '');
+            if ($host === '' || ($scheme !== 'https' && ($scheme !== 'http' || !in_array($host, ['localhost', '127.0.0.1', '::1'], true)))) {
+                throw new \InvalidArgumentException('OAuth issuer and JWKS URI must use HTTPS (except loopback).');
+            }
+        }
+
         return new JwtTokenValidator(
             issuer: (string) $config->oauthIssuer,
             audience: (string) $config->oauthAudience,
-            jwksProvider: new JwksProvider(new OidcDiscovery()),
-            jwksUri: $config->oauthJwksUri,
+            keys: new CachedKeySet($config->oauthJwksUri, $client, $requests, $cache, 3600, true, 'RS256'),
+            algorithms: ['RS256', 'RS384', 'RS512'],
         );
     }
 
@@ -61,8 +86,8 @@ final readonly class HttpAuthFactory
         return new JwtTokenValidator(
             issuer: (string) $config->oauthIssuer,
             audience: (string) $config->oauthAudience,
-            jwksProvider: new StaticJwksProvider((new OAuthKeySet($store))->jwks()),
-            jwksUri: $config->oauthJwksUri,
+            keys: JWK::parseKeySet((new OAuthKeySet($store))->jwks(), 'RS256'),
+            algorithms: ['RS256'],
         );
     }
 

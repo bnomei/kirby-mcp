@@ -155,10 +155,10 @@ function oauthPermissionsHandler(string $root, array $subjects, bool $useKirbyUs
                 return AuthorizationResult::unauthorized('invalid_token');
             }
 
-            return AuthorizationResult::allow([
-                'oauth.scopes' => HttpAuthScopes::all(),
-                'oauth.subject' => $this->subjects[$accessToken],
-            ]);
+            return AuthorizationResult::allow(new \Mcp\Server\Authorization\AccessToken(
+                HttpAuthScopes::all(),
+                ['sub' => $this->subjects[$accessToken]],
+            ));
         }
     };
 

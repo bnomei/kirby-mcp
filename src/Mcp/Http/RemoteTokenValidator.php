@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Http;
 
 use Bnomei\KirbyMcp\Project\KirbyMcpHttpToken;
+use Mcp\Server\Authorization\AccessToken;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationResult;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface;
 
@@ -39,13 +40,10 @@ final readonly class RemoteTokenValidator implements AuthorizationTokenValidator
 
         $scopes = $matchedToken->scopes === [] ? [HttpAuthScopes::READ] : $matchedToken->scopes;
 
-        return AuthorizationResult::allow([
-            'oauth.claims' => [
-                'token_id' => $matchedToken->id,
-                'token_type' => 'remote-token',
-            ],
-            'oauth.scopes' => $scopes,
-            'oauth.subject' => $matchedToken->userId,
-        ]);
+        return AuthorizationResult::allow(new AccessToken($scopes, [
+            'token_id' => $matchedToken->id,
+            'token_type' => 'remote-token',
+            'sub' => $matchedToken->userId,
+        ]));
     }
 }

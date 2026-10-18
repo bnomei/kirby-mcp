@@ -5,6 +5,14 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.1.0] - 2026-10-18
+
+- Upgrade to MCP PHP SDK v0.9.0 for Kirby 6, including concurrent-request isolation fixes, stricter structured tool output validation, and modern `2026-07-28` support over stdio. PHP 8.3+ and the Kirby 6 baseline remain unchanged; no Kirby 5 backport.
+- Migrate bearer scopes and Kirby user identity to the SDK's validated access-token API; update external JWKS discovery and built-in OAuth signature validation while retaining operation scopes and Kirby permissions.
+- Allow external OAuth issuer discovery when `jwksUri` is omitted and explicitly support RS256/RS384/RS512 signatures; built-in OAuth remains RS256-only. Reject malformed HTTP authorities and invalid resource URLs without terminating the listener; retain shared-token access on valid 127/8 addresses without inventing OAuth metadata URLs.
+- Serve OAuth protected-resource metadata at the resource-specific RFC 9728 URL (for example, `/.well-known/oauth-protected-resource/mcp`). Refresh manually copied metadata routes; installations using `KirbyMcpRoutes::routes()` pick up the new route automatically.
+- Allow unauthenticated CORS preflight after Origin and query-credential checks; actual MCP requests still require bearer authentication. Update completion-provider metadata and regression coverage for modern stdio, confirmation binding, and streamed resource notifications.
+
 ## [6.0.1] - 2026-10-15
 
 - Reorganize the README around capabilities, local setup, and everyday usage, with grouped tool/resource lists and a dedicated introduction to the bundled knowledge base.

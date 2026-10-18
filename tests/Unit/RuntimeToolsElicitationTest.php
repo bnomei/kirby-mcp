@@ -10,6 +10,7 @@ use Mcp\Schema\Request\ElicitRequest;
 use Mcp\Server\RequestContext;
 use Mcp\Server\Session\InMemorySessionStore;
 use Mcp\Server\Session\Session;
+use Mcp\Server\Suspension\RequestSuspension;
 
 it('uses a titled enum schema for confirmation elicitation', function (): void {
     $session = new Session(new InMemorySessionStore(60));
@@ -26,11 +27,10 @@ it('uses a titled enum schema for confirmation elicitation', function (): void {
     $fiber = new Fiber(static fn (): mixed => $method->invoke($tools, $context, 'Execute this write?'));
     $suspended = $fiber->start();
 
-    expect($suspended)->toBeArray();
-    expect($suspended['type'] ?? null)->toBe('request');
-    expect($suspended['input_key'] ?? null)->toMatch('/^kirby-confirm-[a-f0-9]{64}$/');
+    expect($suspended)->toBeInstanceOf(RequestSuspension::class);
+    expect($suspended->inputKey)->toMatch('/^kirby-confirm-[a-f0-9]{64}$/');
 
-    $request = $suspended['request'] ?? null;
+    $request = $suspended->request;
     expect($request)->toBeInstanceOf(ElicitRequest::class);
     if (!$request instanceof ElicitRequest) {
         throw new RuntimeException('Expected an elicitation request.');
@@ -77,8 +77,8 @@ it('binds stateless confirmation answers to every security-relevant operation in
         $fiber = new Fiber(static fn (): mixed => $method->invoke($tools, $context, 'Execute?', $operation));
         $suspended = $fiber->start();
 
-        expect($suspended)->toBeArray();
-        $key = $suspended['input_key'] ?? null;
+        expect($suspended)->toBeInstanceOf(RequestSuspension::class);
+        $key = $suspended->inputKey;
         expect($key)->toBeString();
 
         return $key;

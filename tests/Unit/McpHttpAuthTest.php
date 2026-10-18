@@ -16,8 +16,8 @@ it('validates shared bearer tokens with constant-time exact matches and scoped a
 
     $allowed = $validator->validate('local-secret');
     expect($allowed->isAllowed())->toBeTrue()
-        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->toBe([HttpAuthScopes::READ])
-        ->and($allowed->getAttributes()['oauth.subject'] ?? null)->toBe('shared-token');
+        ->and($allowed->getAccessToken()?->getScopes())->toBe([HttpAuthScopes::READ])
+        ->and($allowed->getAccessToken()?->getSubject())->toBe('shared-token');
 
     $denied = $validator->validate('wrong-secret');
     expect($denied->isAllowed())->toBeFalse()
@@ -32,10 +32,10 @@ it('validates hashed remote bearer tokens with per-token scoped attributes', fun
 
     $allowed = $validator->validate('remote-secret');
     expect($allowed->isAllowed())->toBeTrue()
-        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->toBe([HttpAuthScopes::READ])
-        ->and($allowed->getAttributes()['oauth.subject'] ?? null)->toBe('editor-user')
-        ->and($allowed->getAttributes()['oauth.claims']['token_type'] ?? null)->toBe('remote-token')
-        ->and($allowed->getAttributes()['oauth.claims']['token_id'] ?? null)->toBe('claude-code');
+        ->and($allowed->getAccessToken()?->getScopes())->toBe([HttpAuthScopes::READ])
+        ->and($allowed->getAccessToken()?->getSubject())->toBe('editor-user')
+        ->and($allowed->getAccessToken()?->getClaim('token_type'))->toBe('remote-token')
+        ->and($allowed->getAccessToken()?->getClaim('token_id'))->toBe('claude-code');
 
     $denied = $validator->validate('wrong-secret');
     expect($denied->isAllowed())->toBeFalse()
@@ -51,9 +51,9 @@ it('defaults remote tokens with empty scopes to read-only instead of all scopes'
     $allowed = $validator->validate('remote-secret');
 
     expect($allowed->isAllowed())->toBeTrue()
-        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->toBe([HttpAuthScopes::READ])
-        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::ADMIN)
-        ->and($allowed->getAttributes()['oauth.scopes'] ?? null)->not()->toContain(HttpAuthScopes::WRITE);
+        ->and($allowed->getAccessToken()?->getScopes())->toBe([HttpAuthScopes::READ])
+        ->and($allowed->getAccessToken()?->getScopes())->not()->toContain(HttpAuthScopes::ADMIN)
+        ->and($allowed->getAccessToken()?->getScopes())->not()->toContain(HttpAuthScopes::WRITE);
 });
 
 it('rejects remote tokens without a valid bound user', function (string $userId): void {

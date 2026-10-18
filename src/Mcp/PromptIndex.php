@@ -253,8 +253,10 @@ final class PromptIndex
             if (is_string($provider->enum) && $provider->enum !== '') {
                 $completion['enum'] = $provider->enum;
             }
-            if (is_string($provider->providerClass) && $provider->providerClass !== '') {
-                $completion['providerClass'] = $provider->providerClass;
+            if ($provider->provider !== null) {
+                $completion['providerClass'] = is_string($provider->provider)
+                    ? $provider->provider
+                    : $provider->provider::class;
             }
             if ($completion === []) {
                 $completion = null;

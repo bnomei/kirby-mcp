@@ -20,6 +20,8 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Coverage: run `composer cms:starterkit` then `herd coverage ./vendor/bin/pest --coverage` (see `TESTING.md`).
 - When adding runtime commands/tools, add integration tests for both the CLI command and the MCP tool wrapper.
 - For HTTP transport changes, add focused integration coverage for default stdio not entering HTTP mode, `/mcp` POST/GET/DELETE/OPTIONS behavior, `MCP-Session-Id` reuse, auth/origin failures, remote-token public-route guards, insufficient scopes, and unchanged confirm gates for write/eval/query tools.
+- Cover unauthenticated OPTIONS with origin/query-credential restrictions, resource-specific OAuth metadata paths, and modern stdio calls without initialization. Capture stateless SSE at the subprocess stdout boundary because SDK v0.9 flushes PHP output buffers; publish only after subscription acknowledgment.
+- Exercise malformed Host requests followed by successful authentication in the same listener process, including 127.0.0.2. External OAuth fixtures must prove positive authentication for discovery and explicit JWKS URLs, plus signature/issuer/audience/expiry and unsupported-algorithm rejection; negative-only tests cannot prove working validation.
 - OAuth user permissions coverage must exercise real content-update subprocesses with allowed/restricted users, reject unknown users, and verify that request metadata cannot override the authenticated identity. Use an isolated project and clean it up.
 - Remote permission coverage must install the real plugin adapter, grant every required ancestor permission explicitly, verify filtered discovery and direct-request denial, and prove role changes are observed without recreating the HTTP handler.
 - Remote-token fixtures must bind each token to an existing Kirby `userId`; shared-token and local stdio fixtures remain intentionally unbound trusted access.
@@ -34,3 +36,4 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Keep `tests/cms/` stable; avoid editing it unless the test explicitly requires it.
 - Avoid network calls; tests should pass offline.
 - Global `beforeEach` clears Kirby MCP static caches; don’t rely on cached state across tests.
+- Integration teardown commits the active Kirby session because tests share a PHP process. Commit any other App's session before replacing it; otherwise a later App can deadlock on the same cookie session's write lock.
