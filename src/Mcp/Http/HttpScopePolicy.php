@@ -99,11 +99,17 @@ final class HttpScopePolicy
 
         $normalized = strtolower(trim($uri));
 
-        if (str_contains($normalized, '/update-schema')) {
+        if (preg_match('~^kirby://(?:(?:fields|blueprints)|(?:field|blueprint)/[^/]+)/update-schema$~D', $normalized) === 1) {
             return [HttpAuthScopes::READ];
         }
 
         $runtimePrefixes = [
+            'kirby://file/read/',
+            'kirby://page/children/',
+            'kirby://page/files/',
+            'kirby://site/children',
+            'kirby://site/files',
+            'kirby://browse/',
             'kirby://page/content',
             'kirby://site/content',
             'kirby://file/content',
@@ -167,6 +173,7 @@ final class HttpScopePolicy
 
         if (
             $toolName === 'kirby_generate_ide_helpers'
+            || in_array($toolName, ['kirby_upload_file', 'kirby_move_page'], true)
             ||
             str_contains($toolName, '_update_')
             || str_starts_with($toolName, 'kirby_update_')
@@ -177,6 +184,10 @@ final class HttpScopePolicy
         }
 
         if (in_array($toolName, [
+            'kirby_list_children',
+            'kirby_list_files',
+            'kirby_read_file',
+            'kirby_view_image',
             'kirby_read_page_content',
             'kirby_read_site_content',
             'kirby_read_file_content',

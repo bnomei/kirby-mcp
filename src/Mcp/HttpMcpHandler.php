@@ -78,7 +78,7 @@ final class HttpMcpHandler
             ], static fn (): ResponseInterface => $responseFactory->createResponse(404)))->handle($request);
         }
 
-        if ($request->getUri()->getPath() !== $this->path) {
+        if (!in_array($request->getUri()->getPath(), [$this->path, $this->path . '/upload'], true)) {
             return $this->withCorsHeaders($responseFactory->createResponse(404)
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody($streamFactory->createStream($this->encodeError('MCP endpoint not found.'))), $request);
@@ -121,7 +121,7 @@ final class HttpMcpHandler
         ];
         $handler = new MiddlewareRequestHandler([
             ...$middleware,
-            new HttpScopeMiddleware($this->scopePolicy ?? new HttpScopePolicy(), $responseFactory, $streamFactory),
+            ...($request->getUri()->getPath() === $this->path . '/upload' ? [] : [new HttpScopeMiddleware($this->scopePolicy ?? new HttpScopePolicy(), $responseFactory, $streamFactory)]),
         ], fn (ServerRequestInterface $request): ResponseInterface => $this->handleAuthorizedRequest(
             $request,
             $responseFactory,
@@ -161,7 +161,7 @@ final class HttpMcpHandler
             if (!$permissions->allows('access')) {
                 return $this->permissionDenied($responseFactory, $streamFactory);
             }
-            if ($request->getMethod() === 'POST') {
+            if ($request->getMethod() === 'POST' && $request->getUri()->getPath() === $this->path) {
                 $body = $request->getBody()->__toString();
                 $request->getBody()->rewind();
                 $payload = json_decode($body, true);
@@ -173,6 +173,18 @@ final class HttpMcpHandler
                     }
                 }
             }
+        }
+
+        if ($request->getUri()->getPath() === $this->path . '/upload') {
+            $scopeError = (new HttpScopeMiddleware($this->scopePolicy ?? new HttpScopePolicy(), $responseFactory, $streamFactory))
+                ->checkScopes($request, [Http\HttpAuthScopes::WRITE]);
+            if ($scopeError !== null) {
+                return $scopeError;
+            }
+            if ($permissions !== null && !$permissions->tool('kirby_upload_file')) {
+                return $this->permissionDenied($responseFactory, $streamFactory);
+            }
+            return $this->upload($request, $oauthUserId, $responseFactory, $streamFactory);
         }
 
         if ($request->getMethod() === 'GET') {
@@ -202,7 +214,61 @@ final class HttpMcpHandler
             requireInit: false,
             oauthUserId: $oauthUserId,
             permissions: $permissions,
+            uploadUrl: (string)$request->getUri()->withPath($this->path . '/upload')->withQuery('')->withFragment(''),
         )->run($transport);
+    }
+
+    private function upload(ServerRequestInterface $request, ?string $userId, ResponseFactoryInterface $responses, StreamFactoryInterface $streams): ResponseInterface
+    {
+        if ($request->getMethod() !== 'POST') {
+            return $responses->createResponse(405)->withHeader('Allow', 'POST, OPTIONS');
+        }
+        $source = null;
+        try {
+            $context = new ProjectContext(oauthUserId: $userId);
+            $ticket = (new Http\UploadTickets($context->projectRoot()))->claim($request->getHeaderLine('X-Kirby-Upload-Ticket'), $userId);
+            $bus = $this->notificationBus();
+            $bus?->activate();
+            $tools = new Tools\NativeContentTools($context, $bus);
+            $preview = $tools->run($ticket['input']);
+            if (($preview['ok'] ?? false) !== true || $preview !== $ticket['preview']) {
+                throw new \RuntimeException('Upload policy or destination changed; request a new ticket.');
+            }
+            $source = tempnam(sys_get_temp_dir(), 'kirby-upload-');
+            if ($source === false) {
+                throw new \RuntimeException('Unable to stage upload.');
+            }
+            $out = fopen($source, 'wb');
+            if ($out === false) {
+                throw new \RuntimeException('Unable to stage upload.');
+            }
+            try {
+                $size = 0;
+                while (!$request->getBody()->eof()) {
+                    $chunk = $request->getBody()->read(65536);
+                    $size += strlen($chunk);
+                    if ($size > $ticket['preview']['maxBytes']) {
+                        throw new \RuntimeException('Upload exceeds ticket byte limit.');
+                    }
+                    if (fwrite($out, $chunk) !== strlen($chunk)) {
+                        throw new \RuntimeException('Unable to stage upload.');
+                    }
+                }
+            } finally {
+                fclose($out);
+            }
+            $payload = $tools->run($ticket['input'] + ['source' => $source, 'expectedUpload' => $ticket['preview']]);
+            $status = ($payload['ok'] ?? false) === true ? 201 : 400;
+        } catch (\Throwable $e) {
+            $payload = ['ok' => false, 'message' => $e->getMessage()];
+            $status = 400;
+        } finally {
+            if (is_string($source)) {
+                @unlink($source);
+            }
+        }
+        return $responses->createResponse($status)->withHeader('Content-Type', 'application/json')
+            ->withHeader('Cache-Control', 'no-store')->withBody($streams->createStream(json_encode($payload, JSON_THROW_ON_ERROR)));
     }
 
     private function permissionDenied(ResponseFactoryInterface $responses, StreamFactoryInterface $streams): ResponseInterface
@@ -432,7 +498,7 @@ final class HttpMcpHandler
         $headers = [
             'Access-Control-Allow-Origin' => $origin !== '' ? $origin : '*',
             'Access-Control-Allow-Methods' => 'GET, POST, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Method,Mcp-Name,Mcp-Protocol-Version,Traceparent,' . self::SESSION_HEADER,
+            'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Method,Mcp-Name,Mcp-Protocol-Version,Traceparent,X-Kirby-Upload-Ticket,' . self::SESSION_HEADER,
             'Access-Control-Expose-Headers' => self::SESSION_HEADER,
         ];
 

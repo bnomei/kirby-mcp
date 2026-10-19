@@ -14,6 +14,7 @@ final class ProjectContext
 
     public function __construct(
         public readonly ?string $oauthUserId = null,
+        public readonly ?string $uploadUrl = null,
     ) {
     }
 

@@ -661,6 +661,16 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($invalidRefreshResponse->code())->toBe(400)
                 ->and($invalidRefresh['error'] ?? null)->toBe('invalid_scope');
 
+            // Existing client/grant scopes must not outlive a narrowed provider policy.
+            putenv('KIRBY_MCP_HTTP_SCOPES=kirby-mcp:read');
+            KirbyMcpConfig::clearCache();
+            parse_str($authorizeQuery, $defaultScopeParams);
+            unset($defaultScopeParams['scope']);
+            $defaultScopeRequest = $factory->createServerRequest('GET', 'https://example.test/mcp/oauth/authorize?' . http_build_query($defaultScopeParams), ['REMOTE_ADDR' => '203.0.113.10']);
+            $defaultScopeResponse = KirbyMcpOAuthRoute::handle($projectRoot, $defaultScopeRequest);
+            expect($defaultScopeResponse->code())->toBe(200);
+            expect($defaultScopeResponse->body())->toContain('kirby-mcp:read')->not->toContain('kirby-mcp:runtime');
+
             $refreshBody = http_build_query([
                 'grant_type' => 'refresh_token',
                 'client_id' => $client['client_id'],
@@ -674,6 +684,7 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             $refreshResponse = KirbyMcpOAuthRoute::handle($projectRoot, $refreshRequest);
             $refreshed = kirbyMcpRouteDecodeJson($refreshResponse->body());
             expect($refreshResponse->code())->toBe(200)
+                ->and($refreshed['scope'] ?? null)->toBe('kirby-mcp:read')
                 ->and($refreshed['refresh_token'] ?? null)->toBeString()
                 ->and($refreshed['refresh_token'] ?? null)->not()->toBe($token['refresh_token']);
 
@@ -687,6 +698,15 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($refreshReplayResponse->code())->toBe(400)
                 ->and($refreshReplay['error'] ?? null)->toBe('invalid_grant');
 
+            $descendantRequest = $refreshRequest->withBody($factory->createStream(http_build_query([
+                'grant_type' => 'refresh_token',
+                'client_id' => $client['client_id'],
+                'refresh_token' => $refreshed['refresh_token'],
+            ])));
+            $descendantResponse = KirbyMcpOAuthRoute::handle($projectRoot, $descendantRequest);
+            expect($descendantResponse->code())->toBe(400);
+            expect(kirbyMcpRouteDecodeJson($descendantResponse->body())['error'])->toBe('invalid_grant');
+
             $mcpRequest = $factory->createServerRequest('POST', 'https://example.test/mcp', [
                 'REMOTE_ADDR' => '203.0.113.10',
             ])
@@ -698,6 +718,13 @@ it('serves the built-in OAuth provider flow for Claude Desktop custom connectors
             expect($mcpResponse->code())->toBe(200)
                 ->and($mcpResponse->headers()['Mcp-Session-Id'] ?? '')->not()->toBe('')
                 ->and($mcpPayload['result']['serverInfo']['name'] ?? null)->toBe('Kirby MCP');
+            $insecure = $mcpRequest->withUri($mcpRequest->getUri()->withScheme('http'));
+            $insecure->getBody()->rewind();
+            // Explicit HTTPS metadata must not make a cleartext request acceptable.
+            putenv('KIRBY_MCP_HTTP_OAUTH_ISSUER=https://example.test');
+            putenv('KIRBY_MCP_HTTP_OAUTH_AUDIENCE=https://example.test/mcp');
+            KirbyMcpConfig::clearCache();
+            expect(KirbyMcpRoute::handle($projectRoot, $insecure)->code())->toBe(503);
         });
     } finally {
         kirbyMcpRouteCommitSession($app);

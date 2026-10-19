@@ -30,6 +30,7 @@ Provide safe, testable Kirby CLI execution and output parsing for MCP tools and 
 ## Guardrails
 
 - Never interpolate untrusted input into a shell command; treat paths/args as data.
+- Validate command names with `KirbyCliCommand` before policy matching or spawning (including help reads). Accept only non-empty ASCII alphanumeric/underscore/hyphen segments, starting with alphanumeric/underscore, separated by single colons. Do not trim, URI-decode, or normalize aliases: slashes, traversal, empty segments, and percent-encoded alternatives must fail closed. Kirby CLI loads command PHP before processing `--help`.
 - Always capture and return stdout, stderr, and exit codes; don’t silently swallow failures.
 - Treat non-zero exit codes or timeouts as command failures; skip JSON parsing and surface stderr in parse errors.
 - Keep output formats stable (especially MCP JSON markers).

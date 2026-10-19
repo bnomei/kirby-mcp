@@ -54,6 +54,16 @@ trait StructuredToolResult
     {
         $candidates = [];
 
+        $this->addResourceLinkCandidate($candidates, $payload['nextUri'] ?? null);
+        foreach ($payload['items'] ?? [] as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            foreach (['contentUri', 'readUri', 'childrenUri', 'filesUri'] as $field) {
+                $this->addResourceLinkCandidate($candidates, $item[$field] ?? null);
+            }
+        }
+
         foreach (['schemaRefs', 'BEFORE_UPDATE_READ', 'schemaCheckReminder'] as $field) {
             $values = $payload[$field] ?? [];
             if (!is_array($values)) {

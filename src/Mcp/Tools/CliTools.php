@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Tools;
 
+use Bnomei\KirbyMcp\Cli\KirbyCliCommand;
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Cli\McpMarkedJsonExtractor;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
@@ -27,6 +28,7 @@ final class CliTools
 
     /** @var array<string, string> */
     private const DEDICATED_TOOL_COMMANDS = [
+        'mcp:native' => 'kirby_upload_file / kirby_move_page / kirby_list_files',
         RuntimeCommands::EVAL => 'kirby_eval',
         RuntimeCommands::QUERY_DOT => 'kirby_query_dot',
     ];
@@ -199,7 +201,6 @@ final class CliTools
             $projectRoot = $this->context->projectRoot();
             $host = $this->context->kirbyHost();
 
-            $command = trim($command);
             if ($command === '') {
                 return [
                     'ok' => false,
@@ -227,6 +228,7 @@ final class CliTools
                 ];
             }
 
+            KirbyCliCommand::validate($command);
             $normalizedArgs = $this->normalizeArguments($arguments);
 
             $config = KirbyMcpConfig::load($projectRoot);

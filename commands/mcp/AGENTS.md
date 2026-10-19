@@ -24,3 +24,4 @@ Provide Kirby CLI command definition templates that are copied into host project
 
 - Keep templates minimal and side-effect free: strict types + a single return statement.
 - Don’t require autoloaders or perform IO; the host project controls Kirby bootstrapping.
+- `mcp:native` dispatches browsing, byte/image reads, uploads and page moves under the propagated request user. It is blocked in the generic MCP CLI tool; use dedicated native tools for confirmation and transport policy.

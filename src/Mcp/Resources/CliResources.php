@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
+use Bnomei\KirbyMcp\Cli\KirbyCliCommand;
 use Bnomei\KirbyMcp\Cli\KirbyCliHelpParser;
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
@@ -142,13 +143,10 @@ final class CliResources
         $projectRoot = $this->context->projectRoot();
         $host = $this->context->kirbyHost();
 
-        $command = trim(rawurldecode($command));
-        if ($command === '') {
-            throw new ResourceReadException('Command must not be empty.');
-        }
-
-        if (preg_match('/\\s/u', $command) === 1) {
-            throw new ResourceReadException('Command must not contain whitespace.');
+        try {
+            KirbyCliCommand::validate($command);
+        } catch (\InvalidArgumentException $exception) {
+            throw new ResourceReadException($exception->getMessage());
         }
 
         $ttlSeconds = KirbyMcpConfig::load($projectRoot)->cacheTtlSeconds();

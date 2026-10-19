@@ -6,6 +6,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ## [Unreleased]
 
 - Add opt-in `customTools` definitions for project/plugin Kirby CLI commands, with schema-validated inputs, tool discovery and suggestions, existing CLI allow/deny enforcement, write opt-in and HTTP capability/scope checks. Document command paths, results and reuse with Janitor without adding a job system.
+- Reject noncanonical CLI command names in help resources, execution tools, policy checks and the runner to prevent command-path traversal and alternate-spelling deny bypasses.
+- Enforce HTTPS for non-loopback OAuth MCP requests, cap built-in OAuth grants by current provider/client scopes, and revoke refresh-token families on replay under a per-family lock. Existing refresh tokens without family state require fresh authorization; already-issued access tokens retain their normal expiry.
+- Add native paginated site/page children and attachment browsing with UUID-preferred resource links, original text/blob reads, and bounded MCP image previews. Existing `content` APIs remain metadata-only.
+- Add confirmed local-copy uploads and authenticated, user-bound single-use remote upload tickets, with blueprint contexts, native create/accept checks and collision rejection. Add confirmed native page moves preserving UUID identity.
+- Register the HTTP upload route and explicit runtime/write scopes and Kirby capability permissions for these operations. Refresh runtime installation and any manually copied HTTP routes after upgrading.
 
 ## [6.1.0] - 2026-10-18
 

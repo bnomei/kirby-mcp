@@ -9,7 +9,13 @@ use Kirby\Http\Route as KirbyRoute;
 it('builds the copied Kirby route bundle for HTTP MCP', function (): void {
     $routes = KirbyMcpRoutes::routes();
 
-    expect($routes)->toHaveCount(9)
+    $routes = array_column($routes, null, 'name');
+    expect($routes)->toHaveCount(10);
+    expect($routes['kirby-mcp.upload']['pattern'])->toBe('mcp/upload')
+        ->and($routes['kirby-mcp.upload']['method'])->toBe('POST|OPTIONS');
+    unset($routes['kirby-mcp.upload']);
+    $routes = array_values($routes);
+    expect($routes)
         ->and($routes[0]['pattern'])->toBe('mcp')
         ->and($routes[0]['method'])->toBe('GET|POST|DELETE|OPTIONS')
         ->and($routes[0]['name'])->toBe('kirby-mcp.mcp')
@@ -66,7 +72,7 @@ it('exposes focused route helpers', function (): void {
 });
 
 it('routes canonical metadata paths independently of the MCP route path', function (string $path): void {
-    $definition = KirbyMcpRoutes::routes('/internal/mcp')[1];
+    $definition = KirbyMcpRoutes::oauthProtectedResourceMetadata()[0];
     $route = new KirbyRoute($definition['pattern'], $definition['method'], $definition['action']);
 
     expect($route->match($path, 'GET'))->not->toBeFalse();

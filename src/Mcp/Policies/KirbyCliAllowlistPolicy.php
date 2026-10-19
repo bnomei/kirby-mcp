@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Policies;
 
+use Bnomei\KirbyMcp\Cli\KirbyCliCommand;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 
@@ -69,6 +70,8 @@ final class KirbyCliAllowlistPolicy
 
     public function evaluate(string $command, bool $allowWrite): KirbyCliAllowlistDecision
     {
+        KirbyCliCommand::validate($command);
+
         $matchedDeny = $this->firstMatchingPattern($command, $this->deny);
         if ($matchedDeny !== null) {
             return new KirbyCliAllowlistDecision(

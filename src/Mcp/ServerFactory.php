@@ -59,6 +59,7 @@ final class ServerFactory
         bool $requireInit = true,
         ?string $oauthUserId = null,
         ?Permissions $permissions = null,
+        ?string $uploadUrl = null,
     ): Server {
         $profile = ServerProfile::normalize($profile);
         $container = new Container();
@@ -80,6 +81,9 @@ final class ServerFactory
         }
 
         $notificationBus ??= new InMemoryNotificationBus();
+        $nativeContext = new ProjectContext(oauthUserId: $oauthUserId, uploadUrl: $uploadUrl);
+        $container->set(Tools\NativeContentTools::class, new Tools\NativeContentTools($nativeContext, $notificationBus));
+        $container->set(Resources\NativeContentResources::class, new Resources\NativeContentResources($nativeContext));
         $container->set(RuntimeTools::class, new RuntimeTools(
             context: new ProjectContext(oauthUserId: $oauthUserId),
             notificationBus: $notificationBus,

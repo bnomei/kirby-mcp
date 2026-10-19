@@ -42,6 +42,12 @@ final class KirbyMcpRoutes
                 'action' => fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
                 'name' => 'kirby-mcp.mcp',
             ],
+            [
+                'pattern' => self::patternFromPath($path) . '/upload',
+                'method' => 'POST|OPTIONS',
+                'action' => fn () => KirbyMcpRoute::handle($projectRoot, null, $sseMaxSeconds),
+                'name' => 'kirby-mcp.upload',
+            ],
         ];
     }
 

@@ -142,6 +142,10 @@ KIRBY_MCP_HTTP_REMOTE_TOKEN_SCOPES=kirby-mcp:read,kirby-mcp:runtime
 
 No separate OAuth server package is required. The built-in provider derives issuer, audience/resource and JWKS URL from the incoming HTTPS request unless explicitly configured. Provider state is stored in `.kirby-mcp/oauth`, not Kirby cache.
 
+Stored client scopes and existing grants are capped by the current `http.auth.scopes` at authorization and token issuance, even when the client omits scope. Narrowing this setting limits newly issued tokens; already issued access tokens retain their signed scopes until expiry (one hour), subject to current Kirby permissions.
+
+Refresh tokens rotate within a grant family. Replaying a consumed refresh token revokes the family's active refresh credential; unrelated grants remain usable. Clients must serialize refresh requests and authorize again after replay errors. Pre-upgrade refresh tokens without family state also require fresh authorization. Keep consumed token records and family records together: deleting individual records defeats replay detection. Family locking requires reliable local filesystem locks; this is not a distributed OAuth store.
+
 `http.oauthProvider.role` defaults to `admin`. Set an existing role name (such as `editor`) to admit that role, or `"*"` to admit any authenticated Kirby user. This admission setting does not change the user's role or bypass MCP capabilities.
 
 Panel must be enabled. Unauthenticated authorization requests are saved under `.kirby-mcp/oauth/sessions` and resumed after native Panel login, including its configured challenge/2FA handling. The fixed `/mcp/oauth/resume` route restores the request from the same browser's Kirby session; login handoffs expire after ten minutes and a new handoff replaces the previous one in that browser. Resumed requests always require explicit consent.

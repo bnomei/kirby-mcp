@@ -29,3 +29,5 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 - Avoid persistent filesystem writes; use temp dirs and clean up.
 - Don’t assert incidental ordering unless it’s part of the contract.
 - Global `beforeEach` clears Kirby MCP static caches; don’t rely on cached state across tests.
+- Keep native browse/read/upload/move capabilities exhaustive with discovery, and distinguish children/file pagination resource permissions. Upload/move scope mappings must require write rather than falling through to read.
+- CLI validation tests must cover canonical names and rejection of traversal, separator aliases and encoding before both policy evaluation and runner binary resolution.

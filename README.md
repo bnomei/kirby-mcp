@@ -194,12 +194,16 @@ Tools let your agent inspect or act; resources bring reference material and proj
 - **Blueprints:** `kirby_blueprints_index`, `kirby_blueprints_loaded`, `kirby_blueprint_read`.
 - **Code and extensions:** `kirby_templates_index`, `kirby_snippets_index`, `kirby_collections_index`, `kirby_controllers_index`, `kirby_models_index`, `kirby_plugins_index`, `kirby_routes_index`.
 - **Read content:** `kirby_read_page_content`, `kirby_read_file_content`, `kirby_read_site_content`, `kirby_read_user_content`.
+- **Browse and read attachments:** `kirby_list_children`, `kirby_list_files`, `kirby_read_file`, `kirby_view_image`.
+- **Upload and move:** `kirby_upload_file`, `kirby_move_page` (preview first; pass `confirm: true` to execute).
 - **Update content:** `kirby_update_page_content`, `kirby_update_file_content`, `kirby_update_site_content`, `kirby_update_user_content`.
 - **Research and discovery:** `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`.
 - **Render and debug:** `kirby_render_page`, `kirby_dump_log_tail`, `kirby_query_dot`, `kirby_eval`, `kirby_run_cli_command`.
 - **Runtime and IDE support:** `kirby_runtime_status`, `kirby_runtime_install`, `kirby_cache_clear`, `kirby_ide_helpers_status`, `kirby_generate_ide_helpers`.
 
 Writes and execution follow the [defaults and safety controls](#defaults-and-safety). See the [tool reference](docs/reference.md#tools-by-task) for individual descriptions.
+
+CLI tools and help resources accept canonical command names such as `make:template`, not filesystem paths or encoded aliases. OAuth upgrades require reauthorization for refresh tokens issued before grant-family tracking; see [remote access](docs/remote.md#built-in-oauth-for-claude-connectors).
 
 ### Resources
 
@@ -211,9 +215,17 @@ Resources are read-only. Replace `{…}` with the item you want; the [resource r
 - **Hooks and extensions:** `kirby://hooks`, `kirby://hook/{name}`, `kirby://extensions`, `kirby://extension/{name}`.
 - **Project and configuration:** `kirby://info`, `kirby://roots`, `kirby://composer`, `kirby://config/{option}`, `kirby://blueprint/{encodedId}`.
 - **Content:** `kirby://page/content/{encodedIdOrUuid}`, `kirby://file/content/{encodedIdOrUuid}`, `kirby://site/content`, `kirby://user/content/{encodedIdOrEmail}`.
+- **Original files:** `kirby://file/read/{encodedIdOrUuid}` returns text or a binary blob, not metadata.
+- **Browsing:** `kirby://site/children`, `kirby://site/files`, `kirby://page/children/{encodedIdOrUuid}`, `kirby://page/files/{encodedIdOrUuid}`. Follow each listing's `nextUri` for more results.
 - **CLI reference:** `kirby://commands`, `kirby://cli/command/{command}`.
 - **Tool discovery and examples:** `kirby://tools`, `kirby://tool-examples`.
 - **Utilities and extras:** `kirby://uuid/new`, `kirby://susie/{phase}/{step}`.
+
+### Native browsing, uploads and moves
+
+Browse pages and attachments, read original files, and view image previews using Kirby IDs or UUIDs. `content` remains metadata; `read` returns bytes. Uploads support local copies and single-use HTTP tickets; uploads and page moves require confirmation and native permissions.
+
+See [Native browsing, uploads and moves](docs/native-content.md) for pagination, blueprint constraints, examples, limits, and remote permissions.
 
 ## Defaults and safety
 

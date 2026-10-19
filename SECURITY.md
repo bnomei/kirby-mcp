@@ -17,14 +17,35 @@ consume the handoff once; a new handoff in the same browser replaces the previou
 pages disallow framing, including when rendered by a custom snippet. Public OAuth endpoints require
 HTTPS; plaintext HTTP is allowed only with an actual loopback peer and loopback request host.
 
+Built-in OAuth issuance intersects grants and stored client scopes with the current provider policy,
+including requests that omit scope. Refresh rotation is serialized per grant family. Reusing an old
+refresh token revokes that family's active refresh credentials, not unrelated grants. Tokens issued
+before family tracking require fresh authorization. Existing signed access tokens remain valid until
+their one-hour expiry, subject to current Kirby permissions; family revocation prevents further renewal.
+
 OAuth and remote-token authentication resolve an existing Kirby user. Remote-token records require
 `userId` (or `KIRBY_MCP_HTTP_REMOTE_TOKEN_USER_ID` for the environment token). Both modes apply the
 hierarchical `bnomei.kirby-mcp` capability map: every parent and leaf must allow the operation, custom
 roles default to denied, and Kirby's native `admin` role remains unrestricted. The four dedicated
 page/file/site/user updates additionally apply Kirby's native mutation permissions and hooks.
 
-This is not per-target isolation: an allowed capability can access every target supported by it.
+Native child/file browsing, original-byte reads and image previews additionally check native model read/access/list
+permissions. Uploads and page moves run native guards and hooks as the authenticated user. Upload tickets
+require bearer authentication and write scope on redemption, bind the issuing user and operation, expire after
+ten minutes, and can be claimed only once. Remote uploads never accept server paths. Keep ticket storage
+under `.kirby-mcp/uploads` private and enforce HTTP body limits at the web server. Context-free uploads are
+disabled unless explicitly enabled; blueprint-context uploads enforce destination, template and capacity.
+Original-byte reads and previews reject symlink aliases beneath the configured content root, even aliases
+to other content files. Local upload `source` is intentionally a trusted filesystem path, limited by the
+stdio process's OS permissions, not Kirby read permissions. Do not expose stdio to untrusted clients.
+The filesystem and PHP extensions remain trusted: this is not protection against a local process racing
+filesystem changes or a privileged plugin overriding model behavior.
+
+The existing inspection/content-read surface is not per-target isolation: an allowed capability can access every target supported by it.
 Enabled and permitted eval or generic CLI execution is trusted and can bypass other permissions.
+CLI command names (including help resources) must use canonical colon-separated names. Path separators,
+dot segments, encoded alternatives and empty segments are rejected before policy checks or execution.
+Installed command PHP remains trusted: `--help` still loads valid command definitions.
 Revocation is checked per HTTP request, not continuously during an open stream. Local stdio and
 loopback shared-token access remain trusted. See [Remote MCP permissions](docs/remote.md#configure-role-permissions) before
 exposing the server.

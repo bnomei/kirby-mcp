@@ -27,6 +27,10 @@ final class KirbyCliRunner
         array $env = [],
         int $timeoutSeconds = 60,
     ): KirbyCliResult {
+        if ($args !== []) {
+            KirbyCliCommand::validate($args[0]);
+        }
+
         $binary = $this->resolveBinary($projectRoot);
         if ($binary === null) {
             throw new \RuntimeException(

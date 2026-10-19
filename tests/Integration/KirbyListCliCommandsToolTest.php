@@ -42,9 +42,9 @@ it('rejects invalid CLI command identifiers', function (): void {
     $resource = new CliResources();
 
     expect(fn () => $resource->command('   '))
-        ->toThrow(ResourceReadException::class, 'Command must not be empty.');
+        ->toThrow(ResourceReadException::class, 'canonical');
     expect(fn () => $resource->command('bad command'))
-        ->toThrow(ResourceReadException::class, 'Command must not contain whitespace.');
+        ->toThrow(ResourceReadException::class, 'canonical');
 });
 
 it('blocks generic runtime commands on Kirby 5 while allowing version diagnostics', function (): void {

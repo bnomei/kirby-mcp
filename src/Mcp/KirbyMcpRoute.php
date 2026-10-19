@@ -55,11 +55,11 @@ final class KirbyMcpRoute
         }
 
         if (
-            $config->authMode === KirbyMcpHttpConfig::AUTH_MODE_REMOTE_TOKEN
+            in_array($config->authMode, [KirbyMcpHttpConfig::AUTH_MODE_REMOTE_TOKEN, KirbyMcpHttpConfig::AUTH_MODE_OAUTH], true)
             && self::isLoopbackRequest($request) === false
             && self::isHttpsRequest($request) === false
         ) {
-            return self::error(503, 'HTTP remote-token auth requires HTTPS for non-loopback requests.');
+            return self::error(503, 'HTTP ' . $config->authMode . ' auth requires HTTPS for non-loopback requests.');
         }
 
         putenv(ProjectContext::ENV_PROJECT_ROOT . '=' . $projectRoot);

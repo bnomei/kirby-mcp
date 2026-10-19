@@ -406,7 +406,8 @@ final class KirbyOAuthProvider
 
         $tokenId = hash('sha256', $refreshToken);
         $record = $this->store()->read('refresh-tokens', $tokenId);
-        if ($record === null || (int) ($record['expires_at'] ?? 0) < time() || ($record['revoked'] ?? false) === true) {
+        $familyId = $this->stringValue($record['family_id'] ?? null);
+        if ($record === null || $familyId === null || ($record['revoked'] ?? false) === true) {
             return $this->oauthError('invalid_grant', 'Refresh token is invalid or expired.', 400);
         }
 
@@ -414,36 +415,53 @@ final class KirbyOAuthProvider
             return $this->oauthError('invalid_grant', 'Refresh token was not issued to this client.', 400);
         }
 
-        $requestedScope = $this->scopeString($data['scope'] ?? null);
-        $invalidScope = $this->invalidScope($requestedScope);
-        if ($invalidScope !== null) {
-            return $this->oauthError('invalid_scope', 'Unsupported scope: ' . $invalidScope, 400);
-        }
-
-        $requestedScopes = $this->scopeList($requestedScope);
-        $originalScopes = $this->stringList($record['scopes'] ?? null);
-        if ($requestedScopes === []) {
-            $requestedScopes = $originalScopes;
-        }
-
-        foreach ($requestedScopes as $scope) {
-            if (!in_array($scope, $originalScopes, true)) {
-                return $this->oauthError('invalid_scope', 'Refresh token scope cannot be expanded.', 400);
+        return $this->store()->withLock('refresh-families', $familyId, function () use ($familyId, $tokenId, $record, $client, $data): KirbyResponse {
+            $family = $this->store()->read('refresh-families', $familyId);
+            if ($family === null || ($family['revoked'] ?? true) === true || (int) ($family['expires_at'] ?? 0) <= time()) {
+                return $this->oauthError('invalid_grant', 'Refresh token family is invalid or expired.', 400);
             }
-        }
+            // Keep old token records as tombstones: replay revokes the active descendant.
+            if (($family['active_token'] ?? null) !== $tokenId) {
+                $family['revoked'] = true;
+                $this->store()->write('refresh-families', $familyId, $family);
+                return $this->oauthError('invalid_grant', 'Refresh token replay revoked this grant; authorize again.', 400);
+            }
+            if ((int) ($record['expires_at'] ?? 0) <= time()) {
+                return $this->oauthError('invalid_grant', 'Refresh token is expired.', 400);
+            }
 
-        if ($this->store()->take('refresh-tokens', $tokenId) === null) {
-            return $this->oauthError('invalid_grant', 'Refresh token is invalid or expired.', 400);
-        }
+            $requestedScope = $this->scopeString($data['scope'] ?? null);
+            $invalidScope = $this->invalidScope($requestedScope);
+            if ($invalidScope !== null) {
+                return $this->oauthError('invalid_scope', 'Unsupported scope: ' . $invalidScope, 400);
+            }
 
-        return $this->tokenResponse((string) $client['client_id'], (string) $record['user_id'], $requestedScopes);
+            $requestedScopes = $this->scopeList($requestedScope);
+            $originalScopes = $this->stringList($record['scopes'] ?? null);
+            if ($requestedScopes === []) {
+                $requestedScopes = $originalScopes;
+            }
+
+            foreach ($requestedScopes as $scope) {
+                if (!in_array($scope, $originalScopes, true)) {
+                    return $this->oauthError('invalid_scope', 'Refresh token scope cannot be expanded.', 400);
+                }
+            }
+
+            return $this->tokenResponse((string) $client['client_id'], (string) $record['user_id'], $requestedScopes, $familyId);
+        });
     }
 
     /**
      * @param list<string> $scopes
      */
-    private function tokenResponse(string $clientId, string $userId, array $scopes): KirbyResponse
+    private function tokenResponse(string $clientId, string $userId, array $scopes, ?string $familyId = null): KirbyResponse
     {
+        $client = $this->client($clientId);
+        $scopes = array_values(array_intersect($scopes, $client === null ? [] : $this->clientScopes($client)));
+        if ($scopes === []) {
+            return $this->oauthError('invalid_scope', 'No granted scopes remain permitted; authorize again.', 400);
+        }
         $now = time();
         $jti = $this->randomToken(18);
         $scope = implode(' ', $scopes);
@@ -460,11 +478,19 @@ final class KirbyOAuthProvider
         ], $this->keySet()->privateKey(), 'RS256', $this->keySet()->kid());
 
         $refreshToken = 'refresh_' . $this->randomToken(40);
-        $this->store()->write('refresh-tokens', hash('sha256', $refreshToken), [
+        $tokenId = hash('sha256', $refreshToken);
+        $familyId ??= $this->randomToken(32);
+        $this->store()->write('refresh-tokens', $tokenId, [
+            'family_id' => $familyId,
             'client_id' => $clientId,
             'user_id' => $userId,
             'scopes' => $scopes,
             'access_token_id' => $jti,
+            'expires_at' => $now + self::REFRESH_TOKEN_TTL,
+            'revoked' => false,
+        ]);
+        $this->store()->write('refresh-families', $familyId, [
+            'active_token' => $tokenId,
             'expires_at' => $now + self::REFRESH_TOKEN_TTL,
             'revoked' => false,
         ]);
@@ -854,7 +880,7 @@ final class KirbyOAuthProvider
     {
         $scope = $this->scopeString($client['scope'] ?? null);
 
-        return $scope === '' ? $this->allowedScopes() : $this->scopeList($scope);
+        return $scope === '' ? $this->allowedScopes() : array_values(array_intersect($this->scopeList($scope), $this->allowedScopes()));
     }
 
     /**

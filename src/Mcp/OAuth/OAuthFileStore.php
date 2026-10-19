@@ -17,6 +17,35 @@ final readonly class OAuthFileStore
     }
 
     /**
+     * Serialize a record's read/modify/write sequence across PHP workers.
+     *
+     * @template T
+     * @param \Closure(): T $callback
+     * @return T
+     */
+    public function withLock(string $bucket, string $id, \Closure $callback): mixed
+    {
+        $path = $this->path($bucket, $id) . '.lock';
+        $directory = dirname($path);
+        if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
+            throw new \RuntimeException('Unable to create OAuth lock directory.');
+        }
+        $handle = fopen($path, 'c');
+        if ($handle === false) {
+            throw new \RuntimeException('Unable to open OAuth lock.');
+        }
+        try {
+            if (!flock($handle, LOCK_EX)) {
+                throw new \RuntimeException('Unable to acquire OAuth lock.');
+            }
+            return $callback();
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+    }
+
+    /**
      * @param array<string, mixed> $data
      */
     public function write(string $bucket, string $id, array $data): void
