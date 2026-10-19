@@ -5,6 +5,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-10-19
+
 - Add opt-in `customTools` definitions for project/plugin Kirby CLI commands, with schema-validated inputs, tool discovery and suggestions, existing CLI allow/deny enforcement, write opt-in and HTTP capability/scope checks. Document command paths, results and reuse with Janitor without adding a job system.
 - Reject noncanonical CLI command names in help resources, execution tools, policy checks and the runner to prevent command-path traversal and alternate-spelling deny bypasses.
 - Enforce HTTPS for non-loopback OAuth MCP requests, cap built-in OAuth grants by current provider/client scopes, and revoke refresh-token families on replay under a per-family lock. Existing refresh tokens without family state require fresh authorization; already-issued access tokens retain their normal expiry.

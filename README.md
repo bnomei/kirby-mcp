@@ -276,14 +276,14 @@ Server diagnostics go to stderr. Include the client version and relevant error w
 
 ## Documentation
 
-| Go deeper                                         | What you'll find                                        |
-| ------------------------------------------------- | ------------------------------------------------------- |
-| [Installation tutorials](docs/install/index.md)   | Local/remote setup and step-by-step client connections  |
-| [Tools, resources, and skills](docs/reference.md) | Complete inventory, content schemas, and MCP behavior   |
-| [Configuration](docs/configuration.md)            | Every setting and environment variable                  |
+| Go deeper                                         | What you'll find                                            |
+| ------------------------------------------------- | ----------------------------------------------------------- |
+| [Installation tutorials](docs/install/index.md)   | Local/remote setup and step-by-step client connections      |
+| [Tools, resources, and skills](docs/reference.md) | Complete inventory, content schemas, and MCP behavior       |
+| [Configuration](docs/configuration.md)            | Every setting and environment variable                      |
 | [Custom tools](docs/custom-tools.md)              | Expose project/plugin CLI commands, including Janitor reuse |
-| [Remote connections](docs/remote.md)              | HTTP setup, OAuth, bearer tokens, and Kirby permissions |
-| [Global reference mode](docs/global-reference.md) | Projectless installation and client setup               |
+| [Remote connections](docs/remote.md)              | HTTP setup, OAuth, bearer tokens, and Kirby permissions     |
+| [Global reference mode](docs/global-reference.md) | Projectless installation and client setup                   |
 
 For development and contributions, see [Contributing](CONTRIBUTING.md) and [Testing](TESTING.md). Release history lives in the [Changelog](CHANGELOG.md); report vulnerabilities using the [Security policy](SECURITY.md).
 

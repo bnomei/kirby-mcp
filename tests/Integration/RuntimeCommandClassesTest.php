@@ -132,6 +132,7 @@ final class RuntimeCommandIntegrationCli extends CLI
 function runtimeCommandsApp(?string $commandsRoot = null): array
 {
     $previous = App::instance(null, true);
+    $previous?->session()->commit();
     $previousErrorHandlers = runtimeCommandsErrorHandlers();
     $previousWhoops = App::$enableWhoops;
     App::$enableWhoops = false;
@@ -156,6 +157,7 @@ function runtimeCommandsApp(?string $commandsRoot = null): array
  */
 function restoreRuntimeCommandsApp(?App $previous, array $previousErrorHandlers, bool $previousWhoops): void
 {
+    App::instance(null, true)?->session()->commit();
     if ($previous instanceof App) {
         App::instance($previous);
     }
