@@ -196,6 +196,9 @@ Tools let your agent inspect or act; resources bring reference material and proj
 - **Read content:** `kirby_read_page_content`, `kirby_read_file_content`, `kirby_read_site_content`, `kirby_read_user_content`.
 - **Browse and read attachments:** `kirby_list_children`, `kirby_list_files`, `kirby_read_file`, `kirby_view_image`.
 - **Upload and move:** `kirby_upload_file`, `kirby_move_page` (preview first; pass `confirm: true` to execute).
+- **Page lifecycle:** `kirby_create_page`, `kirby_delete_page`, `kirby_change_page_slug`, `kirby_change_page_status`.
+- **Delete attachments:** `kirby_delete_file`.
+- **Find content:** `kirby_find_pages`, `kirby_find_files`.
 - **Update content:** `kirby_update_page_content`, `kirby_update_file_content`, `kirby_update_site_content`, `kirby_update_user_content`.
 - **Research and discovery:** `kirby_search`, `kirby_online`, `kirby_online_plugins`, `kirby_tool_suggest`.
 - **Render and debug:** `kirby_render_page`, `kirby_dump_log_tail`, `kirby_query_dot`, `kirby_eval`, `kirby_run_cli_command`.

@@ -85,6 +85,12 @@ PHP);
         }
         $responses = runKirbyMcpStdioRequests($requests);
         $tools = array_column($responses[0]['result']['tools'], null, 'name');
+        $cursor = $responses[0]['result']['nextCursor'] ?? null;
+        while ($cursor !== null) {
+            $page = runKirbyMcpStdioRequests([['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => ['_meta' => $meta, 'cursor' => $cursor]]])[0];
+            $tools += array_column($page['result']['tools'], null, 'name');
+            $cursor = $page['result']['nextCursor'] ?? null;
+        }
         expect($tools)->toHaveKeys(['custom_probe', 'custom_write'])
             ->and($tools['custom_write']['inputSchema']['required'])->toContain('allowWrite');
         expect($responses[1]['result']['structuredContent']['mcpJson'])->toBe([

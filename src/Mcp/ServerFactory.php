@@ -83,6 +83,7 @@ final class ServerFactory
         $notificationBus ??= new InMemoryNotificationBus();
         $nativeContext = new ProjectContext(oauthUserId: $oauthUserId, uploadUrl: $uploadUrl);
         $container->set(Tools\NativeContentTools::class, new Tools\NativeContentTools($nativeContext, $notificationBus));
+        $container->set(Tools\ContentSearchTools::class, new Tools\ContentSearchTools($nativeContext));
         $container->set(Resources\NativeContentResources::class, new Resources\NativeContentResources($nativeContext));
         $container->set(RuntimeTools::class, new RuntimeTools(
             context: new ProjectContext(oauthUserId: $oauthUserId),

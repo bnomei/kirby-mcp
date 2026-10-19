@@ -244,6 +244,8 @@ permissions:
 
 Every ancestor and leaf must be true. `content: false` blocks the branch; `content.pages: true` alone does not grant reads, updates or rendering. `access` is required to connect. All entries default to false for custom roles; unknown/unmapped capabilities are denied. Kirby's native `admin` role remains unrestricted. Use a custom role to restrict access. See also Kirby's [custom permission extension](https://getkirby.com/docs/reference/plugins/extensions/permissions).
 
+Lifecycle tools additionally use `content.pages.create`, `content.pages.delete`, `content.pages.changeSlug`, `content.pages.changeStatus`, and `content.files.delete`, respectively. All require the HTTP write scope and native mutation guards. `kirby_find_pages` and `kirby_find_files` reuse `content.pages.read` and `content.files.read` with the runtime scope; results are filtered by native read/access/list guards. These capabilities do not require generic CLI or query-execution permission.
+
 ### Complete capability map
 
 Tool names omit the `kirby_` prefix. Every intermediate dotted prefix is also a registered permission.

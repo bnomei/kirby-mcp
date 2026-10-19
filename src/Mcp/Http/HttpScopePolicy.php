@@ -173,7 +173,7 @@ final class HttpScopePolicy
 
         if (
             $toolName === 'kirby_generate_ide_helpers'
-            || in_array($toolName, ['kirby_upload_file', 'kirby_move_page'], true)
+            || in_array($toolName, ['kirby_upload_file', 'kirby_move_page', 'kirby_change_page_slug', 'kirby_change_page_status'], true)
             ||
             str_contains($toolName, '_update_')
             || str_starts_with($toolName, 'kirby_update_')
@@ -186,6 +186,8 @@ final class HttpScopePolicy
         if (in_array($toolName, [
             'kirby_list_children',
             'kirby_list_files',
+            'kirby_find_pages',
+            'kirby_find_files',
             'kirby_read_file',
             'kirby_view_image',
             'kirby_read_page_content',

@@ -49,7 +49,7 @@ it('requires access and every parent and leaf without implicit grants', function
 
 it('filters indexes and suggestions while leaving local discovery unchanged', function (): void {
     $policy = new Permissions(['access' => true, 'content' => true, 'content.pages' => true, 'content.pages.read' => true]);
-    $expected = ['kirby_read_page_content', 'kirby_list_children', 'kirby://page/content/{encodedIdOrUuid}',
+    $expected = ['kirby_read_page_content', 'kirby_list_children', 'kirby_find_pages', 'kirby://page/content/{encodedIdOrUuid}',
         'kirby://page/children/{encodedIdOrUuid}', 'kirby://site/children',
         'kirby://browse/children/{encodedParent}/{limit}/{encodedCursor}/{encodedFilters}'];
     $index = (new MetaResources(permissions: $policy))->toolIndex();

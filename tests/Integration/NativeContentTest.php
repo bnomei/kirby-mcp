@@ -270,7 +270,7 @@ it('keeps UUID-disabled browsing usable and enforces file list capacity and dest
 it('dispatches the new MCP contracts and rechecks a real users native permissions on ticket redemption', function (): void {
     mkdir($this->nativeRoot . '/site/blueprints/users');
     $rolePath = $this->nativeRoot . '/site/blueprints/users/editor.yml';
-    $role = "title: Editor\npermissions:\n  bnomei.kirby-mcp:\n    '*': true\n";
+    $role = "title: Editor\npermissions:\n  site:\n    read: true\n  bnomei.kirby-mcp:\n    '*': true\n";
     file_put_contents($rolePath, $role);
     $createUser = new \Symfony\Component\Process\Process([PHP_BINARY, '-r', <<<'PHP'
 require 'vendor/autoload.php';
@@ -301,7 +301,23 @@ PHP], $this->nativeRoot);
     $listing = $call('tools/call', ['name' => 'kirby_list_files', 'arguments' => ['parent' => ['type' => 'page', 'id' => 'alpha'], 'limit' => 1]]);
     expect($listing['result']['structuredContent']['ok'] ?? null)->toBeTrue(json_encode($listing, JSON_THROW_ON_ERROR));
     expect(array_column($listing['result']['content'], 'type'))->toContain('resource_link');
+    foreach (['kirby_find_pages', 'kirby_find_files'] as $name) {
+        foreach ([[], ['parent' => null], ['parent' => ['type' => 'site']], ['parent' => ['type' => 'page', 'id' => 'alpha']]] as $arguments) {
+            $found = $call('tools/call', ['name' => $name, 'arguments' => $arguments]);
+            expect($found['result']['structuredContent']['ok'] ?? null)->toBeTrue(json_encode($found, JSON_THROW_ON_ERROR));
+        }
+    }
     $file = $listing['result']['structuredContent']['items'][0];
+    foreach ([
+        'kirby_create_page' => ['parent' => ['type' => 'site'], 'slug' => 'new-draft', 'template' => 'default', 'content' => ['title' => 'New']],
+        'kirby_delete_page' => ['id' => 'beta'],
+        'kirby_change_page_slug' => ['id' => 'alpha', 'slug' => 'renamed'],
+        'kirby_change_page_status' => ['id' => 'alpha', 'status' => 'listed', 'position' => 1],
+        'kirby_delete_file' => ['id' => $file['id']],
+    ] as $name => $arguments) {
+        $preview = $call('tools/call', ['name' => $name, 'arguments' => $arguments]);
+        expect($preview['result']['structuredContent']['needsConfirm'] ?? null)->toBeTrue(json_encode($preview, JSON_THROW_ON_ERROR));
+    }
     $read = $call('resources/read', ['uri' => $file['readUri']]);
     expect($read['result']['contents'][0]['text'])->toBe("name,count\r\nÉire,7\r\n");
     $image = $call('tools/call', ['name' => 'kirby_view_image', 'arguments' => ['id' => 'alpha/color.png', 'maxWidth' => 80]]);

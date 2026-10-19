@@ -5,6 +5,13 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.3.0] - 2026-10-19
+
+- Add confirmed draft creation, page/file deletion, language-aware slug changes and page status/position changes, with native guards and recursive deletion preflight.
+- Add fixed-filter page/file search with language selection, blueprint-defined missing metadata, native text matching and bound pagination; no arbitrary query evaluation.
+- Add dedicated remote capability permissions and write/runtime scope checks for the seven new tools. Page creation uses native model permissions rather than Panel page-list field restrictions.
+- Check translated sibling slug collisions, including drafts and language aliases, and keep previews from generating UUID metadata. Refresh installed runtime commands with `vendor/bin/kirby-mcp update` after upgrading.
+
 ## [6.2.0] - 2026-10-19
 
 - Add opt-in `customTools` definitions for project/plugin Kirby CLI commands, with schema-validated inputs, tool discovery and suggestions, existing CLI allow/deny enforcement, write opt-in and HTTP capability/scope checks. Document command paths, results and reuse with Janitor without adding a job system.

@@ -47,10 +47,12 @@ final class NativeContent extends RuntimeCommand
     public static function execute(App $kirby, array $input): array
     {
         return match ($input['operation'] ?? '') {
+            'find_pages', 'find_files' => ContentSearch::execute($kirby, $input),
             'children', 'files' => self::listing($kirby, $input),
             'read', 'image' => self::read($kirby, $input),
             'upload' => self::upload($kirby, $input),
             'move' => self::move($kirby, $input),
+            'createPage', 'deletePage', 'changePageSlug', 'changePageStatus', 'deleteFile' => self::lifecycle($kirby, $input),
             default => throw new \InvalidArgumentException('Unknown native operation.'),
         };
     }
@@ -72,12 +74,12 @@ final class NativeContent extends RuntimeCommand
 
     public static function identity(Page|Site $model): array
     {
-        return $model instanceof Site ? ['type' => 'site'] : ['type' => 'page', 'id' => (string)($model->uuid() ?? $model->id())];
+        return $model instanceof Site ? ['type' => 'site'] : ['type' => 'page', 'id' => (string)(self::storedUuid($model) ?? $model->id())];
     }
 
     public static function summary(File|Page $model): array
     {
-        $uuid = $model->uuid();
+        $uuid = self::storedUuid($model);
         $id = (string)($uuid ?? $model->id());
         $kind = $model instanceof File ? 'file' : 'page';
         $parent = $model instanceof File ? $model->parent() : $model->parentModel();
@@ -348,12 +350,153 @@ final class NativeContent extends RuntimeCommand
             'updatedUris' => array_values(array_unique([...$updatedUris, 'kirby://page/content/' . rawurlencode($page->id())]))];
     }
 
+    private static function lifecycle(App $kirby, array $input): array
+    {
+        $operation = $input['operation'];
+        if ($operation === 'createPage') {
+            $parent = self::parent($kirby, $input['parent']);
+            $slug = self::safeSlug($input['slug']);
+            $template = $input['template'];
+            if (!is_string($template) || !preg_match('/^[a-zA-Z0-9_-]+$/D', $template)) {
+                throw new \InvalidArgumentException('Use a template name without paths.');
+            }
+            $content = $input['content'] ?? [];
+            if (!is_array($content) || ($content !== [] && array_is_list($content))) {
+                throw new \InvalidArgumentException('content must be an object.');
+            }
+            foreach ($content as $key => $value) {
+                if (!is_string($key) || in_array(strtolower($key), ['uuid', 'slug', 'template', 'intendedtemplate', 'num', 'status', 'parent', 'isdraft', 'url'], true)) {
+                    throw new \InvalidArgumentException('Content cannot set reserved model fields.');
+                }
+            }
+            $props = ['parent' => $parent instanceof Page ? $parent : null, 'site' => $kirby->site(), 'slug' => $slug, 'template' => $template, 'isDraft' => true, 'content' => $content];
+            $prospective = Page::factory($props);
+            $prospective->guards()->ensureExecutable('create');
+            $preview = ['ok' => true, 'needsConfirm' => true, 'parent' => self::identity($parent), 'slug' => $slug, 'template' => $template, 'status' => 'draft', 'validation' => 'Native creation guards checked; field save handlers and hooks run only on confirmation.'];
+            if (($input['confirm'] ?? false) !== true) {
+                return $preview;
+            }
+            $page = Page::create($props);
+            return ['ok' => true, 'needsConfirm' => false, 'page' => self::summary($page), 'updatedUris' => self::listingUris($parent, 'children')];
+        }
+
+        $model = $operation === 'deleteFile' ? FileResolver::resolve($kirby, $input['id']) : PageResolver::resolve($kirby, $input['id']);
+        if (!$model instanceof Page && !$model instanceof File) {
+            throw new \RuntimeException('Model not found.');
+        }
+        $parent = $model instanceof Page ? $model->parentModel() : $model->parent();
+        if (!$parent instanceof Page && !$parent instanceof Site) {
+            throw new \RuntimeException('Only site/page attachments are exposed.');
+        }
+        self::parent($kirby, self::identity($parent));
+        $model->guards()->ensureAvailable('read');
+        $model->guards()->ensureAvailable('access');
+        $before = self::summary($model);
+        $uris = [...self::listingUris($parent, $model instanceof Page ? 'children' : 'files'), $before['contentUri'], 'kirby://' . ($model instanceof Page ? 'page' : 'file') . '/content/' . rawurlencode($model->id())];
+        if ($operation === 'deletePage' || $operation === 'deleteFile') {
+            $pages = [];
+            $files = [];
+            $visit = function (Page|File $item) use (&$visit, &$pages, &$files, &$uris): void {
+                $item->guards()->ensureAvailable('read');
+                $item->guards()->ensureAvailable('access');
+                $item->guards()->ensureExecutable('delete', ...($item instanceof Page ? [true] : []));
+                $summary = self::summary($item);
+                $uris[] = $summary['contentUri'];
+                $uris[] = 'kirby://' . ($item instanceof Page ? 'page' : 'file') . '/content/' . rawurlencode($item->id());
+                if ($item instanceof File) {
+                    $files[] = $summary;
+                    $uris[] = $summary['readUri'];
+                    $uris[] = 'kirby://file/read/' . rawurlencode($item->id());
+                    return;
+                }
+                $pages[] = $summary;
+                $uris = [...$uris, ...self::listingUris($item, 'children'), ...self::listingUris($item, 'files')];
+                foreach ($item->files() as $file) {
+                    $visit($file);
+                }
+                foreach ($item->childrenAndDrafts() as $child) {
+                    $visit($child);
+                }
+            };
+            $visit($model);
+            $recursive = ($input['recursive'] ?? false) === true;
+            $blocked = count($pages) > 1 && !$recursive;
+            $preview = ['ok' => !$blocked, 'needsConfirm' => true, 'pages' => $pages, 'files' => $files, 'warnings' => ['References in content are not repaired.']];
+            if ($blocked) {
+                return $preview + ['message' => 'Page has descendants; recursive=true is required.'];
+            }
+            if (($input['confirm'] ?? false) !== true) {
+                return $preview;
+            }
+            $model instanceof Page ? $model->delete($recursive) : $model->delete();
+            return array_replace($preview, ['needsConfirm' => false, 'updatedUris' => array_values(array_unique($uris))]);
+        }
+        if ($operation === 'changePageSlug') {
+            $slug = self::safeSlug($input['slug']);
+            $language = $input['language'] ?? null;
+            if ($language !== null && (!$kirby->multilang() || $kirby->language($language) === null)) {
+                throw new \InvalidArgumentException('Unknown language.');
+            }
+            $language = $kirby->language($language)?->code();
+            $languages = [$language];
+            if ($language === $kirby->defaultLanguage()?->code()) {
+                foreach ($kirby->languages() as $translation) {
+                    if ($model->translation($translation->code())->slug() === null) {
+                        $languages[] = $translation->code();
+                    }
+                }
+            }
+            foreach ($parent->childrenAndDrafts() as $sibling) {
+                if ($sibling->id() === $model->id()) {
+                    continue;
+                }
+                foreach (array_unique($languages) as $code) {
+                    if ($sibling->slug($code) === $slug) {
+                        throw new \RuntimeException('Another sibling page or draft already uses this slug.');
+                    }
+                }
+            }
+            $model->guards()->ensureExecutable('changeSlug', $slug);
+            $target = compact('slug', 'language');
+        } else {
+            $status = $input['status'];
+            $position = $input['position'] ?? null;
+            if (!in_array($status, ['draft', 'unlisted', 'listed'], true) || ($position !== null && ($status !== 'listed' || !is_int($position) || $position < 1))) {
+                throw new \InvalidArgumentException('Invalid status or listed position.');
+            }
+            $model->guards()->ensureExecutable('changeStatus', $status, $status === 'listed' ? $model->createNum($position) : null);
+            $target = compact('status', 'position');
+        }
+        if (($input['confirm'] ?? false) !== true) {
+            return ['ok' => true, 'needsConfirm' => true, 'before' => $before, 'target' => $target, 'validation' => 'Native guards checked; hooks run only on confirmation.'];
+        }
+        $page = $operation === 'changePageSlug' ? $model->changeSlug($slug, $language) : $model->changeStatus($status, $position);
+        $after = self::summary($page);
+        return ['ok' => true, 'needsConfirm' => false, 'before' => $before, 'page' => $after, 'updatedUris' => array_values(array_unique([...$uris, $after['contentUri'], 'kirby://page/content/' . rawurlencode($page->id())]))];
+    }
+
+    private static function storedUuid(File|Page $model): ?string
+    {
+        // Casting a lazy Kirby UUID without an ID generates and persists one.
+        $id = $model->content('default')->get('uuid')->value();
+        return \Kirby\Uuid\Uuids::enabled() && is_string($id) && $id !== ''
+            ? ($model instanceof Page ? 'page://' : 'file://') . $id : null;
+    }
+
+    private static function safeSlug(mixed $slug): string
+    {
+        if (!is_string($slug) || $slug === '' || \Kirby\Cms\Url::slug($slug) !== $slug) {
+            throw new \InvalidArgumentException('Use a nonempty canonical Kirby slug without paths.');
+        }
+        return $slug;
+    }
+
     private static function listingUris(Page|Site $parent, string $kind): array
     {
         if ($parent instanceof Site) {
             return ['kirby://site/' . $kind];
         }
         return array_values(array_unique(['kirby://page/' . $kind . '/' . rawurlencode($parent->id()),
-            'kirby://page/' . $kind . '/' . rawurlencode((string)($parent->uuid() ?? $parent->id()))]));
+            'kirby://page/' . $kind . '/' . rawurlencode((string)(self::storedUuid($parent) ?? $parent->id()))]));
     }
 }

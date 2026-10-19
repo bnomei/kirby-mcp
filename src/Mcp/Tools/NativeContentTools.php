@@ -144,4 +144,44 @@ final class NativeContentTools
     {
         return $this->run(['operation' => 'move'] + compact('id', 'parent', 'confirm'), $requestContext);
     }
+
+    /** @param array{type: string, id?: string} $parent
+     * @param array<string, mixed> $content
+     */
+    #[McpTool(name: 'kirby_create_page', title: 'Create Draft Page', description: 'Preview or confirm native model-level draft creation. Checks native create permission, not Panel page-list field template/capacity restrictions. Content cannot set reserved model fields. Field handlers and hooks run on confirmation.', outputSchema: self::OUTPUT)]
+    #[McpToolIndex(whenToUse: 'Create a draft page.', keywords: ['page' => 100, 'create' => 100, 'draft' => 100])]
+    #[Schema(properties: ['parent' => self::PARENT, 'content' => ['type' => 'object', 'additionalProperties' => true]])]
+    public function createPage(array $parent, string $slug, string $template, array $content = [], bool $confirm = false, ?RequestContext $requestContext = null): array
+    {
+        return $this->run(['operation' => 'createPage'] + compact('parent', 'slug', 'template', 'content', 'confirm'), $requestContext);
+    }
+
+    #[McpTool(name: 'kirby_delete_page', title: 'Delete Page', description: 'Preview all affected pages and attached files before native deletion. Descendants require recursive=true. References elsewhere are not repaired.', outputSchema: self::OUTPUT)]
+    #[McpToolIndex(whenToUse: 'Delete a page and its attachments.', keywords: ['page' => 100, 'delete' => 100])]
+    public function deletePage(string $id, bool $recursive = false, bool $confirm = false, ?RequestContext $requestContext = null): array
+    {
+        return $this->run(['operation' => 'deletePage'] + compact('id', 'recursive', 'confirm'), $requestContext);
+    }
+
+    #[McpTool(name: 'kirby_change_page_slug', title: 'Change Page Slug', description: 'Preview or confirm a native slug change, optionally in a configured language. References elsewhere are not repaired.', outputSchema: self::OUTPUT)]
+    #[McpToolIndex(whenToUse: 'Change a page URL slug.', keywords: ['page' => 100, 'slug' => 100, 'rename' => 100])]
+    public function changePageSlug(string $id, string $slug, ?string $language = null, bool $confirm = false, ?RequestContext $requestContext = null): array
+    {
+        return $this->run(['operation' => 'changePageSlug'] + compact('id', 'slug', 'language', 'confirm'), $requestContext);
+    }
+
+    #[McpTool(name: 'kirby_change_page_status', title: 'Change Page Status', description: 'Preview or confirm draft/unlisted/listed status. position is only valid for listed pages.', outputSchema: self::OUTPUT)]
+    #[McpToolIndex(whenToUse: 'Publish, unpublish or order a page.', keywords: ['page' => 100, 'status' => 100, 'publish' => 100])]
+    #[Schema(properties: ['status' => ['type' => 'string', 'enum' => ['draft', 'unlisted', 'listed']], 'position' => ['type' => ['integer', 'null'], 'minimum' => 1]])]
+    public function changePageStatus(string $id, string $status, ?int $position = null, bool $confirm = false, ?RequestContext $requestContext = null): array
+    {
+        return $this->run(['operation' => 'changePageStatus'] + compact('id', 'status', 'position', 'confirm'), $requestContext);
+    }
+
+    #[McpTool(name: 'kirby_delete_file', title: 'Delete File', description: 'Preview or confirm native attachment deletion. Content references elsewhere are not repaired.', outputSchema: self::OUTPUT)]
+    #[McpToolIndex(whenToUse: 'Delete an attached file.', keywords: ['file' => 100, 'delete' => 100])]
+    public function deleteFile(string $id, bool $confirm = false, ?RequestContext $requestContext = null): array
+    {
+        return $this->run(['operation' => 'deleteFile'] + compact('id', 'confirm'), $requestContext);
+    }
 }

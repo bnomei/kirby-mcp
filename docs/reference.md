@@ -41,6 +41,24 @@ Use `kirby_tool_suggest` or `kirby://tools` to find the next operation. Run `kir
 
 Read first, inspect `fieldSchemas`, then use the matching blueprint and field update-schema resources for payload shapes. Update `data` accepts a JSON object or a JSON-encoded object string. Remote updates run as the authenticated Kirby user; [capabilities and native mutation checks](remote.md#security-boundaries) both apply.
 
+### Manage and find content
+
+| Tool | Purpose |
+| --- | --- |
+| `kirby_create_page` | Create a confirmed draft with parent, slug, template and initial content. Native model permission applies; Panel page-list field creation restrictions do not. |
+| `kirby_delete_page` | Preview affected pages/files; confirm deletion, with explicit recursion for descendants. |
+| `kirby_change_page_slug` | Change a slug in the selected language, checking sibling collisions including drafts. |
+| `kirby_change_page_status` | Set draft/unlisted/listed status and optional listed position. |
+| `kirby_delete_file` | Preview and confirm attachment deletion without repairing references. |
+| `kirby_find_pages` | Paginated native text search with fixed parent/subtree, template, status and language filters. |
+| `kirby_find_files` | Paginated native text search with fixed parent/subtree, template, type, language and missingField filters. |
+
+Lifecycle tools preview by default and require `confirm: true` to write. Creation takes `parent`, `slug`, `template`, and initial `content`, and always creates a draft. Status changes accept `draft`, `unlisted`, or `listed`, with optional positive `position` for listed pages; slug changes accept an optional `language`. Page deletion previews affected pages and files and requires `recursive: true` for descendants. Native guards run as the connected user; field save handlers and hooks run only on confirmation. These previews do not create editorial unsaved changes.
+
+Creation is a model-level API: it enforces native page creation permissions, not a Panel page-list field's `create`, template selection or capacity settings. Grant `content.pages.create` only to agents allowed this direct creation access. Deletion is not transactional if a native hook or filesystem operation fails midway.
+
+Searches omit `parent` for the whole site including drafts. Use `{ "type": "site" }` for top-level pages/site attachments or `{ "type": "page", "id": "…" }` for direct children/attachments; `recursive: true` includes descendants. Filters combine with AND: `template`, `status` (pages), `type` (files), `language`, and plain-text `query`. Files also accept `missingField`, matching only blueprint-declared metadata with an empty effective value. Language defaults to the site's default with normal Kirby fallback. Text search uses the project's Kirby search component over content metadata, not binary file contents. Results contain `items`, `total`, and `nextCursor`; repeat filters with the cursor, with `limit` 1–100 (default 20). Pagination is not a snapshot of concurrent edits. These tools do not require arbitrary query execution.
+
 ### Research Kirby
 
 | Tool                   | Purpose                                                            |
