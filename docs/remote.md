@@ -4,6 +4,8 @@
 
 Use Streamable HTTP when the client cannot start a project-local stdio process. HTTP is disabled by default; enabling it does not turn `vendor/bin/kirby-mcp` into a web server. Kirby serves the route through its normal PHP runtime.
 
+For a first installation, follow the [remote OAuth walkthrough](install/remote.md), then a [client-specific tutorial](install/index.md). This page is the reference for authentication alternatives, permissions, and transport behavior.
+
 ## Install and register the routes
 
 Install as a production dependency if the route must survive `composer install --no-dev`:

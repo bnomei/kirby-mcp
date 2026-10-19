@@ -56,9 +56,20 @@ Then [connect your agent](#connect-your-agent). Your MCP client starts the serve
 
 The installer adds project-local runtime commands, a small Kirby plugin adapter, and `.kirby-mcp/mcp.json`. The MCP library stays in `vendor/`. [Maintenance](#maintenance) explains updates and removal.
 
-**Connecting over HTTP?** Use the [remote setup guide](docs/remote.md), including production installation, bearer tokens, and OAuth for Claude connectors. **Want reference access without a project?** See [global reference mode](docs/global-reference.md).
+**Connecting a hosted site?** Follow the [remote installation tutorial](docs/install/remote.md) for production installation, HTTPS, OAuth, and a restricted Kirby account. Advanced authentication options remain in the [HTTP reference](docs/remote.md). **Want reference access without a project?** See [global reference mode](docs/global-reference.md).
 
 ## Connect your agent
+
+Step-by-step guides cover registration, authorization, a read-only connection check, and troubleshooting:
+
+| Cloud assistants                                      | Coding clients                                                   |
+| ----------------------------------------------------- | ---------------------------------------------------------------- |
+| [Claude web/Desktop](docs/install/claude.md)          | [Claude Code](docs/install/claude-code.md)                       |
+| [ChatGPT](docs/install/chatgpt.md)                    | [Codex CLI](docs/install/codex.md)                               |
+| [Langdock](docs/install/langdock.md)                  | [Cursor](docs/install/cursor.md)                                 |
+| [Choose local or remote setup](docs/install/index.md) | [Other clients, VS Code, and Amp](docs/install/other-clients.md) |
+
+Client availability and authentication support vary; the tutorials link to official requirements and distinguish documented setup from live-tested compatibility. For a local project, the short configurations below are enough to get started.
 
 Run these commands from the Kirby project root. They save an absolute executable path and project root so the client can find both when launched elsewhere.
 
@@ -253,6 +264,7 @@ Server diagnostics go to stderr. Include the client version and relevant error w
 
 | Go deeper                                         | What you'll find                                        |
 | ------------------------------------------------- | ------------------------------------------------------- |
+| [Installation tutorials](docs/install/index.md)   | Local/remote setup and step-by-step client connections  |
 | [Tools, resources, and skills](docs/reference.md) | Complete inventory, content schemas, and MCP behavior   |
 | [Configuration](docs/configuration.md)            | Every setting and environment variable                  |
 | [Remote connections](docs/remote.md)              | HTTP setup, OAuth, bearer tokens, and Kirby permissions |
