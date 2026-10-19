@@ -147,6 +147,12 @@ final class ServerFactory
             ))
             ->build();
 
+        if (!ServerProfile::isGlobalReference($profile)) {
+            foreach (CustomTools::configured() as $customTool) {
+                $customTool->register($registry);
+            }
+        }
+
         // Sizing is optional metadata and can execute runtime-backed resources.
         // Remote discovery must not invoke resources before permission filtering.
         if ($permissions === null) {

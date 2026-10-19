@@ -28,6 +28,8 @@ Environment overrides must reach the process doing the work: the MCP process for
 
 The CLI tool has a built-in allowlist; these arrays extend or restrict it rather than replacing it. Enabling eval or generic commands grants trusted execution, not a sandbox. See [remote boundaries](remote.md#security-boundaries).
 
+`customTools` is an optional object keyed by `custom_*` tool names (default: none). Each definition binds a fixed CLI command to a title, description and input schema. Commands still need `cli.allow` or `cli.allowWrite`, and `cli.deny` always wins. See [custom tools](custom-tools.md) for paths, a complete example, argument mapping and permissions. Restart the MCP process after changing definitions.
+
 ## HTTP options
 
 These options configure transport and authentication; follow [remote setup](remote.md#install-and-register-the-routes) to register Kirby routes and choose credentials. Setting `http.enabled` does not itself register a route or start a listener.

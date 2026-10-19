@@ -5,6 +5,8 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+- Add opt-in `customTools` definitions for project/plugin Kirby CLI commands, with schema-validated inputs, tool discovery and suggestions, existing CLI allow/deny enforcement, write opt-in and HTTP capability/scope checks. Document command paths, results and reuse with Janitor without adding a job system.
+
 ## [6.1.0] - 2026-10-18
 
 - Upgrade to MCP PHP SDK v0.9.0 for Kirby 6, including concurrent-request isolation fixes, stricter structured tool output validation, and modern `2026-07-28` support over stdio. PHP 8.3+ and the Kirby 6 baseline remain unchanged; no Kirby 5 backport.

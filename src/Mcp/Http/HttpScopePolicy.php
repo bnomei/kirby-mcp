@@ -43,13 +43,13 @@ final class HttpScopePolicy
         $name = $this->stringParam($params, 'name');
         $scopes = $this->toolScopes($name);
 
-        if ($name === 'kirby_run_cli_command') {
+        if ($name === 'kirby_run_cli_command' || str_starts_with($name ?? '', 'custom_')) {
             if ($this->boolArgument($params, 'allowWrite') === true && !in_array(HttpAuthScopes::WRITE, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::WRITE;
             }
 
             $command = $this->stringArgument($params, 'command');
-            if (is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
+            if ($name === 'kirby_run_cli_command' && is_string($command) && str_starts_with(strtolower(trim($command)), 'mcp:') && !in_array(HttpAuthScopes::RUNTIME, $scopes, true)) {
                 $scopes[] = HttpAuthScopes::RUNTIME;
             }
         }
@@ -140,6 +140,10 @@ final class HttpScopePolicy
     {
         if ($toolName === null || $toolName === '') {
             return [HttpAuthScopes::READ];
+        }
+
+        if (str_starts_with($toolName, 'custom_')) {
+            return [HttpAuthScopes::EXECUTE];
         }
 
         if (in_array($toolName, [

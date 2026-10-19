@@ -129,7 +129,7 @@ final readonly class Permissions
 
     public function tool(string $name): bool
     {
-        return $this->allows(self::TOOLS[$name] ?? null);
+        return $this->allows(str_starts_with($name, 'custom_') ? 'execution.cli' : (self::TOOLS[$name] ?? null));
     }
 
     public function resource(string $uri): bool

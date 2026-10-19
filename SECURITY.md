@@ -29,6 +29,13 @@ Revocation is checked per HTTP request, not continuously during an open stream. 
 loopback shared-token access remain trusted. See [Remote MCP permissions](docs/remote.md#configure-role-permissions) before
 exposing the server.
 
+Custom command tools inherit the CLI execution boundary: explicit project registration, command
+allowlisting, deny precedence, `execution.cli` capability checks, and execute/write HTTP scopes.
+Their input schemas and fixed command targets are not a sandbox or per-tool permission system.
+They do not automatically impersonate the remote user. Granting CLI execution also grants access
+to the generic CLI tool, so fixed custom-tool arguments do not restrict that broader capability.
+See [Custom tools](docs/custom-tools.md#writes-and-permissions).
+
 CORS preflight (`OPTIONS`) does not require a bearer token, but still enforces allowed origins and rejects
 query-string credentials. Actual MCP requests require authentication; scopes and Kirby identity come
 from the SDK's validated access token, not client-supplied request metadata.

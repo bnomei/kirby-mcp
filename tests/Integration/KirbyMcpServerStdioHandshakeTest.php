@@ -5,6 +5,116 @@ declare(strict_types=1);
 use Symfony\Component\Process\Process;
 use Composer\InstalledVersions;
 
+it('exposes opt-in command tools with validated inputs and the existing execution policy', function (): void {
+    $configPath = cmsPath() . '/.kirby-mcp/mcp.json';
+    $original = is_file($configPath) ? file_get_contents($configPath) : null;
+    $commandPath = cmsPath() . '/site/commands/custom-probe.php';
+    $createdDirectory = !is_dir(dirname($commandPath));
+    if ($createdDirectory) {
+        mkdir(dirname($commandPath), 0777, true);
+    }
+    file_put_contents($commandPath, <<<'PHP'
+<?php
+return [
+    'description' => 'Custom tool fixture',
+    'args' => [
+        'text' => ['longPrefix' => 'text', 'required' => true],
+        'count' => ['longPrefix' => 'count'],
+        'loud' => ['longPrefix' => 'loud', 'noValue' => true],
+        'off' => ['longPrefix' => 'off', 'noValue' => true],
+        'fixed' => ['longPrefix' => 'fixed'],
+        'data' => ['longPrefix' => 'data'],
+    ],
+    'command' => static function (\Kirby\CLI\CLI $cli): void {
+        if ($cli->arg('text') === 'fail') {
+            fwrite(STDERR, 'Expected command failure');
+            exit(3);
+        }
+        $cli->out('__KIRBY_MCP_JSON__');
+        $cli->out(json_encode([
+            'text' => $cli->arg('text'), 'count' => $cli->arg('count'),
+            'loud' => (bool) $cli->arg('loud'), 'off' => (bool) $cli->arg('off'),
+            'fixed' => $cli->arg('fixed'),
+            'data' => $cli->arg('data'),
+        ], JSON_THROW_ON_ERROR));
+        $cli->out('__KIRBY_MCP_JSON_END__');
+    },
+];
+PHP);
+    $definition = [
+        'command' => 'custom-probe', 'description' => 'Probe wombat reports.', 'readOnly' => true,
+        'arguments' => ['--fixed=locked'],
+        'inputSchema' => ['type' => 'object', 'properties' => [
+            'text' => ['type' => 'string', 'default' => 'not-injected'], 'count' => ['type' => 'integer'],
+            'loud' => ['type' => 'boolean'], 'off' => ['type' => 'boolean'],
+            'data' => ['type' => 'string'],
+        ], 'required' => ['text']],
+    ];
+    file_put_contents($configPath, json_encode([
+        'cli' => ['allow' => ['custom-probe', 'custom-blocked'], 'deny' => ['custom-blocked']],
+        'customTools' => [
+            'custom_probe' => $definition,
+            'custom_report_2026' => array_replace($definition, ['description' => 'Kirby 6 reports']),
+            'custom_write' => array_replace($definition, ['readOnly' => false]),
+            'custom_blocked' => array_replace($definition, ['command' => 'custom-blocked']),
+        ],
+    ], JSON_THROW_ON_ERROR));
+    $meta = [
+        'io.modelcontextprotocol/protocolVersion' => '2026-07-28',
+        'io.modelcontextprotocol/clientCapabilities' => new stdClass(),
+        'io.modelcontextprotocol/clientInfo' => ['name' => 'tests', 'version' => 'dev'],
+    ];
+    $text = '  two words --fixed=unlocked; $(echo injected)  ';
+    try {
+        $requests = [['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list', 'params' => ['_meta' => $meta]]];
+        foreach ([
+            ['custom_probe', ['text' => $text, 'count' => 7, 'loud' => true, 'off' => false, 'data' => '{"empty":{},"list":[],"null":null}']],
+            ['custom_probe', ['text' => 'hello', 'fixed' => 'override']],
+            ['custom_probe', ['text' => 'hello', 'count' => 'seven']],
+            ['custom_write', ['text' => 'hello']],
+            ['custom_write', ['text' => 'hello', 'allowWrite' => false]],
+            ['custom_write', ['text' => 'written', 'allowWrite' => true]],
+            ['custom_blocked', ['text' => 'hello']],
+            ['custom_probe', ['text' => 'fail']],
+            ['kirby_tool_suggest', ['query' => 'wombat']],
+            ['custom_probe', []],
+            ['kirby_tool_suggest', ['query' => 'zzzz']],
+        ] as [$name, $arguments]) {
+            $requests[] = ['jsonrpc' => '2.0', 'id' => count($requests) + 1, 'method' => 'tools/call',
+                'params' => ['_meta' => $meta, 'name' => $name, 'arguments' => $arguments]];
+        }
+        $responses = runKirbyMcpStdioRequests($requests);
+        $tools = array_column($responses[0]['result']['tools'], null, 'name');
+        expect($tools)->toHaveKeys(['custom_probe', 'custom_write'])
+            ->and($tools['custom_write']['inputSchema']['required'])->toContain('allowWrite');
+        expect($responses[1]['result']['structuredContent']['mcpJson'])->toBe([
+            'text' => $text, 'count' => '7', 'loud' => true, 'off' => false, 'fixed' => 'locked',
+            'data' => '{"empty":{},"list":[],"null":null}',
+        ]);
+        foreach ([2, 3, 4, 5] as $index) {
+            expect($responses[$index]['error']['code'] ?? null)->toBe(-32602);
+        }
+        expect($responses[6]['result']['structuredContent']['ok'])->toBeTrue()
+            ->and($responses[7]['result']['structuredContent']['ok'])->toBeFalse()
+            ->and($responses[7]['result']['structuredContent']['message'])->toContain('denied')
+            ->and($responses[7]['result']['isError'])->toBeTrue()
+            ->and($responses[8]['result']['structuredContent']['ok'])->toBeFalse()
+            ->and($responses[8]['result']['structuredContent']['exitCode'])->toBe(3)
+            ->and($responses[8]['result']['isError'])->toBeTrue()
+            ->and(array_column($responses[9]['result']['structuredContent']['suggestions'], 'name'))->toContain('custom_probe');
+        expect($responses[10]['result']['isError'] ?? false)->toBeTrue()
+            ->and($responses[10]['result']['content'][0]['text'] ?? '')->toContain('Required CLI input: text')
+            ->and($responses[11]['result']['isError'] ?? false)->toBeFalse()
+            ->and($responses[11]['result']['structuredContent'])->toHaveKey('suggestions');
+    } finally {
+        $original === null ? unlink($configPath) : file_put_contents($configPath, $original);
+        unlink($commandPath);
+        if ($createdDirectory) {
+            rmdir(dirname($commandPath));
+        }
+    }
+});
+
 it('dispatches modern stdio tools without initialization and validates structured results', function (): void {
     $meta = [
         'io.modelcontextprotocol/protocolVersion' => '2026-07-28',

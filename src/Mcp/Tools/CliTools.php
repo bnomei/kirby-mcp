@@ -416,11 +416,6 @@ final class CliTools
                 continue;
             }
 
-            $arg = trim($arg);
-            if ($arg === '') {
-                continue;
-            }
-
             $out[] = $arg;
         }
 

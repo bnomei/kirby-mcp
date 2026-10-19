@@ -27,6 +27,8 @@ For Composer-based Kirby projects. **Kirby 6 · PHP 8.3+ · Composer**
 
 Your agent discovers the tools and resources through MCP. You can ask in plain language; you do not need to memorize tool names. Browse the [tool and resource lists](#tools-and-resources) below to see the full range.
 
+Expose your own project or plugin commands as [custom MCP tools](docs/custom-tools.md), with descriptions, validated inputs and explicit CLI allowlisting. The same Kirby command can also serve Janitor; no separate job system is added.
+
 ### Kirby knowledge, built in
 
 **Kirby MCP ships with a curated knowledge base, not just access to your site.** Your agent can search and read the bundled documents locally, without a network request:
@@ -267,6 +269,7 @@ Server diagnostics go to stderr. Include the client version and relevant error w
 | [Installation tutorials](docs/install/index.md)   | Local/remote setup and step-by-step client connections  |
 | [Tools, resources, and skills](docs/reference.md) | Complete inventory, content schemas, and MCP behavior   |
 | [Configuration](docs/configuration.md)            | Every setting and environment variable                  |
+| [Custom tools](docs/custom-tools.md)              | Expose project/plugin CLI commands, including Janitor reuse |
 | [Remote connections](docs/remote.md)              | HTTP setup, OAuth, bearer tokens, and Kirby permissions |
 | [Global reference mode](docs/global-reference.md) | Projectless installation and client setup               |
 

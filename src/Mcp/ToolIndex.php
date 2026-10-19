@@ -36,6 +36,27 @@ final class ToolIndex
      */
     public static function all(string $profile = ServerProfile::PROJECT): array
     {
+        $items = self::builtins($profile);
+        if (!ServerProfile::isGlobalReference($profile)) {
+            foreach (CustomTools::configured() as $customTool) {
+                $tool = $customTool->tool;
+                $words = preg_split('/[^a-z0-9]+/', strtolower($tool->name . ' ' . $tool->title . ' ' . $tool->description), flags: PREG_SPLIT_NO_EMPTY) ?: [];
+                $words = array_filter($words, static fn (string $word): bool => !ctype_digit($word));
+                $items[] = [
+                    'kind' => 'tool',
+                    'name' => $tool->name,
+                    'title' => $tool->title ?? $tool->name,
+                    'whenToUse' => $tool->description ?? '',
+                    'keywords' => array_fill_keys($words, 60),
+                ];
+            }
+        }
+        return $items;
+    }
+
+    /** @return list<array{kind: 'tool'|'resource'|'resource_template', name: string, title: string, whenToUse: string, keywords: array<string, int>}> */
+    private static function builtins(string $profile): array
+    {
         $profile = ServerProfile::normalize($profile);
 
         if (isset(self::$cache[$profile])) {
