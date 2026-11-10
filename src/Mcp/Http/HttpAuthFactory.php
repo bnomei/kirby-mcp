@@ -12,9 +12,11 @@ use Firebase\JWT\CachedKeySet;
 use Firebase\JWT\JWK;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
+use Mcp\Schema\SecureUrl;
 use Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface;
 use Mcp\Server\Transport\Http\OAuth\JwtTokenValidator;
 use Mcp\Server\Transport\Http\OAuth\ProtectedResourceMetadata;
+use Mcp\Server\Transport\Http\OAuth\RateLimitedJwksClient;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 final readonly class HttpAuthFactory
@@ -59,18 +61,13 @@ final readonly class HttpAuthFactory
         }
 
         foreach ([(string) $config->oauthIssuer, $config->oauthJwksUri] as $url) {
-            $parts = parse_url($url);
-            $host = strtolower(trim($parts['host'] ?? '', '[]'));
-            $scheme = strtolower($parts['scheme'] ?? '');
-            if ($host === '' || ($scheme !== 'https' && ($scheme !== 'http' || !in_array($host, ['localhost', '127.0.0.1', '::1'], true)))) {
-                throw new \InvalidArgumentException('OAuth issuer and JWKS URI must use HTTPS (except loopback).');
-            }
+            SecureUrl::parse($url, 'OAuth issuer or JWKS URI');
         }
 
         return new JwtTokenValidator(
             issuer: (string) $config->oauthIssuer,
             audience: (string) $config->oauthAudience,
-            keys: new CachedKeySet($config->oauthJwksUri, $client, $requests, $cache, 3600, true, 'RS256'),
+            keys: new CachedKeySet($config->oauthJwksUri, new RateLimitedJwksClient($client, $cache), $requests, $cache, 3600, false, 'RS256'),
             algorithms: ['RS256', 'RS384', 'RS512'],
         );
     }

@@ -43,7 +43,7 @@ it('does not mark the session initialized when project init fails validation', f
         $threw = false;
         try {
             (new SessionTools())->init(context: $context);
-        } catch (\Mcp\Exception\ToolCallException) {
+        } catch (\Mcp\Server\Exception\ToolCallException) {
             $threw = true;
         }
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\PromptIndex;
-use Mcp\Capability\Attribute\McpPrompt;
+use Mcp\Server\Capability\Attribute\McpPrompt;
 
 it('indexes every MCP prompt via #[McpPrompt]', function (): void {
     $projectRoot = dirname(__DIR__, 2);

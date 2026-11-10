@@ -183,7 +183,7 @@ function oauthPermissionsCall(
     $factory = new HttpFactory();
     $params = [
         'name' => $tool,
-        'arguments' => $arguments,
+        'arguments' => (object) $arguments,
         '_meta' => array_merge([
             'io.modelcontextprotocol/protocolVersion' => '2026-07-28',
             'io.modelcontextprotocol/clientCapabilities' => new stdClass(),

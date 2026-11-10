@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\Resources\AbstractMarkdownDocsResource;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 class MarkdownDocsResourceStub extends AbstractMarkdownDocsResource
 {

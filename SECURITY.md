@@ -61,6 +61,11 @@ CORS preflight (`OPTIONS`) does not require a bearer token, but still enforces a
 query-string credentials. Actual MCP requests require authentication; scopes and Kirby identity come
 from the SDK's validated access token, not client-supplied request metadata.
 
+Handshake-era HTTP sessions bind to the validated token's issuer, client and subject on POST,
+GET/SSE and DELETE. A different principal or a session predating the 6.4.0 binding receives 404.
+Token refresh preserves the binding, not the old token's scopes. External OAuth signing-key outages
+and refresh limits return 503 with `Retry-After`, without an invalid-token challenge.
+
 ## Reporting a Vulnerability
 
 Please report security issues via GitHub Security Advisories for this repository.

@@ -107,6 +107,19 @@ it('builds protected-resource metadata and OAuth JWT validators from HTTP config
     expect($validator)->toBeInstanceOf(JwtTokenValidator::class);
 });
 
+it('rejects ambiguous explicit OAuth URLs before fetching keys', function (string $url): void {
+    foreach (['oauthIssuer', 'oauthJwksUri'] as $field) {
+        $options = [
+            'oauthIssuer' => 'https://auth.example.test',
+            'oauthAudience' => 'https://kirby.example.test/mcp',
+            'oauthJwksUri' => 'https://auth.example.test/jwks',
+        ];
+        $options[$field] = $url;
+        expect(fn () => (new HttpAuthFactory())->oauthValidator(new KirbyMcpHttpConfig(...$options)))
+            ->toThrow(\InvalidArgumentException::class);
+    }
+})->with(['http://evil.example\\@localhost', 'https://127.1/jwks', 'https://0.0.0.0/jwks', 'https://%65xample.test/jwks']);
+
 it('builds remote-token validators from token records', function (): void {
     $factory = new HttpAuthFactory();
     $validator = $factory->remoteTokenValidator([

@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Mcp\Permissions;
 use Bnomei\KirbyMcp\Mcp\Resources\MetaResources;
 use Bnomei\KirbyMcp\Mcp\Tools\MetaTools;
-use Mcp\Capability\Attribute\McpResource;
-use Mcp\Capability\Attribute\McpResourceTemplate;
-use Mcp\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Attribute\McpResource;
+use Mcp\Server\Capability\Attribute\McpResourceTemplate;
+use Mcp\Server\Capability\Attribute\McpTool;
 
 it('maps every registered tool and resource exactly once', function (): void {
     $tools = [];

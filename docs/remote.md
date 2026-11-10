@@ -308,7 +308,11 @@ OAuth protected-resource metadata now follows the resource URL path: `https://ex
 
 ## Sessions, streaming and subscriptions
 
-The server uses MCP SDK v0.9. Existing clients negotiate stateful sessions through `initialize`; protocol `2026-07-28` uses stateless requests over HTTP and stdio. HTTP tools do not require a preceding `kirby_init`, though it remains useful for audit and guidance. See [reference semantics](reference.md#confirmations-and-resource-links) for confirmations and resource links.
+The server uses MCP SDK v0.10. Kirby MCP explicitly enables persistent HTTP sessions: existing clients negotiate them through `initialize`; protocol `2026-07-28` uses stateless requests over HTTP and stdio. HTTP tools do not require a preceding `kirby_init`, though it remains useful for audit and guidance. See [reference semantics](reference.md#confirmations-and-resource-links) for confirmations and resource links.
+
+After upgrading to 6.4.0, reconnect handshake-era HTTP clients. Sessions created before this upgrade return 404 and must be initialized again. New sessions are bound to the authenticated issuer, client and subject on POST, GET/SSE and DELETE. Refreshing a token with the same principal preserves the session; current scopes and Kirby permissions still apply on every request. Remote tokens identify their bound Kirby user; local shared-token sessions belong to the trusted shared-token identity.
+
+Send one JSON-RPC message per request; batches are rejected. `tools/call.arguments` must be an object, including `{}` for no arguments, never `[]`. Lists inside arguments remain arrays. Malformed JSON returns HTTP 400; invalid method parameters return JSON-RPC `-32602`. If external signing keys cannot be fetched or their refresh is rate-limited, retry after the HTTP 503 response's `Retry-After` interval instead of restarting OAuth login.
 
 Modern resource subscriptions use a bounded 120-second local-filesystem notification bus at `.kirby-mcp/http-notifications`, allowing separate same-host workers to communicate. It is not multi-host/NFS storage and does not promise durability or exactly-once delivery. Each URI requires the scope needed to read it; project content subscriptions require `kirby-mcp:runtime`. Legacy GET/SSE streams recheck every stored subscription against the current token's scopes when opened, independently of role checks.
 

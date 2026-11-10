@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp;
 
-use Mcp\Capability\Attribute\CompletionProvider;
-use Mcp\Capability\Attribute\McpPrompt;
+use Mcp\Server\Capability\Attribute\CompletionProvider;
+use Mcp\Server\Capability\Attribute\McpPrompt;
 use Mcp\Schema\Icon;
 
 /**

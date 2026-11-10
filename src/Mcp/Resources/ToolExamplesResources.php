@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
-use Mcp\Capability\Attribute\McpResource;
+use Mcp\Server\Capability\Attribute\McpResource;
 use Mcp\Schema\Annotations;
 use Mcp\Schema\Enum\Role;
 

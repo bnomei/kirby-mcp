@@ -25,6 +25,7 @@ Keep fast, deterministic tests for pure logic (parsers, policies, indexing, help
 
 - No network access.
 - SDK v0.9 auth tests use validated `AccessToken` objects; legacy `oauth.*` attributes must not grant scopes. Elicitation probes use typed `RequestSuspension` properties.
+- Keep generated list schemas array-only under SDK v0.10, and exercise file-bus publish/read round trips against its single-message parser. Explicit OAuth issuer/JWKS URL validation tests must not fetch keys.
 - Cover unsupported runtime versions without blocking global-reference access; new schema guides must not be assumed present merely because a field appears in the Panel catalog.
 - Avoid persistent filesystem writes; use temp dirs and clean up.
 - Don’t assert incidental ordering unless it’s part of the contract.

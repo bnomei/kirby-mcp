@@ -9,8 +9,8 @@ use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Kirby\Cms\App;
 use Kirby\Cms\Core;
 use Kirby\Uuid\Uuid;
-use Mcp\Capability\Attribute\McpResource;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Capability\Attribute\McpResource;
+use Mcp\Server\Exception\ResourceReadException;
 use Mcp\Schema\Annotations;
 use Mcp\Schema\Enum\Role;
 

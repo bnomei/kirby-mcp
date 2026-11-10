@@ -414,7 +414,7 @@ it('rejects malformed JSON-RPC payloads before MCP dispatch', function (): void 
         )
     );
 
-    expect($response->getStatusCode())->toBe(200);
+    expect($response->getStatusCode())->toBe(400);
     $payload = kirbyMcpHttpDecodeResponse($response);
     expect($payload['error']['code'] ?? null)->toBe(-32700);
     expect(array_key_exists('id', $payload))->toBeFalse();
@@ -744,8 +744,14 @@ it('serves later queued GET SSE messages through the opt-in listener', function 
 
     $sessionDir = cmsPath() . DIRECTORY_SEPARATOR . '.kirby-mcp' . DIRECTORY_SEPARATOR . 'http-sessions';
     $sessionStore = new FileSessionStore($sessionDir);
-    $sessionId = Uuid::v4();
-    expect($sessionStore->write($sessionId, '{}'))->toBeTrue();
+    $factory = new HttpFactory();
+    $initialized = (new HttpMcpHandler(new ServerFactory(), $sessionStore, sharedToken: 'local-secret'))->handle(
+        kirbyMcpHttpAuthorize($factory->createServerRequest('POST', 'http://127.0.0.1/mcp')
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody($factory->createStream(kirbyMcpHttpJsonRequest('initialize', 1))))
+    );
+    expect($initialized->getStatusCode())->toBe(200);
+    $sessionId = Uuid::fromString($initialized->getHeaderLine('Mcp-Session-Id'));
 
     $process = new Process(
         command: [PHP_BINARY, $bin, 'http', '--project=' . cmsPath()],

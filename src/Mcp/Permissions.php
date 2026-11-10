@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp;
 
-use Mcp\Capability\Registry;
+use Mcp\Server\Capability\Registry;
 
 final readonly class Permissions
 {

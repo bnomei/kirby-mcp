@@ -7,7 +7,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 ## System
 
 - Fixture Kirby site lives in `tests/cms/` (generated test data).
-- `tests/fixture/prepare-kit.sh` pins Kirby 6.0.0-beta.1 kits and verifies the bundled runtime against the Composer lock before replacing the fixture. Do not use moving kit branches.
+- `tests/fixture/prepare-kit.sh` pins beta.2 kit templates and replaces their core with Kirby 6.0.0-beta.3 plus its locked production dependencies, verifying the runtime against the root Composer lock before replacing the fixture. Do not use moving kit branches.
 - The fixture config loads the library before plugin discovery, emulating a Composer-based host while retaining the kit's bundled Kirby version.
 - `tests/cms/` must not be committed/changed in PRs; regenerate it locally with `composer cms:starterkit` (CI does this automatically).
 - Use `cmsPath()` from `tests/Pest.php` to reference it.
@@ -28,6 +28,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 - Remote permission coverage must install the real plugin adapter, grant every required ancestor permission explicitly, verify filtered discovery and direct-request denial, and prove role changes are observed without recreating the HTTP handler.
 - Remote-token fixtures must bind each token to an existing Kirby `userId`; shared-token and local stdio fixtures remain intentionally unbound trusted access.
 - Verify private zero-TTL tool-index reads across users/role changes and legacy subscription GET authorization with a narrower token than the token that created the subscription.
+- SDK upgrade coverage must send empty tool arguments as `{}`, distinguish nested objects from lists, and check session-owner rejection on POST/GET/DELETE with same-principal token-refresh controls. External JWKS outages return 503 with exposed `Retry-After` and no bearer challenge.
 - Include dynamic blueprint allow/deny decisions, NUL-containing subjects, and empty listener token overrides in OAuth regression coverage.
 - Exercise Panel OAuth handoff, browser-session binding, expiry, replacement, and consumption on approve/deny. Verify real Panel login and token exchange in the browser fixture; impersonation alone does not verify login redirects.
 - Activity coverage must exercise dispatched tool and bundled/non-bundled resource reads; discovery, failed lookups, and scope-denied calls must not record. Run Panel browser checks after the PHP suite, which modifies the generated fixture, then rerun `.agents/prepare-panel.php`.

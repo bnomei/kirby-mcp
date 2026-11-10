@@ -16,10 +16,10 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandResult;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
 use Bnomei\KirbyMcp\Support\IndexList;
-use Mcp\Capability\Attribute\CompletionProvider;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Capability\Attribute\CompletionProvider;
+use Mcp\Server\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Attribute\Schema;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
@@ -36,7 +36,7 @@ final class BlueprintTools
     /**
      * Index blueprints (prefers runtime when installed).
      *
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array<string, mixed>
      */
     #[McpToolIndex(

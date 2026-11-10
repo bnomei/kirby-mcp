@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\Tools\OnlinePluginsTools;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 
 class OnlinePluginsToolsStub extends OnlinePluginsTools
 {
@@ -212,7 +212,7 @@ it('rejects empty queries', function (): void {
 
 it('suggests and accepts Kirby 6 plugin compatibility searches', function (): void {
     $parameter = (new ReflectionMethod(OnlinePluginsTools::class, 'search'))->getParameters()[1];
-    $completion = $parameter->getAttributes(\Mcp\Capability\Attribute\CompletionProvider::class)[0]->newInstance();
+    $completion = $parameter->getAttributes(\Mcp\Server\Capability\Attribute\CompletionProvider::class)[0]->newInstance();
 
     expect($completion->values)->toContain(6);
 

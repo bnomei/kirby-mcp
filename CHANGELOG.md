@@ -5,6 +5,15 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.4.0] - 2026-11-10
+
+- Upgrade to MCP PHP SDK v0.10.0 and migrate its server/schema namespaces. Preserve PHP 8.3+, Kirby 6, both protocol eras, explicit HTTP sessions and the existing tool/resource surface.
+- Rebase the development dependency and test runtime on Kirby 6.0.0-beta.3, using pinned beta.2 Starterkit/Plainkit templates until newer kit tags exist; the runtime minimum remains 6.0.0-beta.1.
+- Adapt cross-worker resource notifications to the SDK's single-message parser, and keep list-valued tool inputs described as JSON arrays under the new schema generator. Tool arguments must be JSON objects (`{}`, not `[]`); JSON-RPC batches are no longer supported, and malformed JSON returns HTTP 400.
+- Enforce the SDK's issuer/client/subject session binding on custom GET/SSE as well as POST/DELETE. Existing HTTP sessions must be reinitialized after upgrading; token refresh with the same principal preserves new sessions, with scopes still checked per request.
+- Apply the SDK's hardened URL validation and JWKS rate limiter to explicitly configured external signing keys. Key-service outages/rate limits return retryable HTTP 503 rather than an invalid-token challenge; expose `Retry-After` through CORS.
+- Update locked development dependencies to Symfony HttpFoundation/HttpKernel 7.4.23 and Mime 7.4.22, clearing all six remaining Composer security advisories without changing production dependencies.
+
 ## [6.3.0] - 2026-10-19
 
 - Add confirmed draft creation, page/file deletion, language-aware slug changes and page status/position changes, with native guards and recursive deletion preflight.

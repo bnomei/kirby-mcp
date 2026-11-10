@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\Tools\DocsTools;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 
 class DocsToolsStub extends DocsTools
 {

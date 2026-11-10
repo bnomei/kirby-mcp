@@ -219,6 +219,37 @@ it('serves discover and tools without a session while enforcing modern headers a
     }
 });
 
+it('preserves JSON object and list contracts at the tool dispatch boundary', function (): void {
+    $root = kirbyMcpStatelessRoot();
+    $factory = new HttpFactory();
+    $handler = kirbyMcpStatelessHandler($root);
+    try {
+        foreach ([new stdClass(), ['keywords' => ['page', 'blueprint']], [] , ['keywords' => (object) ['0' => 'page']], ['query' => ['page']]] as $index => $arguments) {
+            $response = $handler->handle(kirbyMcpStatelessRequest(
+                $factory,
+                'tools/call',
+                $index + 1,
+                ['name' => 'kirby_tool_suggest', 'arguments' => $arguments],
+                'kirby_tool_suggest',
+            ));
+            $payload = kirbyMcpStatelessDecode($response);
+            if ($index < 2) {
+                expect($response->getStatusCode())->toBe(200)
+                    ->and($payload['result']['structuredContent'])->toHaveKey('suggestions');
+            } else {
+                expect($payload['error']['code'] ?? null)->toBe(-32602);
+            }
+        }
+        $request = kirbyMcpStatelessRequest($factory, 'tools/list', 10);
+        $batch = '[' . (string) $request->getBody() . ']';
+        $response = $handler->handle($request->withBody($factory->createStream($batch)));
+        expect($response->getStatusCode())->toBe(400)
+            ->and(kirbyMcpStatelessDecode($response)['error']['code'] ?? null)->toBe(-32600);
+    } finally {
+        removeKirbyMcpStatelessRoot($root);
+    }
+});
+
 it('records dispatched activity but not discovery, denied calls, or unknown resources', function (): void {
     $root = kirbyMcpStatelessRoot();
     $previousRoot = getenv('KIRBY_MCP_PROJECT_ROOT');

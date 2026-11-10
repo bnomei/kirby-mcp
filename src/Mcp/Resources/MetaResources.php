@@ -8,7 +8,7 @@ use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ServerProfile;
 use Bnomei\KirbyMcp\Mcp\Permissions;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
-use Mcp\Capability\Attribute\McpResource;
+use Mcp\Server\Capability\Attribute\McpResource;
 use Mcp\Schema\Annotations;
 use Mcp\Schema\Enum\Role;
 

@@ -43,15 +43,15 @@ Read first, inspect `fieldSchemas`, then use the matching blueprint and field up
 
 ### Manage and find content
 
-| Tool | Purpose |
-| --- | --- |
-| `kirby_create_page` | Create a confirmed draft with parent, slug, template and initial content. Native model permission applies; Panel page-list field creation restrictions do not. |
-| `kirby_delete_page` | Preview affected pages/files; confirm deletion, with explicit recursion for descendants. |
-| `kirby_change_page_slug` | Change a slug in the selected language, checking sibling collisions including drafts. |
-| `kirby_change_page_status` | Set draft/unlisted/listed status and optional listed position. |
-| `kirby_delete_file` | Preview and confirm attachment deletion without repairing references. |
-| `kirby_find_pages` | Paginated native text search with fixed parent/subtree, template, status and language filters. |
-| `kirby_find_files` | Paginated native text search with fixed parent/subtree, template, type, language and missingField filters. |
+| Tool                       | Purpose                                                                                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kirby_create_page`        | Create a confirmed draft with parent, slug, template and initial content. Native model permission applies; Panel page-list field creation restrictions do not. |
+| `kirby_delete_page`        | Preview affected pages/files; confirm deletion, with explicit recursion for descendants.                                                                       |
+| `kirby_change_page_slug`   | Change a slug in the selected language, checking sibling collisions including drafts.                                                                          |
+| `kirby_change_page_status` | Set draft/unlisted/listed status and optional listed position.                                                                                                 |
+| `kirby_delete_file`        | Preview and confirm attachment deletion without repairing references.                                                                                          |
+| `kirby_find_pages`         | Paginated native text search with fixed parent/subtree, template, status and language filters.                                                                 |
+| `kirby_find_files`         | Paginated native text search with fixed parent/subtree, template, type, language and missingField filters.                                                     |
 
 Lifecycle tools preview by default and require `confirm: true` to write. Creation takes `parent`, `slug`, `template`, and initial `content`, and always creates a draft. Status changes accept `draft`, `unlisted`, or `listed`, with optional positive `position` for listed pages; slug changes accept an optional `language`. Page deletion previews affected pages and files and requires `recursive: true` for descendants. Native guards run as the connected user; field save handlers and hooks run only on confirmation. These previews do not create editorial unsaved changes.
 
@@ -190,7 +190,7 @@ Bundled skills are installed at `vendor/bnomei/kirby-mcp/skills`; copy them to y
 
 ## Compatibility and reference limits
 
-MCP 6.x requires PHP 8.3+ and Kirby 6 for runtime operations. The verified CMS baseline is **6.0.0-beta.1**; a stable MCP release does not certify the CMS beta for production. Install the CMS separately with explicit beta opt-in. Kirby 7+ is unsupported; use MCP 1.x for Kirby 5. Projectless reference access does not require CMS.
+MCP 6.x requires PHP 8.3+ and Kirby 6 for runtime operations. The verified CMS baseline is **6.0.0-beta.3**; a stable MCP release does not certify the CMS beta for production. Install the CMS separately with explicit beta opt-in. Kirby 7+ is unsupported; use MCP 1.x for Kirby 5. Projectless reference access does not require CMS.
 
 Upstream Starterkit beta.1 has a Linux/case-sensitive-filesystem issue: Site Panel requests `js/Sortable.min.js` but the kit ships `js/sortable.min.js`, causing a dynamic-import 404. The Composer CMS package has the correct uppercase filename. This is an upstream kit asset issue, not an MCP activity-indicator requirement.
 

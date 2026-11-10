@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 it('lists Kirby CLI commands via kirby://commands', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');
@@ -60,7 +60,7 @@ it('blocks generic runtime commands on Kirby 5 while allowing version diagnostic
     try {
         $tools = new \Bnomei\KirbyMcp\Mcp\Tools\CliTools();
         expect(fn () => $tools->runCliCommand('roots'))
-            ->toThrow(\Mcp\Exception\ToolCallException::class, 'detected 5.6.1');
+            ->toThrow(\Mcp\Server\Exception\ToolCallException::class, 'detected 5.6.1');
         expect(is_file($marker))->toBeFalse();
         $diagnostic = $tools->runCliCommand('version');
         expect($diagnostic['ok'])->toBeTrue();

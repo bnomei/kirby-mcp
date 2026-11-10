@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Completion;
 
 use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
-use Mcp\Capability\Completion\ProviderInterface;
+use Mcp\Server\Capability\Completion\ProviderInterface;
 
 final class PanelSectionTypeCompletionProvider implements ProviderInterface
 {

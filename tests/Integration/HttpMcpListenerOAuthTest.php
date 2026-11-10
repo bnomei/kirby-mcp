@@ -269,6 +269,27 @@ it('authenticates external RSA tokens through the configured Kirby route and rej
                 expect($response->headers()['WWW-Authenticate'] ?? '')->toContain('invalid_token', $error);
             }
         }
+        $validator = (new Bnomei\KirbyMcp\Mcp\Http\HttpAuthFactory())->oauthValidator(
+            new Bnomei\KirbyMcp\Project\KirbyMcpHttpConfig(
+                oauthIssuer: $issuer,
+                oauthAudience: $audience,
+                oauthJwksUri: $discovery ? null : $issuer . '/jwks',
+            ),
+        );
+        for ($attempt = 1; $attempt <= 11; $attempt++) {
+            $unknownKey = JWT::encode($claims, $keys->privateKey(), $algorithm, 'unknown-' . $attempt);
+            $limited = $validator->validate($unknownKey);
+            expect($limited->getStatusCode())->toBe($attempt <= 10 ? 401 : 503);
+        }
+        expect($validator->validate(JWT::encode($claims, $keys->privateKey(), $algorithm, $keys->kid()))->isAllowed())->toBeTrue();
+
+        listenerOAuthStop($pid);
+        $token = JWT::encode($claims, $keys->privateKey(), $algorithm, $keys->kid());
+        $unavailable = Bnomei\KirbyMcp\Mcp\KirbyMcpRoute::handle($root, $request->withHeader('Authorization', 'Bearer ' . $token));
+        expect($unavailable->code())->toBe(503)
+            ->and((int) ($unavailable->headers()['Retry-After'] ?? 0))->toBeGreaterThan(0)
+            ->and($unavailable->headers()['WWW-Authenticate'] ?? '')->toBe('')
+            ->and($unavailable->headers()['Access-Control-Expose-Headers'] ?? '')->toContain('Retry-After');
     } finally {
         $app->session()->commit();
         $app->plugins($plugins);

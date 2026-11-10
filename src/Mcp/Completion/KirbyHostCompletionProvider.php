@@ -8,7 +8,7 @@ use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Capability\Completion\ProviderInterface;
+use Mcp\Server\Capability\Completion\ProviderInterface;
 
 final class KirbyHostCompletionProvider implements ProviderInterface
 {

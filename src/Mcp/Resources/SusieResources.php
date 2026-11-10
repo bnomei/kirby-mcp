@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
-use Mcp\Capability\Attribute\McpResourceTemplate;
+use Mcp\Server\Capability\Attribute\McpResourceTemplate;
 
 final class SusieResources
 {

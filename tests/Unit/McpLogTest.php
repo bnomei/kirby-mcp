@@ -17,7 +17,7 @@ function mcpLogContextPhp(array $traceContext): string
 {
     return sprintf(<<<'PHP'
         $session = new \Mcp\Server\Session\Session(new \Mcp\Server\Session\InMemorySessionStore(60));
-        $session->set(\Mcp\Server\Stateless\RequestMeta::class, new \Mcp\Server\Stateless\RequestMeta(
+        $session->set(\Mcp\Schema\RequestMeta::class, new \Mcp\Schema\RequestMeta(
             '2026-07-28',
             \Mcp\Schema\ClientCapabilities::fromArray([]),
             traceContext: %s,

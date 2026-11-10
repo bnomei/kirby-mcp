@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
-use Mcp\Capability\Attribute\McpResource;
-use Mcp\Capability\Attribute\McpResourceTemplate;
-use Mcp\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Attribute\McpResource;
+use Mcp\Server\Capability\Attribute\McpResourceTemplate;
+use Mcp\Server\Capability\Attribute\McpTool;
 
 it('indexes tools and resources via #[McpToolIndex]', function (): void {
     $projectRoot = dirname(__DIR__, 2);

@@ -6,8 +6,8 @@ namespace Bnomei\KirbyMcp\Mcp;
 
 use Bnomei\KirbyMcp\Mcp\Tools\CliTools;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
-use Mcp\Capability\Registry;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Capability\Registry;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\Request\CallToolRequest;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\Tool;

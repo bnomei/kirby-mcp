@@ -11,7 +11,7 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommands;
 use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Capability\Completion\ProviderInterface;
+use Mcp\Server\Capability\Completion\ProviderInterface;
 
 final class BlueprintIdCompletionProvider implements ProviderInterface
 {

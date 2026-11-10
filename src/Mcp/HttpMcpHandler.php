@@ -308,9 +308,7 @@ final class HttpMcpHandler
             throw new \InvalidArgumentException('Invalid resource authority.');
         }
 
-        // SDK OAuth metadata permits HTTP only on localhost, ::1 and 127.0.0.1.
-        // Local shared tokens also support real 127/8 literals. They need no
-        // OAuth discovery; do not advertise a fabricated HTTPS or localhost URL.
+        // Additional 127/8 shared-token endpoints intentionally omit OAuth discovery.
         $host = $uri->getHost();
         if ($this->sharedToken !== null && $this->sharedToken !== ''
             && !$this->useKirbyUser && $uri->getScheme() === 'http'
@@ -365,6 +363,19 @@ final class HttpMcpHandler
         }
 
         $session = new \Mcp\Server\Session\Session($this->sessionStore, $uuid);
+        $token = $request->getAttribute(AccessToken::class);
+        $principal = $request->getAttribute(StreamableHttpTransport::PRINCIPAL_ATTRIBUTE)
+            ?? ($token instanceof AccessToken ? $token->getPrincipal() : null);
+        // Match SDK Protocol's session binding because GET uses our SSE transport.
+        $fingerprint = is_string($principal) && $principal !== '' ? hash('sha256', $principal) : null;
+        if ($session->get('_mcp.principal', false) !== $fingerprint) {
+            if ($session->isUnreadable()) {
+                return $responseFactory->createResponse(503)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->withBody($streamFactory->createStream($this->encodeError('Session store is unavailable.')));
+            }
+            return $this->sessionNotFoundResponse($responseFactory, $streamFactory);
+        }
         $scopePolicy = $this->scopePolicy ?? new HttpScopePolicy();
         $requiredScopes = $scopePolicy->methodScopes('GET');
         foreach (array_keys($session->get('resource_subscriptions', [])) as $uri) {
@@ -499,7 +510,7 @@ final class HttpMcpHandler
             'Access-Control-Allow-Origin' => $origin !== '' ? $origin : '*',
             'Access-Control-Allow-Methods' => 'GET, POST, DELETE, OPTIONS',
             'Access-Control-Allow-Headers' => 'Accept,Authorization,Content-Type,Last-Event-ID,Mcp-Method,Mcp-Name,Mcp-Protocol-Version,Traceparent,X-Kirby-Upload-Ticket,' . self::SESSION_HEADER,
-            'Access-Control-Expose-Headers' => self::SESSION_HEADER,
+            'Access-Control-Expose-Headers' => self::SESSION_HEADER . ',Retry-After',
         ];
 
         foreach ($headers as $name => $value) {

@@ -10,8 +10,8 @@ use Bnomei\KirbyMcp\Mcp\Permissions;
 use Bnomei\KirbyMcp\Mcp\ToolIndex;
 use Bnomei\KirbyMcp\Mcp\SessionState;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Attribute\Schema;
+use Mcp\Server\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Attribute\Schema;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
@@ -31,7 +31,7 @@ final class MetaTools
      *
      * Provide either a free-form query or explicit keywords; the tool returns a ranked list with a score and a short “when to use”.
      *
-     * @param array<int, string> $keywords
+     * @param list<string> $keywords
      * @return array{
      *   query: string|null,
      *   keywords: array<int, string>,

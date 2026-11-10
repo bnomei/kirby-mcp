@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Completion;
 
 use Bnomei\KirbyMcp\Docs\HookReferenceIndex;
-use Mcp\Capability\Completion\ProviderInterface;
+use Mcp\Server\Capability\Completion\ProviderInterface;
 
 final class HookNameCompletionProvider implements ProviderInterface
 {

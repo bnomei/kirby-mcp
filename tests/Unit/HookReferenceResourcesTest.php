@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bnomei\KirbyMcp\Mcp\Resources\HookReferenceResources;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 it('lists Kirby hook resources', function (): void {
     $resource = new HookReferenceResources();

@@ -13,6 +13,8 @@ Give your coding agent access to your Kirby project and the knowledge to work wi
 
 For Composer-based Kirby projects. **Kirby 6 · PHP 8.3+ · Composer**
 
+Version 6.4.0 integrates MCP PHP SDK v0.10.0. Reconnect existing HTTP sessions after upgrading; see the [transport compatibility notes](docs/remote.md#sessions-streaming-and-subscriptions).
+
 [Capabilities](#capabilities) · [Knowledge base](#kirby-knowledge-built-in) · [Quickstart](#quickstart) · [Connect your agent](#connect-your-agent) · [Usage](#usage) · [Tools and resources](#tools-and-resources) · [Documentation](#documentation)
 
 ## Capabilities
@@ -54,7 +56,7 @@ vendor/bin/kirby-mcp install
 Then [connect your agent](#connect-your-agent). Your MCP client starts the server; no separate running terminal is needed.
 
 > [!IMPORTANT]
-> The verified Kirby CMS baseline is **6.0.0-beta.1**. Kirby MCP's stable version does not make the CMS beta production-ready. Install Kirby separately and explicitly opt into its beta, for example with `composer require getkirby/cms:"6.0.0-beta.1" --with-all-dependencies` on a test copy before installing MCP. For **Kirby 5**, use `bnomei/kirby-mcp:"^1.15"` instead.
+> The verified Kirby CMS baseline is **6.0.0-beta.3**. Kirby MCP's stable version does not make the CMS beta production-ready. Install Kirby separately and explicitly opt into its beta, for example with `composer require getkirby/cms:"6.0.0-beta.3" --with-all-dependencies` on a test copy before installing MCP. For **Kirby 5**, use `bnomei/kirby-mcp:"^1.15"` instead.
 
 The installer adds project-local runtime commands, a small Kirby plugin adapter, and `.kirby-mcp/mcp.json`. The MCP library stays in `vendor/`. [Maintenance](#maintenance) explains updates and removal.
 

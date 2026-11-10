@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Discovery\DocBlockParser;
-use Mcp\Capability\Discovery\SchemaGenerator;
+use Mcp\Server\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Discovery\DocBlockParser;
+use Mcp\Server\Capability\Discovery\SchemaGenerator;
 
 it('exposes strict-compatible input schemas for all MCP tools', function (): void {
     $generator = new SchemaGenerator(new DocBlockParser());

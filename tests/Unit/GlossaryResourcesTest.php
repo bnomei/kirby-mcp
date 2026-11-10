@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Mcp\Resources\GlossaryResources;
 use Bnomei\KirbyMcp\Mcp\Support\KbDocuments;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 it('lists bundled Kirby glossary entries as MCP resources', function (): void {
     $resource = new GlossaryResources();

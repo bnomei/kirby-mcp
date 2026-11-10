@@ -303,7 +303,7 @@ PHP], $this->nativeRoot);
     expect(array_column($listing['result']['content'], 'type'))->toContain('resource_link');
     foreach (['kirby_find_pages', 'kirby_find_files'] as $name) {
         foreach ([[], ['parent' => null], ['parent' => ['type' => 'site']], ['parent' => ['type' => 'page', 'id' => 'alpha']]] as $arguments) {
-            $found = $call('tools/call', ['name' => $name, 'arguments' => $arguments]);
+            $found = $call('tools/call', ['name' => $name, 'arguments' => (object) $arguments]);
             expect($found['result']['structuredContent']['ok'] ?? null)->toBeTrue(json_encode($found, JSON_THROW_ON_ERROR));
         }
     }

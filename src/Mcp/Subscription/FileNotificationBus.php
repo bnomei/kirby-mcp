@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Subscription;
 
-use Mcp\JsonRpc\MessageFactory;
+use Mcp\Schema\MessageFactory;
 use Mcp\Schema\JsonRpc\Notification;
 use Mcp\Server\Subscription\NotificationBusInterface;
 use RuntimeException;
@@ -132,9 +132,9 @@ final class FileNotificationBus implements NotificationBusInterface
                     continue;
                 }
                 try {
-                    $messages = $factory->create(json_encode($entry['notification'], JSON_THROW_ON_ERROR));
-                    if (($messages[0] ?? null) instanceof Notification) {
-                        $notifications[] = $messages[0];
+                    $message = $factory->create(json_encode($entry['notification'], JSON_THROW_ON_ERROR));
+                    if ($message instanceof Notification) {
+                        $notifications[] = $message;
                     }
                 } catch (Throwable) {
                     // Skip malformed entries while still advancing to the head.

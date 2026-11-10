@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Mcp\PromptIndex;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 final class PromptResources
 {

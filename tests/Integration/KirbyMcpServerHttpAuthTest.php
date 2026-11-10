@@ -46,6 +46,52 @@ function kirbyMcpHttpAuthDecode(ResponseInterface $response): array
     return $decoded;
 }
 
+it('binds HTTP sessions to issuer client and subject across POST GET and DELETE', function (): void {
+    $factory = new HttpFactory();
+    $store = new \Mcp\Server\Session\InMemorySessionStore();
+    $validator = new class () implements \Mcp\Server\Transport\Http\OAuth\AuthorizationTokenValidatorInterface {
+        public function validate(string $accessToken): \Mcp\Server\Transport\Http\OAuth\AuthorizationResult
+        {
+            $claims = ['iss' => 'https://issuer.test', 'client_id' => 'client-a', 'sub' => 'user-a'];
+            $claims = array_replace($claims, match ($accessToken) {
+                'other-issuer' => ['iss' => 'https://other.test'],
+                'other-client' => ['client_id' => 'client-b'],
+                'other-user' => ['sub' => 'user-b'],
+                default => [],
+            });
+            return \Mcp\Server\Transport\Http\OAuth\AuthorizationResult::allow(
+                new \Mcp\Server\Authorization\AccessToken(HttpAuthScopes::all(), $claims),
+            );
+        }
+    };
+    $handler = new HttpMcpHandler(new ServerFactory(), $store, tokenValidator: $validator, sseMaxSeconds: 1);
+    $post = $factory->createServerRequest('POST', 'http://localhost/mcp')
+        ->withHeader('Authorization', 'Bearer original')->withHeader('Content-Type', 'application/json');
+    $initialized = $handler->handle($post->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('initialize', 1))));
+    expect($initialized->getStatusCode())->toBe(200);
+    $id = $initialized->getHeaderLine('Mcp-Session-Id');
+    expect($id)->not()->toBe('');
+    $post = $post->withHeader('Mcp-Session-Id', $id)
+        ->withBody($factory->createStream(kirbyMcpHttpAuthJsonRequest('tools/list', 2)));
+    $get = $post->withMethod('GET')->withBody($factory->createStream(''));
+    $delete = $get->withMethod('DELETE');
+    foreach (['other-issuer', 'other-client', 'other-user'] as $token) {
+        foreach ([$post, $get, $delete] as $request) {
+            expect($handler->handle($request->withHeader('Authorization', 'Bearer ' . $token))->getStatusCode())->toBe(404);
+        }
+    }
+    // Token rotation keeps the principal and the session, but not a prior token's authorization.
+    expect($handler->handle($post->withHeader('Authorization', 'Bearer refreshed'))->getStatusCode())->toBe(200)
+        ->and($handler->handle($get->withHeader('Authorization', 'Bearer refreshed'))->getStatusCode())->toBe(200);
+
+    $session = new Session($store, Uuid::fromString($id));
+    $session->forget('_mcp.principal');
+    $session->save();
+    foreach ([$post, $get, $delete] as $request) {
+        expect($handler->handle($request)->getStatusCode())->toBe(404);
+    }
+});
+
 it('enforces resource scopes on legacy subscriptions and rechecks stored subscriptions on GET', function (): void {
     $factory = new HttpFactory();
     $directory = sys_get_temp_dir() . '/kirby-mcp-subscription-scopes-' . bin2hex(random_bytes(6));

@@ -7,7 +7,7 @@ namespace Bnomei\KirbyMcp\Mcp\Resources;
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Project\KirbyMcpConfig;
 use Bnomei\KirbyMcp\Support\StaticCache;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Exception\ResourceReadException;
 
 abstract class AbstractMarkdownDocsResource
 {

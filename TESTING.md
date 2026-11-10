@@ -3,8 +3,9 @@
 ## Reproducible Kirby 6 baseline
 
 Run `composer install`, `composer cms:starterkit`, `composer test`, then `composer analyse`.
-The fixture script downloads the exact `6.0.0-beta.1` kit tag and checks its bundled runtime against
-`composer.lock` before replacing `tests/cms/`. `cms:plainkit` uses the same version checks but is not
+The fixture script downloads the `6.0.0-beta.2` kit templates (the latest published kit tags), replaces their
+core with `6.0.0-beta.3`, installs that core's locked production dependencies, and checks its runtime against
+the root `composer.lock` before replacing `tests/cms/`. `cms:plainkit` uses the same version checks but is not
 the full-suite fixture. Root dependencies resolve against PHP 8.3; CI runs Pest on PHP 8.3 and 8.5.
 Keep the development helper patch and prepend scripts: Laravel development dependencies still collide
 with Kirby's global `e()`/`dump()` helpers. Fixture config keeps the bundled Kirby loader authoritative.

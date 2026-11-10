@@ -81,7 +81,7 @@ PHP);
             ['kirby_tool_suggest', ['query' => 'zzzz']],
         ] as [$name, $arguments]) {
             $requests[] = ['jsonrpc' => '2.0', 'id' => count($requests) + 1, 'method' => 'tools/call',
-                'params' => ['_meta' => $meta, 'name' => $name, 'arguments' => $arguments]];
+                'params' => ['_meta' => $meta, 'name' => $name, 'arguments' => (object) $arguments]];
         }
         $responses = runKirbyMcpStdioRequests($requests);
         $tools = array_column($responses[0]['result']['tools'], null, 'name');
@@ -142,7 +142,7 @@ it('dispatches modern stdio tools without initialization and validates structure
         ->and($result)->toHaveKey('structuredContent');
     $schema = $tools['kirby_info']['outputSchema'];
     $sent = json_decode(json_encode($result['structuredContent'], JSON_THROW_ON_ERROR), false, flags: JSON_THROW_ON_ERROR);
-    $errors = (new Mcp\Capability\Discovery\SchemaValidator())->validateAgainstJsonSchema($sent, $schema);
+    $errors = (new Mcp\Server\Capability\Discovery\SchemaValidator())->validateAgainstJsonSchema($sent, $schema);
     expect($errors)->toBeEmpty()
         ->and(json_decode($result['content'][0]['text'], true, flags: JSON_THROW_ON_ERROR))->toBe($result['structuredContent']);
 });

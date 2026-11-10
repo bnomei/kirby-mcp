@@ -14,9 +14,9 @@ use Bnomei\KirbyMcp\Mcp\Support\RuntimeCommandRunner;
 use Bnomei\KirbyMcp\Project\RootsCodeIndexer;
 use Bnomei\KirbyMcp\Support\IndexList;
 use Bnomei\KirbyMcp\Mcp\Tools\Concerns\StructuredToolResult;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Attribute\Schema;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Attribute\Schema;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Schema\ToolAnnotations;
 use Mcp\Server\RequestContext;
@@ -31,7 +31,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array<string, mixed>
      */
     #[McpToolIndex(
@@ -166,7 +166,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array<string, mixed>
      */
     #[McpToolIndex(
@@ -299,7 +299,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array<string, mixed>
      */
     #[McpToolIndex(
@@ -433,7 +433,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array<string, mixed>
      */
     #[McpToolIndex(
@@ -565,7 +565,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array{
      *   projectRoot: string,
      *   host: string|null,
@@ -685,7 +685,7 @@ final class CodeIndexTools
     }
 
     /**
-     * @param array<int, string>|null $fields
+     * @param list<string>|null $fields
      * @return array{
      *   projectRoot: string,
      *   host: string|null,

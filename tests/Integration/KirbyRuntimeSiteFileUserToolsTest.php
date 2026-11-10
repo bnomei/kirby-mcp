@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Tools\RuntimeTools;
 use Kirby\Cms\App;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Discovery\SchemaValidator;
+use Mcp\Server\Capability\Attribute\McpTool;
+use Mcp\Server\Capability\Discovery\SchemaValidator;
 
 it('reads site content via runtime CLI', function (): void {
     $binary = realpath(__DIR__ . '/../../vendor/bin/kirby');

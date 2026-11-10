@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp;
 
-use Mcp\Capability\Discovery\DiscovererInterface;
-use Mcp\Capability\Registry\Loader\LoaderInterface;
-use Mcp\Capability\RegistryInterface;
+use Mcp\Server\Capability\Discovery\DiscovererInterface;
+use Mcp\Server\Capability\Registry\Loader\LoaderInterface;
+use Mcp\Server\Capability\RegistryInterface;
 
 final class ProfileDiscoveryLoader implements LoaderInterface
 {

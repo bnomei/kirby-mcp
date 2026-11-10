@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Tools\ProjectTools;
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ToolCallException;
 use Mcp\Schema\Request\CallToolRequest;
 use Mcp\Schema\Result\CallToolResult;
 use Mcp\Server\RequestContext;

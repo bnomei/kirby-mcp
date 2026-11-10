@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bnomei\KirbyMcp\Mcp\Handlers;
 
-use Mcp\Capability\RegistryInterface;
+use Mcp\Server\Capability\RegistryInterface;
 use Mcp\Schema\JsonRpc\Error;
 use Mcp\Schema\JsonRpc\Request;
 use Mcp\Schema\JsonRpc\Response;

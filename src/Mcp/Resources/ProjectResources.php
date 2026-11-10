@@ -9,8 +9,8 @@ use Bnomei\KirbyMcp\Mcp\ProjectContext;
 use Bnomei\KirbyMcp\Mcp\Support\KirbyRuntimeContext;
 use Bnomei\KirbyMcp\Project\ComposerInspector;
 use Bnomei\KirbyMcp\Project\ProjectInfoInspector;
-use Mcp\Capability\Attribute\McpResource;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Capability\Attribute\McpResource;
+use Mcp\Server\Exception\ResourceReadException;
 use Mcp\Schema\Annotations;
 use Mcp\Schema\Enum\Role;
 

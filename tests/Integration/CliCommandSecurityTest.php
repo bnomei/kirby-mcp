@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Bnomei\KirbyMcp\Cli\KirbyCliRunner;
 use Bnomei\KirbyMcp\Mcp\Resources\CliResources;
 use Bnomei\KirbyMcp\Mcp\Tools\CliTools;
-use Mcp\Exception\ResourceReadException;
-use Mcp\Exception\ToolCallException;
+use Mcp\Server\Exception\ResourceReadException;
+use Mcp\Server\Exception\ToolCallException;
 
 beforeEach(function (): void {
     $this->cliSecurityRoot = sys_get_temp_dir() . '/kirby-cli-security-' . bin2hex(random_bytes(8));

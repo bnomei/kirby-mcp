@@ -6,10 +6,10 @@ namespace Bnomei\KirbyMcp\Mcp\Resources;
 
 use Bnomei\KirbyMcp\Docs\PanelReferenceIndex;
 use Bnomei\KirbyMcp\Mcp\Attributes\McpToolIndex;
-use Mcp\Capability\Attribute\CompletionProvider;
-use Mcp\Capability\Attribute\McpResource;
-use Mcp\Capability\Attribute\McpResourceTemplate;
-use Mcp\Exception\ResourceReadException;
+use Mcp\Server\Capability\Attribute\CompletionProvider;
+use Mcp\Server\Capability\Attribute\McpResource;
+use Mcp\Server\Capability\Attribute\McpResourceTemplate;
+use Mcp\Server\Exception\ResourceReadException;
 use Bnomei\KirbyMcp\Mcp\Completion\PanelFieldTypeCompletionProvider;
 use Bnomei\KirbyMcp\Mcp\Completion\PanelSectionTypeCompletionProvider;
 use Mcp\Schema\Annotations;
