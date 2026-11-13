@@ -1,6 +1,6 @@
 # Hetzner
 
-Hetzner sells Cloud servers (self-managed VPS) and Webhosting (shared hosting, managed in konsoleH). The rules in SKILL.md and the workflow in `generic.md` still apply.
+Hetzner sells Cloud servers (self-managed VPS) and Webhosting (shared hosting, managed in konsoleH). This file covers what differs from `generic.md`; the rules in SKILL.md still apply. Last checked against the docs on 2026-11-13.
 
 ## Fits
 
@@ -16,22 +16,32 @@ Hetzner sells Cloud servers (self-managed VPS) and Webhosting (shared hosting, m
 - Webhosting: SSH only in the L and XL packages, on port 222, without root. https://docs.hetzner.com/de/managed/administration-on-konsoleh/access-details/ssh/
 - Webhosting: the docs name no document root setting for the main domain, which the Composerkit needs (`public/`). Subdomains can point at any folder. https://docs.hetzner.com/managed/domain-and-dns/subdomain/
 
-## Cloud servers
+## Tools
 
-Follow `generic.md`. The LAMP image ships Apache, MySQL, PHP and Certbot on Ubuntu 24.04, installed but not enabled; check its PHP version against Kirby's requirements. Log in with the SSH key chosen at creation.
+- Cloud: the Cloud Console in the browser, or the `hcloud` CLI to create servers. https://github.com/hetznercloud/cli
+- Webhosting: konsoleH in the browser; no CLI.
 
-## Webhosting
+## Settings
 
-| Setting | Value                                                                        |
-| ------- | ---------------------------------------------------------------------------- |
-| PHP     | konsoleH: Services, PHP Configuration; up to 8.5                             |
-| SSH     | L and XL: `ssh -p 222`, main FTP user only                                   |
-| SFTP    | Port 22, all packages                                                        |
-| Cron    | konsoleH Cron Job Manager; jobs using too many resources are ended           |
-| Web dir | `public_html/`; subdomains can point at a folder below it, e.g. its `public` |
+| Setting  | Cloud                                      | Webhosting                                                   |
+| -------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Web root | Your web server's config                   | `public_html/`; subdomains can point at a folder below it    |
+| PHP      | Installed by you; the LAMP image ships one | konsoleH: Services, PHP Configuration; up to 8.5             |
+| SSH      | `root@<server-ip>`, key chosen at creation | L and XL only: `ssh -p 222`, main FTP user, no root          |
+| Mail     | Your own setup                             | Not covered in the docs read                                 |
+| Cron     | `crontab -e`                               | konsoleH Cron Job Manager; jobs using too many resources end |
+| SFTP     | Over SSH                                   | Port 22, all packages                                        |
 
-- With SSH (L, XL): follow `generic.md`, with `-e 'ssh -p 222'` for rsync. The docs do not mention rsync or git, so check that they run.
-- Without SSH (S, M): upload over SFTP. Composer and the cache command then run locally, and the page cache is emptied by deleting `site/cache/<domain>/pages` over SFTP.
+## Deploy
+
+- **Cloud:** follow `generic.md`. The LAMP image ships Apache, MySQL, PHP and Certbot on Ubuntu 24.04, installed but not enabled; check its PHP version against Kirby's requirements.
+- **Webhosting with SSH (L, XL):** follow `generic.md`, with `-e 'ssh -p 222'` for rsync. The docs do not mention rsync or git, so check that they run.
+- **Webhosting without SSH (S, M):** upload over SFTP. Composer runs locally, and the page cache is emptied by deleting `site/cache/<domain>/pages` over SFTP.
+- **Composerkit on Webhosting:** point a subdomain at `public/`; the main domain has no documented setting.
+
+## Content
+
+Sync with rsync as in `generic.md`: on Cloud as is, on Webhosting L and XL with `-e 'ssh -p 222'`. Without SSH, download and upload `content/` over SFTP, excluding `_changes` and `.lock`.
 
 ## Documentation
 

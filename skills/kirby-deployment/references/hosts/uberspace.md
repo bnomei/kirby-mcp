@@ -1,6 +1,6 @@
 # Uberspace
 
-Uberspace is shared hosting run from the shell: one account ("Asteroid") per project, set up over SSH. This file follows Uberspace 8; accounts on Uberspace 7 use other commands, see the U7 manual. The rules in SKILL.md and the workflow in `generic.md` still apply.
+Uberspace is shared hosting run from the shell. This file follows Uberspace 8 and covers what differs from `generic.md`; the rules in SKILL.md still apply. Last checked against the docs on 2026-11-13.
 
 ## Fits
 
@@ -16,15 +16,21 @@ Uberspace is shared hosting run from the shell: one account ("Asteroid") per pro
 - 1500 MiB RAM and 300 % CPU per account, on a shared host. https://u8manual.uberspace.de/basics_resources/
 - No deploy pipeline: builds run locally or over SSH.
 
+## Tools
+
+- No local CLI: everything runs over SSH.
+- On the server, the `uberspace` command sets the PHP version and adds domains: `uberspace tool php version set 8.4`, `uberspace web domain list`.
+
 ## Settings
 
 | Setting  | Value                                                                       |
 | -------- | --------------------------------------------------------------------------- |
-| SSH      | `<user>@<host>.uberspace.de`                                                |
 | Web root | `/var/www/virtual/<user>/html`, shared by all domains unless split          |
 | PHP      | `uberspace tool php version set 8.4`; own `.ini` files in `~/.config/php/`  |
-| Rights   | Folders `0755`, files `0644`: `chmod -R u=rwX,go=rX /var/www/virtual/$USER` |
+| SSH      | `<user>@<host>.uberspace.de`                                                |
 | Mail     | SMTP at `<host>.uberspace.de`, port 465, login with the full address        |
+| Cron     | `crontab -e`                                                                |
+| Rights   | Folders `0755`, files `0644`: `chmod -R u=rwX,go=rX /var/www/virtual/$USER` |
 
 ## Deploy
 
@@ -43,10 +49,15 @@ Follow `generic.md` with these paths.
 
 - After the upload, fix the rights with the `chmod` above, then empty the page cache as in `generic.md`.
 
+## Content
+
+Sync with rsync as in `generic.md`, to `<user>@<host>.uberspace.de:/var/www/virtual/<user>/html/content/`, or the resolved content root under `my_project/` for the Composerkit.
+
 ## Documentation
 
 - Uberspace 8 manual: https://u8manual.uberspace.de/
 - Document root: https://u8manual.uberspace.de/web_documentroot/
 - Domains: https://u8manual.uberspace.de/web_domains/
 - Mail: https://u8manual.uberspace.de/mail_access/
+- Cron: https://u8manual.uberspace.de/services_cron/
 - Uberspace 7 Kirby guide: https://lab.uberspace.de/guide_kirby/

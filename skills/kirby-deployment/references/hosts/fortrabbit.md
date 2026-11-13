@@ -1,6 +1,6 @@
 # fortrabbit
 
-fortrabbit is a managed PHP hosting platform with a Kirby software template. This file covers what differs from a self-managed server; the rules in SKILL.md still apply.
+fortrabbit is managed PHP hosting with a Kirby software template. This file covers what differs from `generic.md`; the rules in SKILL.md still apply. Last checked against the docs on 2026-11-13.
 
 ## Fits
 
@@ -14,7 +14,7 @@ fortrabbit is a managed PHP hosting platform with a Kirby software template. Thi
 
 - No root access and no sendmail: Kirby sends mail over SMTP. https://docs.fortrabbit.com/guides/kirby/tune
 
-## The frbit CLI
+## Tools
 
 The commands below use `frbit`, fortrabbit's command line tool. When `frbit --version` fails, install it and let the person sign in.
 
@@ -28,9 +28,21 @@ frbit doctor                        # checks version, sign-in, ssh, rsync and th
 - `frbit <group> --help` lists the commands and flags; do not guess them.
 - `frbit setup agent` adds fortrabbit's MCP server and its own agent skill, for platform tasks beyond Kirby.
 
-**Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`. Last checked against the docs on 2026-11-13.
+**Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`.
 
-## Choose a workflow
+## Settings
+
+| Setting  | Value                                                                          |
+| -------- | ------------------------------------------------------------------------------ |
+| Web root | Root path: empty for the Plainkit and Starterkit, `public` for the Composerkit |
+| PHP      | Kirby 6 needs 8.3 or newer: check before the first deployment                  |
+| SSH      | `<env>@ssh.<region>.frbit.app`, no root; `frbit ssh -- '<command>'`            |
+| Mail     | No sendmail: configure SMTP                                                    |
+| Cron     | `frbit jobs create <env>`                                                      |
+| Objects  | An app with environments (`en-xxxxxx`): own code, files, SSH, domain           |
+| Env vars | `APP_MODE`, `APP_DEBUG`: Kirby ignores them unless the config reads them       |
+
+## Deploy
 
 | Workflow                  | Code                    | Content       | Fits              |
 | ------------------------- | ----------------------- | ------------- | ----------------- |
@@ -41,18 +53,7 @@ Find out which one the project uses: `frbit environments get <env> --json` shows
 
 Do not mix them for code. With a repository connected, the next git deployment overwrites code pushed with rsync.
 
-## Settings for both workflows
-
-| Setting   | Value                                                                    |
-| --------- | ------------------------------------------------------------------------ |
-| Objects   | An app with environments (`en-xxxxxx`): own code, files, SSH, domain     |
-| Root path | Empty for the Plainkit and Starterkit, `public` for the Composerkit      |
-| PHP       | Kirby 6 needs 8.3 or newer: check before the first deployment            |
-| Env vars  | `APP_MODE`, `APP_DEBUG`: Kirby ignores them unless the config reads them |
-| SSH       | `<env>@ssh.<region>.frbit.app`, no root; `frbit ssh -- '<command>'`      |
-| Mail      | No sendmail: configure SMTP                                              |
-
-## Git + rsync
+### Git + rsync
 
 Git carries the code, rsync carries what the Panel writes. The deployment settings below exist only for git deployments.
 
@@ -68,9 +69,9 @@ Template exclude patterns: `/node_modules`, `/content`, `/media`, `/public/media
 1. Connect the GitHub repository and branch through the fortrabbit GitHub App.
 2. Check the exclude patterns against the roots of the project, see the pitfalls below. `frbit environments update <env> --exclude-pattern …` replaces the whole list: repeat the flag for every existing pattern.
 3. `git push` deploys. `frbit deployments logs <deployment>` shows a failed build; `frbit environments deploy <env>` deploys the latest commit again.
-4. Push the content once, then pull before every later push (see "Content and Panel users").
+4. Push the content once, then pull before every later push (see "Content").
 
-### Git + rsync pitfalls
+#### Git + rsync pitfalls
 
 - **The license is not excluded.** `/site/config/.license` is missing from the template's patterns, so every deployment of a Plainkit or Starterkit project deletes a license activated in the Panel. Add the pattern, or commit the activated file. The Composerkit's `data/storage/.license` is covered by `/data/`.
 - **Environments created before October 2026** lack `/site/accounts` and `/site/sessions`: every deployment deletes the Panel users created on the server. Add both.
@@ -78,7 +79,7 @@ Template exclude patterns: `/node_modules`, `/content`, `/media`, `/public/media
 - **Composerkit cache.** The post-deploy command empties `site/cache`; the Composerkit's cache sits in `data/runtime/cache`. Change the command to `rm -rf data/runtime/cache/*/pages`.
 - **Composerkit languages.** `data/storage/languages` falls under `/data/`, so committed language files never deploy. Push them with `frbit files push data/storage/languages`.
 
-## rsync only
+### rsync only
 
 The whole site goes up with rsync. Strategy, exclude patterns, build and post-deploy commands do not apply: there is no build pipeline, and every step of it is manual.
 
@@ -97,7 +98,7 @@ The whole site goes up with rsync. Strategy, exclude patterns, build and post-de
 
 Content goes separately with `frbit files push content`, as in Git + rsync.
 
-## Content and Panel users
+## Content
 
 Both workflows. `frbit files` paths are relative to the project root on both sides. In a checkout whose branch an environment deploys, `frbit` finds that environment by itself. Otherwise, as in rsync only, find the ID with `frbit environments list` and store it once with `frbit link <env>`.
 
