@@ -4,7 +4,7 @@ One row per host. Add a row only with facts checked in the host's own docs, and 
 
 | Host                   | Recognise by        | Deployment            | What survives         |
 | ---------------------- | ------------------- | --------------------- | --------------------- |
-| fortrabbit             | `.fortrabbit/`      | Git push or rsync     | Exclude patterns      |
+| fortrabbit             | `.fortrabbit/`      | Git push or rsync     | Git: exclude patterns |
 | Dokku                  | `dokku` git remote  | Git push, buildpack   | Mounted storage       |
 | FTP via GitHub Actions | FTP deploy workflow | Changed files on push | What the action skips |
 | VPS, shared hosting    | No host files       | rsync, SFTP           | What you exclude      |
