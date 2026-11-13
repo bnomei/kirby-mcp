@@ -4,6 +4,20 @@ fortrabbit is a managed PHP hosting platform with a Kirby software template. Thi
 
 **Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`. Last checked against the docs on 2026-11-13.
 
+## The frbit CLI
+
+The commands below use `frbit`, fortrabbit's command line tool. When `frbit --version` fails, install it and let the person sign in.
+
+```sh
+brew install fortrabbit/tap/frbit   # or: npm install --global @fortrabbit/cli
+frbit auth login                    # the person signs in in the browser
+frbit doctor                        # checks version, sign-in, ssh, rsync and the linked environment
+```
+
+- Never ask for a password or token in the chat.
+- `frbit <group> --help` lists the commands and flags; do not guess them.
+- `frbit setup agent` adds fortrabbit's MCP server and its own agent skill, for platform tasks beyond Kirby.
+
 ## Choose a workflow
 
 | Workflow                  | Code                    | Content       | Fits              |
