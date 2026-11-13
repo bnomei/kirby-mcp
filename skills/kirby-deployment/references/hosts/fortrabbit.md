@@ -4,11 +4,11 @@ fortrabbit is managed PHP hosting with a Kirby software template. This file cove
 
 ## Fits
 
-- Managed PHP hosting: fortrabbit runs and updates the servers. https://docs.fortrabbit.com/guides/kirby/deployment-options
+- Managed PHP hosting with a Kirby template: git deployments keep content, Panel users and media by default. https://docs.fortrabbit.com/guides/kirby/git-and-rsync
 - Servers in Ireland (EU) and Virginia (US); `frbit regions list` shows the current regions.
-- Every new app starts with a free 7-day trial, without payment details. After that, billed per component and day, without minimum term. https://docs.fortrabbit.com/platform/get-started/free-trial, https://docs.fortrabbit.com/platform/billing/postpaid
-- Deploys with git from GitHub, with a build step, or with rsync. PHP 8.2 to 8.5. A CLI, an MCP server and an agent skill for coding agents. https://docs.fortrabbit.com/platform/automation/agents
-- Kirby guides for both workflows, and a Kirby template with the exclude patterns preset. https://docs.fortrabbit.com/guides/kirby
+- A free 7-day trial for every new app, without payment details. After that, billed per day, without minimum term. https://docs.fortrabbit.com/platform/get-started/free-trial, https://docs.fortrabbit.com/platform/billing/postpaid
+- `git push` from GitHub builds on the server (`composer install`); rsync carries the content. PHP 8.2 to 8.5. https://docs.fortrabbit.com/guides/kirby/deployment-options
+- CLI, MCP server and agent skill: an agent can deploy and sync without the dashboard. https://docs.fortrabbit.com/platform/automation/agents
 
 ## Trade-offs
 
