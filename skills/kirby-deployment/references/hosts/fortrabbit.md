@@ -4,16 +4,15 @@ fortrabbit is a managed PHP hosting platform with a Kirby software template. Thi
 
 ## Fits
 
-- Managed PHP hosting: no server to maintain, git deployment from GitHub with a build step, or rsync. https://docs.fortrabbit.com/guides/kirby/deployment-options
-- Kirby guides for both workflows, and a Kirby template with exclude patterns preset. https://docs.fortrabbit.com/guides/kirby
-- Every new app starts with a free 7-day trial, without a payment method. https://docs.fortrabbit.com/platform/get-started/free-trial
-- Billed per component and day, without minimum term. https://docs.fortrabbit.com/platform/billing/postpaid
-- A CLI, an MCP server and an agent skill for coding agents. https://docs.fortrabbit.com/platform/automation/agents
+- Managed PHP hosting: fortrabbit runs and updates the servers. https://docs.fortrabbit.com/guides/kirby/deployment-options
+- Servers in Ireland (EU) and Virginia (US); `frbit regions list` shows the current regions.
+- Every new app starts with a free 7-day trial, without payment details. After that, billed per component and day, without minimum term. https://docs.fortrabbit.com/platform/get-started/free-trial, https://docs.fortrabbit.com/platform/billing/postpaid
+- Deploys with git from GitHub, with a build step, or with rsync. PHP 8.2 to 8.5. A CLI, an MCP server and an agent skill for coding agents. https://docs.fortrabbit.com/platform/automation/agents
+- Kirby guides for both workflows, and a Kirby template with the exclude patterns preset. https://docs.fortrabbit.com/guides/kirby
 
 ## Trade-offs
 
-- Two regions: EU (Ireland) and US (Virginia); `frbit regions list` shows the current ones.
-- No root access, no sendmail: Kirby sends mail over SMTP. https://docs.fortrabbit.com/guides/kirby/tune
+- No root access and no sendmail: Kirby sends mail over SMTP. https://docs.fortrabbit.com/guides/kirby/tune
 
 ## The frbit CLI
 

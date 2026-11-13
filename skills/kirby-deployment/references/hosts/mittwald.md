@@ -4,18 +4,17 @@ Mittwald runs managed hosting, administered in its mStudio and the `mw` CLI. Kir
 
 ## Fits
 
-- Servers in Germany: own data center in Espelkamp, more space in Frankfurt and Hannover. https://www.mittwald.de/webhosting
-- Web hosting includes SSH, Apache, git, cron jobs, editable `php.ini`, daily backups kept 30 days and Let's Encrypt certificates. https://www.mittwald.de/webhosting
-- PHP 8.2 to 8.5 included. https://www.mittwald.de/webhosting
-- A CLI (`mw`) that creates apps, sets the document root and PHP version, and syncs files with rsync. https://developer.mittwald.de/docs/v2/cli/reference/app/
-- A Deployer recipe (beta) with GitHub Actions and GitLab CI examples. https://developer.mittwald.de/docs/v2/guides/deployment/deployer/
+- Managed hosting: Mittwald runs the servers, administered in the mStudio or with the `mw` CLI. https://www.mittwald.de/mstudio
+- Servers in Germany: an own data center in Espelkamp, more space in Frankfurt and Hannover. https://www.mittwald.de/webhosting
+- Web hosting includes SSH, git, cron jobs, daily backups kept 30 days and Let's Encrypt certificates. https://www.mittwald.de/webhosting
+- Deploys with rsync, git or a Deployer recipe (beta) with GitHub Actions and GitLab CI examples. PHP 8.2 to 8.5. https://developer.mittwald.de/docs/v2/guides/deployment/deployer/
+- Kirby runs as a custom PHP app; the `mw` CLI sets its document root and PHP version. https://developer.mittwald.de/docs/v2/cli/reference/app/
 
 ## Trade-offs
 
 - Offers are for business customers only; prices exclude VAT. https://www.mittwald.de/mstudio
-- No Kirby installer or Kirby guide; Kirby is set up as a custom PHP app. https://developer.mittwald.de/docs/v2/platform/workloads/php/
-- Backups count against the booked storage. https://www.mittwald.de/webhosting
-- Contracts renew for their term unless cancelled 30 days before its end. https://www.mittwald.de/webhosting
+- No Kirby installer and no Kirby guide. https://developer.mittwald.de/docs/v2/platform/workloads/php/
+- Backups count against the booked storage. Contracts renew for their term unless cancelled 30 days before its end. https://www.mittwald.de/webhosting
 
 ## Settings
 

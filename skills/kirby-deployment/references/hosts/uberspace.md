@@ -4,17 +4,17 @@ Uberspace is shared hosting run from the shell: one account ("Asteroid") per pro
 
 ## Fits
 
-- Shell access over SSH and SFTP, Apache with `.htaccess`, Composer installed. https://u8manual.uberspace.de/basics_ssh/, https://u8manual.uberspace.de/lang_php/
-- First month free, without payment details. https://u8manual.uberspace.de/billing_general/
-- Prepaid, pay what you want: Budget 6 €, Standard 9 €, Solidary 12 € per month; cancel every month. https://u8manual.uberspace.de/billing_general/
-- PHP 8.3, 8.4 and 8.5. https://u8manual.uberspace.de/lang_php/
+- Shared hosting run from the shell: Uberspace runs the server, the account is set up over SSH. https://u8manual.uberspace.de/basics_ssh/
+- The manual does not say where the servers are.
+- The first month is free, without payment details. After that, prepaid and pay what you want: 6, 9 or 12 € per month, cancellable every month. https://u8manual.uberspace.de/billing_general/
+- Deploys with rsync or SFTP; Composer runs on the server. PHP 8.3 to 8.5. https://u8manual.uberspace.de/lang_php/
+- Kirby runs on Apache with its own `.htaccess`. Uberspace's Kirby guide covers Uberspace 7 only. https://lab.uberspace.de/guide_kirby/
 
 ## Trade-offs
 
 - 10 GB storage, up to 100 GB at 3 € per 10 GB. Above 110 % writes are blocked, so Panel uploads fail. https://u8manual.uberspace.de/basics_resources/
-- 1500 MiB RAM and 300 % CPU per account, shared host. https://u8manual.uberspace.de/basics_resources/
-- No deploy pipeline: code goes up with rsync or SFTP, or a git setup of your own.
-- No Kirby guide for Uberspace 8; the lab guide covers Uberspace 7. https://lab.uberspace.de/guide_kirby/
+- 1500 MiB RAM and 300 % CPU per account, on a shared host. https://u8manual.uberspace.de/basics_resources/
+- No deploy pipeline: builds run locally or over SSH.
 
 ## Settings
 
