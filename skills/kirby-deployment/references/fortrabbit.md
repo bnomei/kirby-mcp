@@ -29,7 +29,7 @@ fortrabbit is a managed PHP hosting platform with a Kirby software template. Thi
 | Pull Panel edits                       | `frbit files pull content --dry-run --exclude _changes --exclude .lock`, then without `--dry-run`                           |
 | Push local content                     | `frbit files push content --dry-run --exclude _changes --exclude .lock`, then without `--dry-run`                           |
 | Seed Panel users on a new environment  | `frbit files push site/accounts`                                                                                            |
-| Empty the page cache by hand           | `frbit ssh -- 'rm -rf site/cache/*/pages'`                                                                                  |
+| Empty the page cache by hand           | `frbit ssh -- 'rm -rf site/cache/*/pages'` (frbit 1.17.0 or later)                                                          |
 | Deploy the latest commit again         | `frbit environments deploy <env>`                                                                                           |
 | Read a failed deployment               | `frbit deployments logs <deployment>`                                                                                       |
 
