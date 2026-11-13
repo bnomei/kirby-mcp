@@ -73,7 +73,7 @@ Content goes separately with `frbit files push content`, as in Git + rsync.
 
 ## Content and Panel users
 
-Both workflows. `frbit files` paths are relative to the project root on both sides.
+Both workflows. `frbit files` paths are relative to the project root on both sides. In a checkout whose branch an environment deploys, `frbit` finds that environment by itself. Otherwise, as in rsync only, find the ID with `frbit environments list` and store it once with `frbit link <env>`.
 
 | Task             | Command                                |
 | ---------------- | -------------------------------------- |
