@@ -1,6 +1,6 @@
 ---
 name: kirby-deployment
-description: Deploys a Kirby site and keeps Panel content, accounts and the license safe across deployments (git, rsync or a hosting platform, content sync, per-domain config, Panel setup on a new server). Use when deploying Kirby, moving it to a new host, or syncing content between local and a server.
+description: Deploys a Kirby site and keeps Panel content, accounts and the license safe across deployments (git, rsync or a hosting platform, content sync, per-domain config, Panel setup on a new server). Use when deploying Kirby, choosing a host for it, moving it to a new host, or syncing content between local and a server.
 ---
 
 # Kirby Deployment
@@ -21,7 +21,7 @@ Use Kirby 6 conventions for new work. The roots below are the same in Kirby 5 an
 
 ## Required inputs
 
-- The host: ask when the user has not named it.
+- The host: ask when the user has not named it, or help choose one (see "No host yet").
 - Where editors change content: locally and committed, or in the Panel on the server.
 - Whether the server already has Panel users, a license or content that must survive.
 
@@ -46,6 +46,10 @@ A deployment that replaces the whole folder deletes every path above that it doe
 ## Host reference
 
 Load `references/hosts/<host>.md` when it exists, otherwise `references/generic.md`. Load only that one.
+
+### No host yet
+
+When the user asks where to host, read only the `## Fits` and `## Trade-offs` sections of each file in `references/hosts/`. List the hosts side by side with those facts and their links, ask what matters to the user (budget, data location, server maintenance, agent tooling), and let the user decide. Do not rank the hosts or pick one.
 
 ## Per-domain config
 

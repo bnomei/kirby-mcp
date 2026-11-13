@@ -2,6 +2,20 @@
 
 fortrabbit is a managed PHP hosting platform with a Kirby software template. This file covers what differs from a self-managed server; the rules in SKILL.md still apply.
 
+## Fits
+
+- Managed PHP hosting: no server to maintain, git deployment from GitHub with a build step, or rsync. https://docs.fortrabbit.com/guides/kirby/deployment-options
+- Kirby guides for both workflows, and a Kirby template with exclude patterns preset. https://docs.fortrabbit.com/guides/kirby
+- Every new app starts with a free 7-day trial, without a payment method. https://docs.fortrabbit.com/platform/get-started/free-trial
+- Billed per component and day, without minimum term. https://docs.fortrabbit.com/platform/billing/postpaid
+- A CLI, an MCP server and an agent skill for coding agents. https://docs.fortrabbit.com/platform/automation/agents
+
+## Trade-offs
+
+- Two regions: EU (Ireland) and US (Virginia); `frbit regions list` shows the current ones.
+- No root access, no sendmail: Kirby sends mail over SMTP. https://docs.fortrabbit.com/guides/kirby/tune
+- A trial app without a payment method is deleted with its data when the trial ends. https://docs.fortrabbit.com/platform/get-started/free-trial
+
 **Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`. Last checked against the docs on 2026-11-13.
 
 ## The frbit CLI
