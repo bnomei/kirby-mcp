@@ -33,7 +33,7 @@ Resolve each path with `kirby:kirby_roots`; the Plainkit paths are shown. The Co
 | ------------------ | ---------------------- | --------------------------------------------- | ---------------------------------- | --------------------------------- |
 | `content`          | `content/`             | Yes, unless edited in the Panel on the server | Excluded when edited on the server | Pull before push                  |
 | `_changes` folders | `content/**/_changes/` | No                                            | Excluded with `content`            | Exclude: unsaved Panel edits      |
-| `media`            | `media/`               | No                                            | Excluded                           | Never: Kirby regenerates it       |
+| `media`            | `media/`               | No                                            | Excluded                           | Never: copies and thumbs only     |
 | `accounts`         | `site/accounts/`       | No                                            | Excluded                           | Only to seed a new server         |
 | `sessions`         | `site/sessions/`       | No                                            | Excluded                           | Never                             |
 | `cache`            | `site/cache/`          | No                                            | Emptied after deployment           | Never                             |
@@ -61,6 +61,8 @@ Ask when nothing names the host. Load only the reference that matches.
 
 - Pull before push: the server holds the newest Panel edits. Use a dry run first.
 - Sync `content/` alone; exclude `_changes` and `.lock`. Never sync `media/`, `site/cache/` or `site/sessions/`.
+- Uploads travel with `content/`: Kirby stores each original file next to its page's text file, e.g. `content/blog/post/photo.jpg` with its metadata in `photo.jpg.txt`.
+- `media/` holds only public copies and thumbs, generated on the first request. Its folder names hash the absolute content root path (the default `content.salt`) and the file's modification time, so a synced local `media/` folder does not match the server's URLs and is never used.
 - Never sync with delete from local to server without a backup; it removes pages created in the Panel.
 - Push `site/accounts/` only to seed a new server; afterwards accounts belong to the server.
 
