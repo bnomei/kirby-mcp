@@ -50,3 +50,5 @@ Then open the site and log in to the Panel.
 - Kirby requirements: https://getkirby.com/docs/guide/quickstart#requirements
 - Kirby roots: https://getkirby.com/docs/reference/system/roots
 - Multi-environment config: https://getkirby.com/docs/guide/configuration#multi-environment-setup
+- Git deployment with Dokku: https://getkirby.com/docs/cookbook/development-deployment/git-based-deployment-with-dokku
+- FTP deployment with GitHub Actions: https://getkirby.com/docs/cookbook/development-deployment/git-based-ftp-deployment

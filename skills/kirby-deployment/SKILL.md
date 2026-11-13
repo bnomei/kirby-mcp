@@ -45,11 +45,8 @@ A deployment that replaces the whole folder deletes every path above that it doe
 
 ## Recognise the host
 
-| Repo contains        | Load                                          |
-| -------------------- | --------------------------------------------- |
-| `.fortrabbit/`       | `references/fortrabbit.md`                    |
-| Another host's files | `references/hosts.md`                         |
-| Nothing              | `references/generic.md` (VPS, shared hosting) |
+- Host files in the repo name the host, e.g. `.fortrabbit/`. Load `references/hosts/<host>.md` when it exists.
+- No host file, or no reference for that host: load `references/generic.md`.
 
 Ask when nothing names the host. Load only the reference that matches.
 
