@@ -1,4 +1,4 @@
-# Hosting platforms
+# Hosts
 
 One row per host. Add a row only with facts checked in the host's own docs, and link them. A host gets a reference file of its own only when its workflow differs too much for one row.
 

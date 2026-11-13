@@ -48,7 +48,7 @@ A deployment that replaces the whole folder deletes every path above that it doe
 | Repo contains        | Load                                          |
 | -------------------- | --------------------------------------------- |
 | `.fortrabbit/`       | `references/fortrabbit.md`                    |
-| Another host's files | `references/hosting.md`                       |
+| Another host's files | `references/hosts.md`                         |
 | Nothing              | `references/generic.md` (VPS, shared hosting) |
 
 Ask when nothing names the host. Load only the reference that matches.
