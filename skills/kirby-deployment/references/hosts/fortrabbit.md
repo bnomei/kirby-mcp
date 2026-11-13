@@ -8,7 +8,7 @@ fortrabbit is managed PHP hosting with a Kirby software template. This file cove
 - Servers in Ireland (EU) and Virginia (US); `frbit regions list` shows the current regions.
 - A free 7-day trial for every new app, without payment details. After that, billed per day, without minimum term. https://docs.fortrabbit.com/platform/get-started/free-trial, https://docs.fortrabbit.com/platform/billing/postpaid
 - `git push` from GitHub builds on the server (`composer install`); rsync carries the content. PHP 8.2 to 8.5. https://docs.fortrabbit.com/guides/kirby/deployment-options
-- A CLI, an MCP server and an agent skill. https://docs.fortrabbit.com/platform/automation/agents
+- Managed in the dashboard, or with a CLI, an MCP server and an agent skill. https://docs.fortrabbit.com/platform/automation/agents
 
 ## Trade-offs
 
@@ -19,7 +19,7 @@ fortrabbit is managed PHP hosting with a Kirby software template. This file cove
 
 ## Tools
 
-The commands below use `frbit`, fortrabbit's command line tool. When `frbit --version` fails, install it and let the person sign in.
+The dashboard at https://dash.fortrabbit.com covers every setting. The commands below use `frbit`, fortrabbit's command line tool. When `frbit --version` fails, install it and let the person sign in.
 
 ```sh
 brew install fortrabbit/tap/frbit   # or: npm install --global @fortrabbit/cli

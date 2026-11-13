@@ -18,7 +18,7 @@ Uberspace is shared hosting run from the shell. This file follows Uberspace 8 an
 
 ## Tools
 
-- No local CLI: everything runs over SSH.
+- A web interface for the account and domains; no local CLI. Everything else runs over SSH.
 - On the server, the `uberspace` command sets the PHP version and adds domains: `uberspace tool php version set 8.4`, `uberspace web domain list`.
 
 ## Settings
