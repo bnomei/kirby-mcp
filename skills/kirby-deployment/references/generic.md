@@ -17,7 +17,7 @@ rsync -avz --dry-run \
   --exclude=.git --exclude=/content --exclude=/media \
   --exclude=/site/accounts --exclude=/site/sessions --exclude=/site/cache \
   --exclude=/site/config/.license \
-  ./ user@example.com:/var/www/site/
+  ./ user@example.com:/var/www/example.com/
 ```
 
 - Drop `--dry-run` once the list looks right. Add `--delete` only with these excludes in place.
@@ -27,10 +27,10 @@ rsync -avz --dry-run \
 
 ```sh
 # Down: Panel edits from the server
-rsync -avz --exclude=_changes --exclude=.lock user@example.com:/var/www/site/content/ ./content/
+rsync -avz --exclude=_changes --exclude=.lock user@example.com:/var/www/example.com/content/ ./content/
 
 # Up: local content to the server, dry run first
-rsync -avz --dry-run --exclude=_changes --exclude=.lock ./content/ user@example.com:/var/www/site/content/
+rsync -avz --dry-run --exclude=_changes --exclude=.lock ./content/ user@example.com:/var/www/example.com/content/
 ```
 
 ## Release-based tools
@@ -40,7 +40,7 @@ Tools that deploy each release into a new folder and switch a symlink (Deployer,
 ## After a deployment
 
 ```sh
-ssh user@example.com 'rm -rf /var/www/site/site/cache/*/pages'
+ssh user@example.com 'rm -rf /var/www/example.com/site/cache/*/pages'
 ```
 
 Then open the site and log in to the Panel.
