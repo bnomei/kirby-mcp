@@ -14,9 +14,6 @@ fortrabbit is a managed PHP hosting platform with a Kirby software template. Thi
 
 - Two regions: EU (Ireland) and US (Virginia); `frbit regions list` shows the current ones.
 - No root access, no sendmail: Kirby sends mail over SMTP. https://docs.fortrabbit.com/guides/kirby/tune
-- A trial app without a payment method is deleted with its data when the trial ends. https://docs.fortrabbit.com/platform/get-started/free-trial
-
-**Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`. Last checked against the docs on 2026-11-13.
 
 ## The frbit CLI
 
@@ -31,6 +28,8 @@ frbit doctor                        # checks version, sign-in, ssh, rsync and th
 - Never ask for a password or token in the chat.
 - `frbit <group> --help` lists the commands and flags; do not guess them.
 - `frbit setup agent` adds fortrabbit's MCP server and its own agent skill, for platform tasks beyond Kirby.
+
+**Current values beat this file.** Read the live settings of the environment (`frbit environments get <env> --json`, or `get_environment` on the fortrabbit MCP server) and the Kirby guides before changing anything. Every docs page is available as Markdown: insert `/raw` after the host and append `.md`, e.g. `https://docs.fortrabbit.com/raw/guides/kirby/tune.md`. Last checked against the docs on 2026-11-13.
 
 ## Choose a workflow
 
