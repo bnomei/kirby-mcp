@@ -27,27 +27,29 @@ Use Kirby 6 conventions for new work. The roots below are the same in Kirby 5 an
 
 ## What never travels with the code
 
-Resolve each path with `kirby:kirby_roots`; the Plainkit paths are shown. The Composerkit keeps all of them except `media` under `data/` and `public/media`.
+Resolve each path with `kirby:kirby_roots`; the Plainkit paths are shown. The Composerkit keeps them under `data/`, and `media` in `public/media`.
 
-| Root               | Plainkit path          | In git                                        | Code deployment                    | Content sync                      |
-| ------------------ | ---------------------- | --------------------------------------------- | ---------------------------------- | --------------------------------- |
-| `content`          | `content/`             | Yes, unless edited in the Panel on the server | Excluded when edited on the server | Pull before push                  |
-| `_changes` folders | `content/**/_changes/` | No                                            | Excluded with `content`            | Exclude: unsaved Panel edits      |
-| `media`            | `media/`               | No                                            | Excluded                           | Never: copies and thumbs only     |
-| `accounts`         | `site/accounts/`       | No                                            | Excluded                           | Only to seed a new server         |
-| `sessions`         | `site/sessions/`       | No                                            | Excluded                           | Never                             |
-| `cache`            | `site/cache/`          | No                                            | Emptied after deployment           | Never                             |
-| `license`          | `site/config/.license` | No                                            | Excluded                           | Only to copy an activated license |
+None of them belongs in git, except `content` when nobody edits in the Panel on the server. `_changes` folders hold unsaved Panel edits.
+
+| Root       | Plainkit path          | Deployment             | Sync            |
+| ---------- | ---------------------- | ---------------------- | --------------- |
+| `content`  | `content/`             | Exclude if edited live | Pull, then push |
+| `_changes` | `content/**/_changes/` | With `content`         | Exclude         |
+| `media`    | `media/`               | Exclude                | Never           |
+| `accounts` | `site/accounts/`       | Exclude                | Seed once       |
+| `sessions` | `site/sessions/`       | Exclude                | Never           |
+| `cache`    | `site/cache/`          | Empty after            | Never           |
+| `license`  | `site/config/.license` | Exclude                | Copy once       |
 
 A deployment that replaces the whole folder deletes every path above that it does not exclude. Users created in the Panel, an activated license and content edited on the server are then gone.
 
 ## Recognise the host
 
-| File in the repo                                         | Host                                  | Reference                  |
-| -------------------------------------------------------- | ------------------------------------- | -------------------------- |
-| `.fortrabbit/deploy.yml`, `.fortrabbit/environments.yml` | fortrabbit                            | `references/fortrabbit.md` |
-| Other host files                                         | See the table                         | `references/hosting.md`    |
-| None                                                     | VPS or shared hosting with SSH or FTP | `references/generic.md`    |
+| Repo contains        | Load                                          |
+| -------------------- | --------------------------------------------- |
+| `.fortrabbit/`       | `references/fortrabbit.md`                    |
+| Another host's files | `references/hosting.md`                       |
+| Nothing              | `references/generic.md` (VPS, shared hosting) |
 
 Ask when nothing names the host. Load only the reference that matches.
 
