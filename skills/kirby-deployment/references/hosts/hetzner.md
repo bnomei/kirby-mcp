@@ -7,11 +7,11 @@ Hetzner sells Cloud servers (self-managed VPS) and Webhosting (shared hosting, m
 - Two products: Cloud servers with root access, run and updated by the customer, and Webhosting, run by Hetzner. https://docs.hetzner.com/cloud/apps/list/lamp-stack/, https://www.hetzner.com/webhosting
 - Cloud servers in Germany (Falkenstein, Nuremberg), Finland, the USA and Singapore; Webhosting in Nuremberg. https://docs.hetzner.com/cloud/general/locations/, https://www.hetzner.com/webhosting
 - Cloud: hourly price with a monthly cap, the lower one is charged. Webhosting: no minimum contract period. https://docs.hetzner.com/cloud/billing/faq/, https://www.hetzner.com/webhosting
-- Cloud: any workflow from `generic.md`, with a LAMP image to start from. Webhosting: SFTP, SSH in the larger packages. PHP up to 8.5 on Webhosting. https://docs.hetzner.com/konsoleh/account-management/configuration/php-configuration
-- getkirby.com itself is hosted on Hetzner servers in Nuremberg. https://getkirby.com/privacy
+- Cloud: any workflow from `generic.md`, with a LAMP image to start from and the `hcloud` CLI. Webhosting: SFTP, SSH in the larger packages. PHP up to 8.5 on Webhosting. https://docs.hetzner.com/konsoleh/account-management/configuration/php-configuration
 
 ## Trade-offs
 
+- No Kirby guide from Hetzner.
 - Cloud: the server, PHP and the web server are the customer's to install, update and secure. A stopped server is billed until it is deleted. https://docs.hetzner.com/cloud/billing/faq/
 - Webhosting: SSH only in the L and XL packages, on port 222, without root. https://docs.hetzner.com/de/managed/administration-on-konsoleh/access-details/ssh/
 - Webhosting: the docs name no document root setting for the main domain, which the Composerkit needs (`public/`). Subdomains can point at any folder. https://docs.hetzner.com/managed/domain-and-dns/subdomain/

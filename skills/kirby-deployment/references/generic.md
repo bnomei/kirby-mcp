@@ -25,13 +25,17 @@ rsync -avz --dry-run \
 
 ## Sync content
 
+Ask the user for the SSH host and the project path on the server; `kirby:kirby_roots` resolves the local roots only, and the server's can differ. Commit or back up the local `content/` first: a pull overwrites it.
+
 ```sh
-# Down: Panel edits from the server
-rsync -avz --exclude=_changes --exclude=.lock user@example.com:/var/www/example.com/content/ ./content/
+# Down: Panel edits from the server, dry run first
+rsync -avz --dry-run --exclude=_changes --exclude=.lock user@example.com:/var/www/example.com/content/ ./content/
 
 # Up: local content to the server, dry run first
 rsync -avz --dry-run --exclude=_changes --exclude=.lock ./content/ user@example.com:/var/www/example.com/content/
 ```
+
+Drop `--dry-run` once the list looks right.
 
 ## Release-based tools
 

@@ -27,7 +27,7 @@ Uberspace is shared hosting run from the shell. This file follows Uberspace 8 an
 | -------- | --------------------------------------------------------------------------- |
 | Web root | `/var/www/virtual/<user>/html`, shared by all domains unless split          |
 | PHP      | `uberspace tool php version set 8.4`; own `.ini` files in `~/.config/php/`  |
-| SSH      | `<user>@<host>.uberspace.de`                                                |
+| SSH      | `<user>@<host>.uberspace.de`; ask the user for the account and server names |
 | Mail     | SMTP at `<host>.uberspace.de`, port 465, login with the full address        |
 | Cron     | `crontab -e`                                                                |
 | Rights   | Folders `0755`, files `0644`: `chmod -R u=rwX,go=rX /var/www/virtual/$USER` |
@@ -37,7 +37,7 @@ Uberspace is shared hosting run from the shell. This file follows Uberspace 8 an
 Follow `generic.md` with these paths.
 
 - **Plainkit, Starterkit:** deploy into `/var/www/virtual/<user>/html/`.
-- **Composerkit:** keep the project outside the web root and point `html` at `public`. Never delete `html` while domains still link to it: they go offline.
+- **Composerkit:** keep the project outside the web root and point `html` at `public`. Replace `html` with the symlink in one go, as below; while `html` is missing, every domain linked to it is offline.
 
   ```sh
   cd /var/www/virtual/$USER
