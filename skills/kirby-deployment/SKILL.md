@@ -1,6 +1,6 @@
 ---
 name: kirby-deployment
-description: Deploys a Kirby site and keeps Panel content, accounts and the license safe across deployments (git, rsync or a hosting platform, content sync, per-host config, Panel setup on a new server). Use when deploying Kirby, moving it to a new host, or syncing content between local and a server.
+description: Deploys a Kirby site and keeps Panel content, accounts and the license safe across deployments (git, rsync or a hosting platform, content sync, per-domain config, Panel setup on a new server). Use when deploying Kirby, moving it to a new host, or syncing content between local and a server.
 ---
 
 # Kirby Deployment
@@ -9,7 +9,7 @@ Use Kirby 6 conventions for new work. The roots below are the same in Kirby 5 an
 
 ## Quick start
 
-- Resolve the roots, decide where content is edited, recognise the host, then follow its reference file.
+- Resolve the roots, decide where content is edited, then follow the host's reference file.
 
 ## KB entry points
 
@@ -21,7 +21,7 @@ Use Kirby 6 conventions for new work. The roots below are the same in Kirby 5 an
 
 ## Required inputs
 
-- The host, or the files that name it (see "Recognise the host").
+- The host: ask when the user has not named it.
 - Where editors change content: locally and committed, or in the Panel on the server.
 - Whether the server already has Panel users, a license or content that must survive.
 
@@ -43,14 +43,11 @@ None of them belongs in git, except `content` when nobody edits in the Panel on 
 
 A deployment that replaces the whole folder deletes every path above that it does not exclude. Users created in the Panel, an activated license and content edited on the server are then gone.
 
-## Recognise the host
+## Host reference
 
-- Host files in the repo name the host, e.g. `.fortrabbit/`. Load `references/hosts/<host>.md` when it exists.
-- No host file, or no reference for that host: load `references/generic.md`.
+Load `references/hosts/<host>.md` when it exists, otherwise `references/generic.md`. Load only that one.
 
-Ask when nothing names the host. Load only the reference that matches.
-
-## Per-host config
+## Per-domain config
 
 - Keep shared options in `site/config/config.php`; put server-only options in `site/config/config.<domain>.php`, which Kirby loads on that domain only.
 - Turn `debug` off on public servers. Keep secrets out of git: read them from server environment variables.
@@ -67,7 +64,7 @@ Ask when nothing names the host. Load only the reference that matches.
 
 ## Cache after a deployment
 
-- Empty the page cache (`site/cache/<host>/pages` by default) after every deployment; templates changed, cached HTML did not.
+- Empty the page cache (`site/cache/<domain>/pages` by default) after every deployment; templates changed, cached HTML did not.
 - `kirby:kirby_cache_clear` only clears caches of the MCP process. It does not touch `site/cache` on any server.
 
 ## Common pitfalls
@@ -82,7 +79,7 @@ Ask when nothing names the host. Load only the reference that matches.
 
 1. Call `kirby:kirby_init`, then `kirby:kirby_roots` to resolve `content`, `media`, `accounts`, `sessions`, `cache` and `license`.
 2. Read `kirby://config/debug` and `kirby://config/cache`; list the `site/config/config.*.php` files.
-3. Recognise the host and load its reference.
+3. Load the host's reference.
 4. Check `.gitignore` and the host's deployment excludes against the table above, for the resolved paths.
 5. Deploy the code, then sync content in the direction the user asked, dry run first.
 6. Empty the page cache on the server, then verify the site and a Panel login.
