@@ -18,7 +18,7 @@ Mittwald runs managed hosting, administered in its mStudio and the `mw` CLI; Kir
 
 ## Tools
 
-The `mw` CLI creates the app, sets the document root and PHP version, opens SSH and syncs files. Install it and let the person sign in; never ask for the API token in the chat. https://developer.mittwald.de/docs/v2/cli/usage/install/
+The mStudio in the browser covers every setting. The `mw` CLI creates the app, sets the document root and PHP version, opens SSH and syncs files. Install it and let the person sign in; never ask for the API token in the chat. https://developer.mittwald.de/docs/v2/cli/usage/install/
 
 ```sh
 brew tap mittwald/cli && brew trust --formula mittwald/cli/mw && brew install mw
