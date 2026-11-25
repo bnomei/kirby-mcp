@@ -6,7 +6,7 @@ Kirby 6 value field for selected file references. The Kirby 5 legacy name `files
 
 ## Storage and runtime value
 
-The default stores a YAML list of file UUID references. With `store: id`, files belonging to the current model use filenames; other files use full IDs. Disabling UUIDs forces ID storage in beta.1. Resolve references in the model's context. Renaming the field type does not rename the content key or upload a file.
+The default stores a YAML list of file UUID references. With `store: id` or UUIDs disabled, files belonging to the current model use filenames; other files use full IDs. Resolve references in the model's context. Renaming the field type does not rename the content key or upload a file.
 
 ```yaml
 gallery:

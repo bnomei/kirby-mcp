@@ -93,4 +93,4 @@ panel.plugin('example/analytics', {
 
 ## Kirby 6 migration
 
-Rebuild Kirby 5 legacy Vue 2 bundles for Vue 3. Plain ESM can import `vue`, but beta.1 does not map bare `kirbyuse` imports: bundle kirbyuse as described in `kirby://kb/panel/tooling-kirbyuse`.
+Rebuild Kirby 5 legacy Vue 2 bundles for Vue 3. Plain ESM can import `vue`, but the stock Panel does not map bare `kirbyuse` imports: bundle kirbyuse as described in `kirby://kb/panel/tooling-kirbyuse`.

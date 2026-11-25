@@ -15,7 +15,7 @@ beforeEach(function (): void {
     }
     symlink(dirname(__DIR__, 2) . '/vendor', $this->lifecycleRoot . '/vendor');
     file_put_contents($this->lifecycleRoot . '/index.php', '<?php require __DIR__ . "/vendor/autoload.php"; echo (new Kirby(["roots" => ["index" => __DIR__]]))->render();');
-    file_put_contents($this->lifecycleRoot . '/composer.json', '{"require":{"getkirby/cms":"6.0.0-beta.1"}}');
+    file_put_contents($this->lifecycleRoot . '/composer.json', '{"require":{"getkirby/cms":"^6.0"}}');
     file_put_contents($this->lifecycleRoot . '/site/config/config.php', '<?php return [];');
     file_put_contents($this->lifecycleRoot . '/site/blueprints/pages/default.yml', "title: Default\nfields:\n  title:\n    type: text\n");
     foreach (['home', 'alpha', 'alpha/child'] as $slug) {

@@ -6,7 +6,7 @@ Kirby 6 value field for selected users. The Kirby 5 legacy name `users` is a dep
 
 ## Storage and runtime value
 
-Default storage is a YAML list of user UUID references. Preserve configured alternative storage (`store: id` or `store: email`) when migrating existing content. Disabling UUIDs forces ID storage in beta.1.
+Default storage is a YAML list of user UUID references. Preserve configured alternative storage (`store: id` or `store: email`) when migrating existing content. When UUIDs are disabled, the picker stores user IDs regardless of `store`.
 
 ```yaml
 authors:

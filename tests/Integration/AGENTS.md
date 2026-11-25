@@ -7,7 +7,7 @@ Validate behavior that depends on Kirby runtime, CLI execution, or the fixture s
 ## System
 
 - Fixture Kirby site lives in `tests/cms/` (generated test data).
-- `tests/fixture/prepare-kit.sh` pins beta.2 kit templates and replaces their core with Kirby 6.0.0-beta.3 plus its locked production dependencies, verifying the runtime against the root Composer lock before replacing the fixture. Do not use moving kit branches.
+- Use the kit release tag matching `getkirby/cms` in the root Composer lock. Verify its bundled runtime before replacing the fixture; do not use moving kit branches.
 - The fixture config loads the library before plugin discovery, emulating a Composer-based host while retaining the kit's bundled Kirby version.
 - `tests/cms/` must not be committed/changed in PRs; regenerate it locally with `composer cms:starterkit` (CI does this automatically).
 - Use `cmsPath()` from `tests/Pest.php` to reference it.

@@ -77,6 +77,6 @@ Use Panel dropdown components and load options from the backend:
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dropdowns
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
-- https://lab.getkirby.com/public/lab
+- https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
 
 - Migration: `kirby://kb/panel/compat-k5-k6-migration`

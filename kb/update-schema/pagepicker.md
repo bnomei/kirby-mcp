@@ -6,7 +6,7 @@ Kirby 6 value field for selected page references. The Kirby 5 legacy name `pages
 
 ## Storage and runtime value
 
-The default stores a YAML list of page UUID references. With `store: id`, preserve page IDs instead. Disabling UUIDs forces ID storage in beta.1. The field key stays unchanged when renaming its type.
+The default stores a YAML list of page UUID references. With `store: id` or UUIDs disabled, preserve page IDs instead. The field key stays unchanged when renaming its type.
 
 ```yaml
 related:

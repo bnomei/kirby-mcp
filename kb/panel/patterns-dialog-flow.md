@@ -56,6 +56,6 @@ Create a modal dialog with `load` and `submit` callbacks.
 ## Links
 
 - https://getkirby.com/docs/reference/plugins/extensions/panel-dialogs
-- https://lab.getkirby.com/public/lab
+- https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
 
 - Controller reuse and trusted HTML: `kirby://kb/panel/reference-dialogs`

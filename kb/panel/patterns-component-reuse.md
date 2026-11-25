@@ -6,7 +6,7 @@ Reuse Panel UI components and core value/display field components instead of reb
 
 ## Inputs to ask for
 
-- Installed Kirby 6 version (baseline beta.1)
+- Installed Kirby 6 version (check the component in that tag)
 - Core component or field you want to extend
 - Build setup (kirbyup bundle vs plain JS)
 
@@ -54,8 +54,8 @@ panel.plugin('vendor/hello', {
 ## Links
 
 - https://getkirby.com/docs/reference/plugins/ui
-- https://lab.getkirby.com/public/lab
-- https://github.com/getkirby/kirby/tree/main/panel
+- https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
+- https://github.com/getkirby/kirby/tree/6.0.0/panel
 
 ## Kirby 6 migration
 

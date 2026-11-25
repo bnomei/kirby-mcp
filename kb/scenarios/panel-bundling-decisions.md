@@ -91,4 +91,4 @@ panel.plugin('vendor/audio-block', {
 
 ## Kirby 6 migration
 
-Use Vue 3 and kirbyup 4 (`dev` supports HMR). Rebuild Kirby 5 legacy Vue 2 bundles. Simple ESM plugins can remain unbundled; import Vue from `vue`. If using kirbyuse, bundle it: beta.1 provides no plugin import-map hook. See `kirby://kb/panel/tooling-kirbyuse`.
+Use Vue 3 and kirbyup 4 (`dev` supports HMR). Rebuild Kirby 5 legacy Vue 2 bundles. Simple ESM plugins can remain unbundled; import Vue helpers from `vue`. Bundle kirbyuse if used, since the stock Panel does not map that package. See `kirby://kb/panel/tooling-kirbyuse`.

@@ -101,8 +101,8 @@ Use the Panel Lab to inspect component props and examples.
 - https://getkirby.com/docs/cookbook/panel/first-panel-area
 - https://getkirby.com/docs/cookbook/panel/advanced-panel-area
 - https://getkirby.com/docs/reference/plugins/ui
-- https://lab.getkirby.com/public/lab
-- https://github.com/getkirby/kirby/tree/main/panel
+- https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
+- https://github.com/getkirby/kirby/tree/6.0.0/panel
 
 ## Kirby 6 migration
 

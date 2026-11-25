@@ -2,7 +2,7 @@
 
 ## Baseline and scope
 
-This KB targets Kirby 6; the verified migration baseline is **6.0.0-beta.1** (checked October 15, 2026). Beta APIs and tooling can change. Test on a disposable copy, not production. Official online documentation is unversioned: compare it with the installed version and tagged source.
+The migration target is **Kirby CMS 6.0.0**, the stable release also used by Starterkit and Plainkit 6.0.0. Rehearse on a disposable copy and keep the old site recoverable. Use the tagged source when online documentation differs from your installed version.
 
 Preserve content and published URLs. Renaming a blueprint field's **type** is not renaming its content key, and converting a display section is not a content migration.
 
@@ -10,7 +10,7 @@ Preserve content and published URLs. Renaming a blueprint field's **type** is no
 
 1. Back up content, accounts, configuration, plugins and the Composer lockfile. Keep secrets out of logs. Verify restoration before bulk writes.
 2. First update the legacy site to a patched Kirby 5 release and resolve deprecations. Inventory every plugin, especially Panel plugins and custom auth.
-3. Use supported PHP 8.3, 8.4 or 8.5 at this baseline. Verify required extensions: `ctype`, `curl`, `dom`, `filter`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `openssl`, `SimpleXML`. Install the exact Kirby beta version on the copy; do not relax stability constraints globally just to resolve it.
+3. The 6.0.0 Composer manifest accepts PHP 8.3, 8.4, 8.5 and 8.6. Verify required extensions: `ctype`, `curl`, `dom`, `filter`, `hash`, `iconv`, `json`, `libxml`, `mbstring`, `openssl`, `SimpleXML`. Audit YAML before editors use the upgraded copy (see below). For the stable 6.x line, run `composer require getkirby/cms:"^6.0" --with-all-dependencies`; check the resolved CMS version and review the lockfile diff.
 4. Inspect `kirby://info`, `kirby://roots`, plugin inventory and runtime status. Do not infer the CMS version from the MCP version.
 5. Enable debug only on the test copy; exercise templates, routes, Panel views, content saves, uploads and login with representative roles and languages.
 
@@ -82,7 +82,13 @@ country:
 
 The query-string shorthand `options: site.children` still works. Picker candidate `query` settings are a different API; do not move those mechanically. Option fields now preserve invalid values instead of silently dropping them on save. Validate explicitly and decide how to map removed options. Color options use `value: text`, e.g. `"#ff0000": Red`.
 
-Symfony YAML replaces Spyc as default. Use `true`/`false`, not `yes`/`no`/`on`/`off` (now strings); quote dates to prevent timestamp conversion. Quote scalars beginning with `@`, `%`, backticks, `[` or `{`; use single quotes for regex backslashes. Fix duplicate keys and tab indentation. Check serialized structure/object/entries/picker content as well as blueprint files. The documented temporary `yaml.handler: spyc` escape hatch is a migration aid, not the canonical configuration. Beta.1 docs promise a future CLI migration command; do not assume it exists now.
+Symfony YAML replaces Spyc as default. Use `true`/`false`, not `yes`/`no`/`on`/`off` (now strings); quote dates to prevent timestamp conversion. Quote scalars beginning with `@`, `%`, backticks, `[` or `{`; use single quotes for regex backslashes. Fix duplicate keys and tab indentation.
+
+Kirby CLI **2.1.0** ships `kirby migrate:to:symfony-yaml`. This is a Kirby CLI command, not an MCP tool. Check that `kirby` lists the command; an older project-local CLI does not provide it. Use a separately installed CLI 2.1.0 or newer for the migration instead of forcing a dependency upgrade in the site. Work on a backed-up copy before anyone saves content in the Panel:
+
+1. Run `kirby migrate:to:symfony-yaml --dry-run` on Kirby 5 or 6. It compares parsers for blueprints and serialized YAML fields across model versions and languages; it does not write conversions.
+2. Fix blueprint issues by hand. Review reported plugin fields and fields missing from blueprints separately: the command does not convert them. With the deprecated `'yaml.handler' => 'spyc'` fallback active, the command only reports issues.
+3. Switch to Symfony YAML (the Kirby 6 default). Before editors resume, run `kirby migrate:to:symfony-yaml` and confirm conversion of the reported core YAML fields. Inspect the content diff, repeat the dry run and verify representative values by reading them back.
 
 ## Queries, templates and PHP
 
@@ -99,7 +105,7 @@ Symfony YAML replaces Spyc as default. Use `true`/`false`, not `yes`/`no`/`on`/`
 Follow `kirby://kb/panel/compat-k5-k6-migration` for PHP field classes, Vue 3, ESM, trusted HTML and Panel controllers. Rebuilding JavaScript alone does not port array-based PHP fields or custom sections.
 
 - Remove `panel.vue.compiler`. Favicon arrays use per-icon `rel` and `href`, not the old keyed `url` notation. Check custom CSS for renamed field classes and removed variables.
-- All users must log in again: old login cookies are rejected. Tell editors before the switch; require a supported modern browser (Chrome/Edge 124, Firefox 125, Safari 17.5 or newer at beta.1).
+- All users must log in again: old login cookies are rejected. Tell editors before the switch; check their browser against the [Panel browser targets](https://github.com/getkirby/kirby/blob/6.0.0/panel/.browserslistrc) (including Chrome/Edge 124+, Firefox 125+ and Safari 17.5+).
 - Frontend login flows should use `$kirby->auth()->authenticate('password', $email, $password)` and handle `Kirby\Auth\Status` / `Kirby\Auth\State::Pending`, then `verifyChallenge()`. A pending second factor is **not** a completed login. `login2fa()` is deprecated; password-only `login()` cannot complete 2FA.
 - Users can opt into 2FA even when it is not globally required. Basic Auth cannot complete a second factor; use an appropriately scoped dedicated API user rather than weakening an editor's account.
 - Passkeys require HTTPS (except localhost), are host-bound and need `webauthn` in the relevant configured methods/challenges. Staging credentials do not transfer automatically to a production hostname.
@@ -114,11 +120,11 @@ Follow `kirby://kb/panel/compat-k5-k6-migration` for PHP field classes, Vue 3, E
 - Serialized dates, booleans, nested fields and references round-trip on a sample in each language.
 - Plugins load without console errors; field input, dialogs, drawers, API routes and authorization work for allowed and denied roles.
 - Frontend login handles success, pending challenge, failure, logout and expired sessions; editors can recover access.
-- Representative templates, query results and content representations match expectations; no production deployment is implied by passing beta tests.
+- Representative templates, query results and content representations match the expected output from the old site.
 
 ## Coverage map for current development
 
-The release overview, full beta.1 changelog, feature guides, site/editor migration guides and all six plugin migration subguides were reconciled on October 15, 2026. Use current contracts first; consult migration notes for existing code:
+Use the release overview and migration guides for the upgrade sequence, and the following references for specific contracts:
 
 | Topic                                                                 | Canonical guidance                                                                                                           |
 | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -135,8 +141,6 @@ The release overview, full beta.1 changelog, feature guides, site/editor migrati
 
 The advanced embed, SVG, map and barcode articles now describe Kirby 6 implementation contracts instead of copyable Vue 2 sketches. They are recipes, not certified third-party plugin builds. This coverage includes developer-facing features and breaking contracts; the upstream changelog remains the source for every internal refactor and cosmetic fix. Documentation/link checks do not prove every integration runs.
 
-Known baseline limits: direct-request buttons and the YAML migration CLI are announced future work, not available beta.1 APIs. Online docs are unversioned; verify source when an example disagrees with the installed tag. Preserve these specific limits without adding generic warnings to every ordinary article.
-
 ## Authoritative sources
 
 - https://getkirby.com/releases/6
@@ -146,4 +150,5 @@ Known baseline limits: direct-request buttons and the YAML migration CLI are ann
 - https://getkirby.com/releases/6/migration/site-developers
 - https://getkirby.com/releases/6/migration/plugin-developers
 - https://getkirby.com/releases/6/migration/editors
-- https://github.com/getkirby/kirby/tree/6.0.0-beta.1
+- https://github.com/getkirby/kirby/tree/6.0.0
+- https://github.com/getkirby/cli/blob/2.1.0/src/CLI/Commands/Migrate/To/SymfonyYaml.php

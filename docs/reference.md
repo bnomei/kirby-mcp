@@ -190,8 +190,8 @@ Bundled skills are installed at `vendor/bnomei/kirby-mcp/skills`; copy them to y
 
 ## Compatibility and reference limits
 
-MCP 6.x requires PHP 8.3+ and Kirby 6 for runtime operations. The verified CMS baseline is **6.0.0-beta.3**; a stable MCP release does not certify the CMS beta for production. Install the CMS separately with explicit beta opt-in. Kirby 7+ is unsupported; use MCP 1.x for Kirby 5. Projectless reference access does not require CMS.
+MCP 6.x requires PHP 8.3+ and Kirby 6 for runtime operations. The verified stable CMS, Starterkit and Plainkit baseline is **6.0.0**. Install Kirby separately; see the [quickstart](../README.md#quickstart). Kirby 7+ is unsupported; use MCP `^1.15` for Kirby 5. Projectless reference access does not require the CMS.
 
-Upstream Starterkit beta.1 has a Linux/case-sensitive-filesystem issue: Site Panel requests `js/Sortable.min.js` but the kit ships `js/sortable.min.js`, causing a dynamic-import 404. The Composer CMS package has the correct uppercase filename. This is an upstream kit asset issue, not an MCP activity-indicator requirement.
+Historical note: Starterkit 6.0.0-beta.1 had a case-sensitive `Sortable.min.js` import mismatch. The [6.0.0 Starterkit](https://github.com/getkirby/starterkit/tree/6.0.0/kirby/panel/dist/js) imports and ships lowercase `sortable.min.js`; no file rename is needed.
 
 Online docs and marketplace availability depend on upstream services; a catalog entry does not prove every upstream URL or Kirby 6 plugin listing exists. Bundled implementation recipes are not certified third-party builds. Review compatibility in your project, including external dependencies and authentication integrations; see [remote integration limits](remote.md#troubleshoot-http).

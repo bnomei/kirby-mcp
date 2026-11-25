@@ -51,7 +51,7 @@ panel.plugin('acme/myblock', {
 
 ## Verification
 
-Use Vue 3 for Kirby 6. Import Vue helpers from `vue` in ESM; do not use `window.Vue`. Kirby 5 legacy sections need PHP display-field classes, and array field definitions need class ports. If using kirbyuse, bundle it instead: beta.1 has no plugin import-map hook. See `kirby://kb/panel/compat-k5-k6-migration`.
+Import Vue 3 helpers from `vue` in ESM; do not use `window.Vue`. Kirby 5 legacy sections need PHP display-field classes, and array field definitions need class ports. Use `window.panel` for a no-build plugin, or bundle kirbyuse if you need its composables. See `kirby://kb/panel/compat-k5-k6-migration`.
 
 - Open the Panel and confirm the plugin UI renders without a bundler build.
 - Confirm the plugin still works when installed from a clean zip/release.

@@ -24,7 +24,7 @@ beforeEach(function (): void {
     }
     symlink(dirname(__DIR__, 2) . '/vendor', $this->nativeRoot . '/vendor');
     file_put_contents($this->nativeRoot . '/index.php', '<?php require __DIR__ . "/vendor/autoload.php"; echo (new Kirby(["roots" => ["index" => __DIR__]]))->render();');
-    file_put_contents($this->nativeRoot . '/composer.json', '{"require":{"getkirby/cms":"6.0.0-beta.1"}}');
+    file_put_contents($this->nativeRoot . '/composer.json', '{"require":{"getkirby/cms":"^6.0"}}');
     file_put_contents($this->nativeRoot . '/site/config/config.php', '<?php return ["bnomei.kirby-mcp.files.readMaxBytes" => 1024, "bnomei.kirby-mcp.files.uploadMaxBytes" => 4096];');
     foreach (['home', 'alpha', 'beta'] as $slug) {
         file_put_contents($this->nativeRoot . '/content/' . $slug . '/default.txt', "Title: $slug\n\n----\n\nUuid: native-$slug\n");
@@ -33,9 +33,9 @@ beforeEach(function (): void {
 title: Default
 fields:
   attachments:
-    type: files
+    type: filepicker
     uploads:
-      template: document
+      blueprint: document
   disabled:
     type: files
     uploads: false
@@ -199,6 +199,7 @@ it('copies local uploads with metadata and rejects disabled contexts, types and 
     expect($this->native->upload($parent, 'new.csv', 'disabled', source: $source)['ok'])->toBeFalse();
     $preview = $this->native->upload($parent, 'new.csv', 'attachments', ['caption' => 'Initial caption'], source: $source);
     expect($preview['needsConfirm'])->toBeTrue();
+    expect($preview['template'])->toBe('document');
     expect(file_exists($this->nativeRoot . '/content/alpha/new.csv'))->toBeFalse();
     $created = $this->native->upload($parent, 'new.csv', 'attachments', ['caption' => 'Initial caption'], source: $source, confirm: true);
     expect($created['ok'])->toBeTrue(json_encode($created, JSON_THROW_ON_ERROR));

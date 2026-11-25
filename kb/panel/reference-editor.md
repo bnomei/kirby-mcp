@@ -52,7 +52,7 @@ fields:
 
 Each button selects one of `link`, `dialog` or `drawer`. Text/title support translations; query templates can resolve model data. Optional `theme`, `badge` and `disabled` control presentation. A `buttons` query such as `page.shopButtons` must return a list of definitions, not custom-keyed entries. Enforce authorization and validation in the destination route, regardless of button visibility.
 
-Do not write content for this field. Direct backend-request buttons are announced but not implemented in the verified beta.1 baseline; use a dialog/submit flow for actions.
+Do not write content for this field. The [6.0.0 button component](https://github.com/getkirby/kirby/blob/6.0.0/panel/src/components/Navigation/Button.vue) has no blueprint action for a direct backend request. Open a dialog and perform the change in its authorized submit handler instead.
 
 ## Existing Kirby 5 projects
 

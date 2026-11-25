@@ -2,7 +2,7 @@
 
 ## Meaning
 
-kirbyuse provides Panel composables and typings. Use the Kirby-6/Vue-3 prerelease line for Kirby 6; legacy 1.x targets Kirby 4/5. Bundle kirbyuse and leave Vue external: tagged Kirby 6 beta.1 supplies a `vue` import map, not a plugin import-map registration API.
+kirbyuse provides Panel composables and typings. Use kirbyuse 2.x for Kirby 6 and Vue 3; legacy 1.x targets Kirby 4/5. Bundle kirbyuse and leave Vue external: the stock Panel maps `vue`, not `kirbyuse`.
 
 ## In prompts (what it usually implies)
 

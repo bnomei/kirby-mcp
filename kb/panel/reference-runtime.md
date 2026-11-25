@@ -13,6 +13,8 @@ const pages = await this.$helper.items('items/pages', ['page://a', 'page://b']);
 
 IDs here are placeholders; supply actual authorized model IDs. Calls in the same tick are batched and list results follow requested order. Handle missing/inaccessible models without deleting their stored references. `k-image-frame` accepts a file ID/UUID via `file`; use ratio/cover settings for previews. Its images load lazily by default; set `:lazy="false"` for immediately visible images.
 
+When a selected model no longer exists, the [model picker](https://github.com/getkirby/kirby/blob/6.0.0/src/Form/Field/ModelPickerField.php) keeps the stored ID in both form and storage values and returns a missing-item placeholder. Let the editor remove or replace it deliberately.
+
 `k-collection`/`k-items` selection events pass an array of selected IDs. Keep the parent's selected list as IDs; do not treat the payload as a single item object. `k-item` supports `selected` and `selectmode`.
 
 ## Components and presentation

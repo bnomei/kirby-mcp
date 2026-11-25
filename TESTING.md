@@ -3,22 +3,24 @@
 ## Reproducible Kirby 6 baseline
 
 Run `composer install`, `composer cms:starterkit`, `composer test`, then `composer analyse`.
-The fixture script downloads the `6.0.0-beta.2` kit templates (the latest published kit tags), replaces their
-core with `6.0.0-beta.3`, installs that core's locked production dependencies, and checks its runtime against
-the root `composer.lock` before replacing `tests/cms/`. `cms:plainkit` uses the same version checks but is not
+The fixture script downloads the kit release matching `getkirby/cms` in the root `composer.lock` and checks
+the bundled runtime before replacing `tests/cms/`. Do not run Composer inside the kit: the 6.0.0 archives
+bundle the released core but their root manifests still request CMS 5. `cms:plainkit` uses the same version check but is not
 the full-suite fixture. Root dependencies resolve against PHP 8.3; CI runs Pest on PHP 8.3 and 8.5.
 Keep the development helper patch and prepend scripts: Laravel development dependencies still collide
 with Kirby's global `e()`/`dump()` helpers. Fixture config keeps the bundled Kirby loader authoritative.
 
 ## Panel activity browser checks in an orb
 
-Run the PHP suite before browser checks: some tests modify the generated `tests/cms/` fixture.
-Then run `php .agents/prepare-panel.php` and `amp orb services ensure`. The preparation script
+Run the PHP suite before browser checks. Regenerate the disposable fixture with `composer cms:starterkit`
+after the suite so test accounts are not served. Then run `php .agents/prepare-panel.php` and `amp orb services ensure`. The preparation script
 installs current adapter assets, enables activity, and creates a fixture admin with random credentials
 in ignored, mode-0600 `.amp/secrets/kirby-panel-email` and `kirby-panel-password` files. It also binds
 the fixture's read/runtime MCP bearer token to that user. Do not print or commit these secrets.
 
-Open the service's Panel, log in, and make an authenticated MCP tool call or resource read. Within
+Run `bash tests/browser/panel-activity.sh PORT` with the local port of the `kirby` service to exercise the
+admin login, a real authenticated MCP read, activity age states, polling failure/recovery and in-place logout in Chromium.
+For interactive checks, open the service's Panel, log in, and make an authenticated MCP tool call or resource read. Within
 15 seconds the robot should appear orange; focus or tap it to see the activity age. For deterministic
 visual checks, set the disposable fixture's `.kirby-mcp/activity` timestamp to 60, 180, and 301 seconds
 ago and verify muted orange, grey, and hidden states. This simulates age, not agent connections.

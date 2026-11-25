@@ -26,20 +26,20 @@ With a build step, use `kirbyup` and emit the production assets into the plugin 
 
 ## Dev workflow
 
-- Kirby 6: kirbyup 4 / Node.js 24+, `kirbyup dev src/index.js` for HMR (the `next` package line at beta.1).
-- Kirby 5 legacy `serve` and Vue 2 bundles must be replaced with this Vue 3 build.
+- Kirby 6: kirbyup 4 / Node.js 24+, `kirbyup dev src/index.js` for HMR (`serve` remains an alias).
+- Rebuild Kirby 5 Vue 2 bundles for Vue 3.
 - No bundler: edit `index.js`/`index.css` and reload the Panel.
 
 ## Build output
 
-- `kirbyup` produces `index.js` and `index.css` in the configured output directory.
-- Dev server builds write `index.dev.js`; ignore it and exclude it from releases.
+- `kirbyup` produces `index.js` and, for imported styles, `index.css` in the configured output directory.
+- Ignore `index.dev.*` and exclude it from releases: the dev server writes `index.dev.js`, and watch builds may also emit `index.dev.css`.
 - Ensure production files are in the plugin root, not only in `src/`.
 
 ## Compatibility notes
 
 - Use `kirbyup` as the default bundler for Panel plugins.
-- Bundle Kirby-6-compatible kirbyuse into your plugin and leave Vue external. Tagged beta.1 only maps `vue`; see `kirby://kb/panel/tooling-kirbyuse` before adding custom imports.
+- Bundle kirbyuse 2.x into your plugin and leave Vue external. The stock Panel only maps `vue`; see `kirby://kb/panel/tooling-kirbyuse`.
 - If you only ship plain JS, keep your component templates small and avoid heavy logic.
 - Converting SFCs to plain JS: move `<script>` logic into the component object, `<template>` into a `template` string, and `<style>` into `index.css`.
 

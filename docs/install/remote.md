@@ -6,7 +6,7 @@ This walkthrough is for the person operating the Kirby site. It produces an HTTP
 
 ## 1. Check the hosting requirements
 
-- Use a Composer-based Kirby 6 project, PHP 8.3+, and a working Panel login. The verified CMS baseline is **6.0.0-beta.1**: follow the [version warning](../../README.md#quickstart) and start on a test copy.
+- Use a Composer-based Kirby 6 project, PHP 8.3+, and a working Panel login. Check the [supported versions](../../README.md#quickstart) and test the connection on a staging copy before enabling it for editors.
 - Serve the site over HTTPS with a trusted certificate. The MCP client must be able to reach it. For cloud clients, browser access from your laptop does not prove reachability from the provider's servers.
 - Keep PHP CLI available to the web process. Runtime tools invoke CLI wrappers; configure `KIRBY_MCP_PHP_BINARY` in the web environment if the correct executable is not on its PATH.
 - Allow PHP to write `.kirby-mcp/`, including OAuth state, without making it publicly readable. Keep it outside the document root or explicitly deny web access. Preserve OAuth state across deployments; do not treat it as disposable cache.

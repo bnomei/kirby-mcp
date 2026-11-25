@@ -248,7 +248,7 @@ final class NativeContent extends RuntimeCommand
                         throw new \RuntimeException('Uploads disabled or list capacity reached.');
                     }
                     $parent = $field->parentModel();
-                    $template = $field->template() ?? 'default';
+                    $template = $field->blueprint() ?? 'default';
                 } elseif ($field instanceof FilePickerField) {
                     $settings = $field->uploads();
                     $field->fill($owner->content($input['language'] ?? null)->get($context)->value());
@@ -257,7 +257,7 @@ final class NativeContent extends RuntimeCommand
                         throw new \RuntimeException('Uploads disabled or picker capacity reached.');
                     }
                     $parent = isset($settings['parent']) ? $owner->query($settings['parent']) : $owner;
-                    $template = $settings['template'] ?? 'default';
+                    $template = $settings['blueprint'] ?? 'default';
                 } else {
                     throw new \InvalidArgumentException('uploadContext must name a file picker or file list.');
                 }

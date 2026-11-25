@@ -82,6 +82,6 @@ Plain text props are escaped in Kirby 6. For markup, use trusted `HtmlString` va
 - https://getkirby.com/docs/reference/plugins/extensions/panel-drawers
 - https://getkirby.com/docs/reference/plugins/extensions/panel-areas
 - https://getkirby.com/docs/reference/plugins/ui
-- https://lab.getkirby.com/public/lab
+- https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
 
 - Migration: `kirby://kb/panel/compat-k5-k6-migration`

@@ -1,6 +1,6 @@
 # Panel extensions: Kirby 5 to Kirby 6 migration
 
-Baseline: **6.0.0-beta.1**, checked October 15, 2026. APIs/tooling remain beta-sensitive. The full site checklist is `kirby://kb/scenarios/83-migrate-kirby-5-to-6`. Do not deploy a beta migration just because assets compile.
+Baseline: **Kirby CMS 6.0.0**. Follow the full site checklist at `kirby://kb/scenarios/83-migrate-kirby-5-to-6`. A successful asset build does not verify PHP field storage or Panel behavior.
 
 ## PHP fields and sections
 
@@ -10,9 +10,9 @@ Custom sections are removed, not auto-converted. Port them to `DisplayField`, re
 
 ## Vue 3 and ESM
 
-- Rebuild all Vue 2 bundles with kirbyup 4 (the `next` release line at beta.1, Node.js 24+). Use `kirbyup dev src/index.js` for HMR, not legacy `serve`. Never ship `index.dev.js`; it replaces legacy `index.dev.mjs`.
+- Rebuild Vue 2 bundles with kirbyup 4 on Node.js 24+. Use `kirbyup dev src/index.js` for HMR (`serve` is a compatibility alias). Replace `index.dev.mjs` in `.gitignore` with `index.dev.*`; never ship the development JS or CSS.
 - Import Vue from `vue`; Kirby provides the import map and runtime. Never bundle a second Vue copy or access `window.Vue`.
-- Bundle Kirby-6-compatible kirbyuse into your plugin if used, leaving Vue external. **Tagged beta.1 has no plugin `importMaps` extension or `panel.extend` assets callback.** Do not paste an unverified import-map hook. See `kirby://kb/panel/tooling-kirbyuse`.
+- If using kirbyuse, bundle its stable 2.x line into your plugin. The stock Panel maps `vue`, not `kirbyuse`. See `kirby://kb/panel/tooling-kirbyuse`.
 - Kirby fields still use `value` and `input`. Use explicit `:value`/`@input`, not default Vue 3 component `v-model`; declare `emits: ['input']`.
 - Replace `$listeners` with `$attrs`, `$set`/`$delete` with assignment/deletion, `beforeDestroy`/`destroyed` with `beforeUnmount`/`unmounted`, and Vue-instance event buses with `$panel.events`. Unsubscribe on unmount.
 - Vue plugin `install()` receives an app, not the Vue constructor. Use `app.config.globalProperties` and `app.component()`.
@@ -32,9 +32,9 @@ Core route definitions now contain controller classes. Call the matching control
 
 ## Authentication and sessions
 
-Custom methods extend `Kirby\Auth\Method`; challenges extend `Kirby\Auth\Challenge`. Register via `authMethods`/`authChallenges`, then enable them in config. The legacy Panel `login` extension and `Kirby\Cms\Auth\Challenge` base are removed. `form()` supplies a Panel UI component for each step.
+Custom methods extend `Kirby\Auth\Method`; challenges extend `Kirby\Auth\Challenge`. Register via `authMethods`/`authChallenges`, then enable them in config. Kirby passes the registration key into the constructor as `type`; do not derive it from the class name. Keep constructors free of side effects: Kirby also constructs instances to check availability. The legacy Panel `login` extension and `Kirby\Cms\Auth\Challenge` base are removed.
 
-Challenge `create()` returns `Pending` data; hash secrets yourself before storing them in `Pending::secret`. `public` data is sent to the Panel. Implement `verify()`; distinguish login, password-reset and 2FA modes. `isAvailable($user, '2fa')` means the factor is set up and can force a second step, so make enrollment deliberate. Keep rate limiting, timeout and recovery paths; do not expose secrets in props or logs.
+In a challenge class, `isAvailable(): bool` takes no arguments; use `$this->user()` and `$this->mode()` to check enrollment for the current user and purpose. Returning true for `2fa` can require a second step at password login. `create(): Pending|null` supplies data for `form(Pending $pending)` and `verify(mixed $input, Pending $data): bool`. Keep one-time code hashes in `secret`, never in `public`: public data is sent to the Panel. Preserve rate limiting, timeout and recovery paths.
 
 Frontend flows use `authenticate()` and `Status`/`State`, not string status checks. Basic Auth cannot complete 2FA. Old cookies are rejected, and session handler APIs changed; see the site guide and `kirby://glossary/session`.
 
@@ -51,4 +51,5 @@ Test field value round-trips and non-value displays; asynchronous failure/empty 
 - https://getkirby.com/releases/6/migration/plugin-developers/trusted-html
 - https://getkirby.com/releases/6/migration/plugin-developers/auth
 - https://getkirby.com/releases/6/migration/plugin-developers/panel-backend
-- https://github.com/getkirby/kirby/blob/6.0.0-beta.1/src/Panel/Assets.php
+- https://github.com/getkirby/kirby/blob/6.0.0/src/Panel/Assets.php
+- https://github.com/getkirby/kirby/blob/6.0.0/src/Auth/Challenge.php

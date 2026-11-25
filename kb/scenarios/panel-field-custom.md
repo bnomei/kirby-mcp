@@ -114,4 +114,4 @@ fields:
 
 ## Kirby 6 build contract
 
-Use kirbyup 4 with Vue 3, leaving Vue external. Kirby inputs still use `value`/`input`, not Vue 3's default component `v-model`. If using kirbyuse, bundle its Kirby-6-compatible version; tagged beta.1 only supplies the `vue` import map. See `kirby://kb/panel/tooling-kirbyuse`.
+Use kirbyup 4 with Vue 3, leaving Vue external. Kirby inputs still use `value`/`input`, not Vue 3's default component `v-model`. If using kirbyuse, bundle its 2.x version; the stock Panel maps only `vue`. See `kirby://kb/panel/tooling-kirbyuse`.

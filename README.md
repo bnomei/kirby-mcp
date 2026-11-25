@@ -13,7 +13,7 @@ Give your coding agent access to your Kirby project and the knowledge to work wi
 
 For Composer-based Kirby projects. **Kirby 6 · PHP 8.3+ · Composer**
 
-Version 6.4.0 integrates MCP PHP SDK v0.10.0. Reconnect existing HTTP sessions after upgrading; see the [transport compatibility notes](docs/remote.md#sessions-streaming-and-subscriptions).
+**Kirby MCP 6.5.0 supports stable Kirby CMS 6.0.0.** File-picker and file-list uploads now use the blueprint configured in the Panel. Sites on a Kirby 6 beta or release candidate must upgrade the CMS before updating MCP.
 
 [Capabilities](#capabilities) · [Knowledge base](#kirby-knowledge-built-in) · [Quickstart](#quickstart) · [Connect your agent](#connect-your-agent) · [Usage](#usage) · [Tools and resources](#tools-and-resources) · [Documentation](#documentation)
 
@@ -46,7 +46,11 @@ Use `kirby_search` to find a topic, or read documents through `kirby://kb` and `
 
 ## Quickstart
 
-From your Kirby project root:
+Start in a Composer-based **Kirby 6** project. The verified stable CMS release is **6.0.0**; MCP does not install the CMS for you. For a new site, use the [Starterkit](https://github.com/getkirby/starterkit/tree/6.0.0) or [Plainkit](https://github.com/getkirby/plainkit/tree/6.0.0). For an existing Kirby 5 site, use `bnomei/kirby-mcp:"^1.15"` or follow the [Kirby 6 migration checklist](kb/scenarios/83-migrate-kirby-5-to-6.md) on a backup first.
+
+Both 6.0.0 kit archives bundle Kirby 6, but their top-level `composer.json` still requests `getkirby/cms: ^5.2`. If starting from one of those tags, run `composer require getkirby/cms:"^6.0" --with-all-dependencies` before installing MCP. Confirm `composer show getkirby/cms` reports 6.x.
+
+From the project root:
 
 ```bash
 composer require --dev bnomei/kirby-mcp:"^6.0"
@@ -54,9 +58,6 @@ vendor/bin/kirby-mcp install
 ```
 
 Then [connect your agent](#connect-your-agent). Your MCP client starts the server; no separate running terminal is needed.
-
-> [!IMPORTANT]
-> The verified Kirby CMS baseline is **6.0.0-beta.3**. Kirby MCP's stable version does not make the CMS beta production-ready. Install Kirby separately and explicitly opt into its beta, for example with `composer require getkirby/cms:"6.0.0-beta.3" --with-all-dependencies` on a test copy before installing MCP. For **Kirby 5**, use `bnomei/kirby-mcp:"^1.15"` instead.
 
 The installer adds project-local runtime commands, a small Kirby plugin adapter, and `.kirby-mcp/mcp.json`. The MCP library stays in `vendor/`. [Maintenance](#maintenance) explains updates and removal.
 

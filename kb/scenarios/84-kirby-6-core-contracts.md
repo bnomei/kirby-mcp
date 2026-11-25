@@ -40,7 +40,7 @@ Use `Uuid::from()` for UUID strings, `Permalink::from()` for permalink strings a
 - Invalid template changes throw `InvalidArgumentException`; a missing home page during app resolution indicates `LogicException`. `Find::user()` throws `UserNotFoundException`.
 - Kirby exception constructors accept named arguments (or a message string); `isTranslated()` is removed. Preserve `previous` when wrapping failures.
 - `Request::domain()` and EXIF timestamps can be null. `Site::modified()`/`Dir::modified()` and `File::realpath()` can return false. Check before string/date operations.
-- JSON encoding and `toJson()` helpers throw on invalid data. Invalid UTF-8 is not an empty successful response. `Response::json()` requires a boolean `pretty` argument.
+- JSON encoding and `toJson()` helpers throw on invalid data. Invalid UTF-8 is not an empty successful response. `Response::json()` accepts an optional boolean `pretty` argument (default `false`).
 - `Dom::query()` throws for an invalid selector; `File::sha1()` throws for a missing file. `Version::contentFile()` requires plain-text storage. `Dir::realpath()` rejects the directory itself as its containment argument.
 - Trusted Panel text may be `HtmlString` rather than string, including translated UI/field text. Cast explicitly when a raw string is required, and avoid identity comparisons for independently created value objects. `V::value()` returns `true` or an error array.
 
@@ -50,7 +50,7 @@ Store serializable scalar/array data in sessions, not objects. Use `Kirby\Sessio
 
 Cookies are HMAC-SHA256 signed and secure by default on HTTPS. Do not weaken secure cookies to work around an incorrect proxy/HTTPS setup. A Kirby 5 upgrade invalidates previous session cookies and in-flight auth challenges; users log in again.
 
-Use `$kirby->auth()->methods()`, `challenges()` and `limits()` for enabled methods/challenges and rate-limit operations. Custom methods use `Auth::guard()` for rate limiting and failure handling; method registration keys must match `type()`. Challenge secrets belong in hashed private `Pending` data, not exported props. Pending is not authenticated. See `kirby://kb/panel/compat-k5-k6-migration` and `kirby://kb/scenarios/43-user-registration-and-login`.
+Use `$kirby->auth()->methods()`, `challenges()` and `limits()` for enabled methods/challenges and rate-limit operations. For guarded operations use the auth instance's `guard()` method. A custom method's `type()` returns its registration key. A pending login is not authenticated; keep challenge secrets out of exported props. See `kirby://kb/panel/compat-k5-k6-migration` and `kirby://kb/scenarios/43-user-registration-and-login`.
 
 ## HTTP and files
 
@@ -62,7 +62,7 @@ Additional mappings include WebAssembly, WebVTT, web manifests, APNG, EPUB, Atom
 
 ## Sources and coverage
 
-This reference distills developer-facing contracts from the **6.0.0-beta.1** changelog, rechecked October 15, 2026. It complements task-specific guides rather than copying every internal refactor or cosmetic bug fix. Future prereleases require another source comparison, not an assumption that these contracts are frozen.
+This reference covers the [Kirby 6.0.0 core](https://github.com/getkirby/kirby/tree/6.0.0/src). Consult the release changelog for the full list of changes and check your installed tag when extending an internal class.
 
 - https://getkirby.com/releases/6/changelog
 - https://getkirby.com/releases/6/more-details

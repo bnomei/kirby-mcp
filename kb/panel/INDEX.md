@@ -55,8 +55,8 @@ These scenarios live under `kb/scenarios/` and are linked here for discovery:
 ## External references
 
 - Panel UI: https://getkirby.com/docs/reference/plugins/ui
-- Panel Lab: https://lab.getkirby.com/public/lab
-- Panel source: https://github.com/getkirby/kirby/tree/main/panel
+- Panel Lab for your installed version: https://getkirby.com/docs/reference/plugins/ui#access-the-panel-lab-locally
+- Panel source: https://github.com/getkirby/kirby/tree/6.0.0/panel
 - kirbyup: https://github.com/johannschopplich/kirbyup
-- kirbyuse: https://github.com/johannschopplich/kirbyuse (verify the Kirby-6-compatible prerelease and pin it)
+- kirbyuse: https://github.com/johannschopplich/kirbyuse (2.x for Kirby 6)
 - Bundling decision: https://getkirby.com/docs/cookbook/plugins/to-bundle-or-not-to-bundle

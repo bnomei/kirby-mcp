@@ -27,7 +27,7 @@ These tutorials describe vendor-documented setup and Kirby MCP's server contract
 ## Prepare a local project
 
 1. Use a Composer-based Kirby 6 project with PHP 8.3+ and an executable PHP CLI. Check `php --version` and `composer --version` in the environment where your client will run.
-2. Make a backup or work on a development copy. The verified CMS baseline is **Kirby 6.0.0-beta.1**; Kirby MCP's stable package does not make the CMS beta production-ready. See the [README's version guidance](../../README.md#quickstart). Kirby 5 requires the older `^1.15` package line, not these version-6 instructions.
+2. Run `composer show getkirby/cms` to check the installed version. The verified stable CMS baseline is **6.0.0**. If you have Kirby 5, use the older MCP `^1.15` line or [migrate a development copy](../../kb/scenarios/83-migrate-kirby-5-to-6.md) first.
 3. From the directory containing the project's `composer.json`, run:
 
    ```bash

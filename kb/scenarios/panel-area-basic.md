@@ -103,7 +103,7 @@ export default {
 ## Verification
 
 - Build or serve assets:
-  - `kirbyup dev src/index.js` for HMR with kirbyup 4 (Node.js 24+ at beta.1)
+  - `kirbyup dev src/index.js` for HMR with kirbyup 4 (Node.js 24+)
   - `kirbyup build src/index.js` for production assets
 - Open the Panel and confirm the area appears in the menu.
 - Use `kirby_plugins_index` to confirm the plugin is loaded.
@@ -124,4 +124,4 @@ export default {
 
 ## Kirby 6 migration
 
-Rebuild Kirby 5 legacy Vue 2 assets with kirbyup 4 and Vue 3. Replace the old `serve` command with `dev`; do not ship `index.dev.js`. See `kirby://kb/panel/tooling-kirbyup`.
+Rebuild Kirby 5 legacy Vue 2 assets with kirbyup 4 and Vue 3. Prefer `dev` over its `serve` alias; do not ship `index.dev.*`. See `kirby://kb/panel/tooling-kirbyup`.

@@ -2,7 +2,7 @@
 
 ## Meaning
 
-kirbyup is a Vite-based bundler for Kirby Panel plugin assets. Kirby 6 beta.1 uses kirbyup 4 (published under `next` at this baseline), Node.js 24+ and Vue 3, including HMR via `dev`. Kirby 5 legacy kirbyup 3/`serve` builds must be rebuilt with version 4 for Kirby 6.
+kirbyup builds Kirby Panel plugin assets with Vite. For Kirby 6, use kirbyup 4, Node.js 24+ and Vue 3; `dev` runs the hot-reload server. Rebuild Kirby 5 bundles rather than reusing their Vue 2 output.
 
 ## In prompts (what it usually implies)
 

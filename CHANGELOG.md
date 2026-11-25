@@ -5,6 +5,12 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 
 ## [Unreleased]
 
+## [6.5.0] - 2026-11-25
+
+- Require Kirby 6.0.0 or newer within major 6 for runtime operations. Test against the released Starterkit and Plainkit matching the Composer lock instead of replacing their bundled core.
+- Use the configured file blueprint for picker and list uploads on Kirby 6.0.0, preserving upload restrictions, metadata and image conversion.
+- Update the installation and Panel development guides for stable Kirby 6, and add a repeatable Chromium check for the Panel activity indicator.
+
 ## [6.4.0] - 2026-11-10
 
 - Upgrade to MCP PHP SDK v0.10.0 and migrate its server/schema namespaces. Preserve PHP 8.3+, Kirby 6, both protocol eras, explicit HTTP sessions and the existing tool/resource surface.

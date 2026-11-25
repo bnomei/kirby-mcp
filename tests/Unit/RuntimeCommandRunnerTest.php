@@ -55,7 +55,7 @@ function runtimeTestTempDir(string $suffix): string
     return $dir;
 }
 
-function writeRuntimeTestScript(string $path, string $body, string $version = '6.0.0-beta.1'): void
+function writeRuntimeTestScript(string $path, string $body, string $version = '6.0.0'): void
 {
     $preflight = 'if (($argv[1] ?? null) === "version") { echo ' . var_export($version, true) . '; exit(0); }';
     $contents = "#!/usr/bin/env php\n<?php\n" . $preflight . "\n" . $body . "\n";
@@ -124,13 +124,13 @@ it('rejects unsupported target runtimes before executing project-local wrappers'
             $runner = new RuntimeCommandRunner(new FakeRuntimeContext($root, $commandsRoot));
             $result = $runner->runMarkedJson('mcp/test.php', ['mcp:test']);
             expect($result->payload)->toBeNull();
-            expect($result->parseError)->toContain('requires Kirby 6.0.0-beta.1');
+            expect($result->parseError)->toContain('requires Kirby 6.0.0 or newer');
             expect(is_file($root . '/executed'))->toBeFalse();
         });
     } finally {
         removeRuntimeTestDir($root);
     }
-})->with(['5.6.1', '7.0.0', 'unknown']);
+})->with(['5.6.1', '6.0.0-rc.3', '7.0.0', 'unknown']);
 
 it('skips parsing when CLI exits non-zero and includes stderr', function (): void {
     $root = runtimeTestTempDir('fail');
