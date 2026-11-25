@@ -170,23 +170,24 @@ Successful `kirby_update_*_content` writes emit `notifications/resources/updated
 
 Bundled skills are installed at `vendor/bnomei/kirby-mcp/skills`; copy them to your agent's local skills directory using the [README client instructions](../README.md). Skills guide work; they do not grant tool permissions.
 
-| Skill                               | Task                                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------------- |
-| `kirby-project-tour`                | Inventory roots, blueprints and plugins; recommend next steps.                        |
-| `kirby-content-migration`           | Plan safe content migrations using reads, updates and schemas.                        |
-| `kirby-scaffold-page-type`          | Create a blueprint, template and optional controller/model using project conventions. |
-| `kirby-routing-and-representations` | Routes, redirects and JSON/XML/RSS representations.                                   |
-| `kirby-collections-and-navigation`  | Listings, pagination, search, filtering, sorting, grouping and menus.                 |
-| `kirby-panel-and-blueprints`        | Panel UX, blueprint design, `extends`, custom areas/fields/sections.                  |
-| `kirby-plugin-development`          | Hooks/extensions, KirbyTags, blocks and reusable plugin code.                         |
-| `kirby-headless-api`                | Kirby API, KQL and JSON representations.                                              |
-| `kirby-i18n-workflows`              | Languages, translation keys, localized labels and import/export.                      |
-| `kirby-security-and-auth`           | Login, roles, permissions, access restrictions and protected downloads.               |
-| `kirby-performance-and-media`       | Caches, CDN/media routing, responsive images and lazy loading.                        |
-| `kirby-debugging-and-tracing`       | Render reproduction, `mcp_dump()` tracing and code-path discovery.                    |
-| `kirby-ide-support`                 | Helper freshness and focused PHPDoc/type-hint improvements.                           |
-| `kirby-upgrade-and-maintenance`     | Composer audit, plugin checks and upgrade verification.                               |
-| `kirby-forms-and-frontend-actions`  | Forms, uploads, email and validated frontend page creation.                           |
+| Skill                               | Task                                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `kirby-project-tour`                | Inventory roots, blueprints and plugins; recommend next steps.                           |
+| `kirby-content-migration`           | Plan safe content migrations using reads, updates and schemas.                           |
+| `kirby-scaffold-page-type`          | Create a blueprint, template and optional controller/model using project conventions.    |
+| `kirby-routing-and-representations` | Routes, redirects and JSON/XML/RSS representations.                                      |
+| `kirby-collections-and-navigation`  | Listings, pagination, search, filtering, sorting, grouping and menus.                    |
+| `kirby-panel-and-blueprints`        | Panel UX, blueprint design, `extends`, custom areas/fields/sections.                     |
+| `kirby-plugin-development`          | Hooks/extensions, KirbyTags, blocks and reusable plugin code.                            |
+| `kirby-headless-api`                | Kirby API, KQL and JSON representations.                                                 |
+| `kirby-i18n-workflows`              | Languages, translation keys, localized labels and import/export.                         |
+| `kirby-security-and-auth`           | Login, roles, permissions, access restrictions and protected downloads.                  |
+| `kirby-performance-and-media`       | Caches, CDN/media routing, responsive images and lazy loading.                           |
+| `kirby-debugging-and-tracing`       | Render reproduction, `mcp_dump()` tracing and code-path discovery.                       |
+| `kirby-ide-support`                 | Helper freshness and focused PHPDoc/type-hint improvements.                              |
+| `kirby-upgrade-and-maintenance`     | Composer audit, plugin checks and upgrade verification.                                  |
+| `kirby-forms-and-frontend-actions`  | Forms, uploads, email and validated frontend page creation.                              |
+| `kirby-deployment`                  | Deploy code, sync content and keep accounts, license and Panel edits across deployments. |
 
 ## Compatibility and reference limits
 
